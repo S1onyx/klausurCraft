@@ -1,0 +1,25 @@
+<tasks>
+  <task id="t-0001" title="SQL Basics">
+    <subtask id="st-0001" points="5" difficulty="easy" eligibility="both">
+      <variants group="SELECT DISTINCT">
+        <variant id="v-0001">
+          <text>Return distinct city names from Customers.</text>
+          <solution>SELECT DISTINCT city FROM Customers;</solution>
+        </variant>
+        <variant id="v-0001">
+          <text>List unique cities found in the Customers table.</text>
+          <solution>SELECT DISTINCT city FROM Customers;</solution>
+        </variant>
+      </variants>
+    </subtask>
+
+    <subtask id="st-0002" points="10" difficulty="medium" eligibility="exam">
+      <variants group="Aggregations">
+        <variant id="v-0001">
+          <text>Show department name and number of employees.</text>
+          <solution>SELECT d.name, COUNT(*) FROM Dept d JOIN Emp e ...</solution>
+        </variant>
+      </variants>
+    </subtask>
+  </task>
+</tasks>

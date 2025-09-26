@@ -1,0 +1,121 @@
+<!-- exam-tasks.xsd -->
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+
+  <!-- ============================
+       BASIC TYPES AND ENUMS
+       ============================ -->
+
+  <!-- NumericId: IDs must be numeric (at least one digit) -->
+  <xsd:simpleType name="NumericId">
+    <xsd:restriction base="xsd:string">
+      <xsd:pattern value="\d+"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+
+  <!-- Difficulty levels for a subtask -->
+  <xsd:simpleType name="Difficulty">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="easy"/>
+      <xsd:enumeration value="medium"/>
+      <xsd:enumeration value="hard"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+
+  <!-- Eligibility of a subtask: where it can appear -->
+  <xsd:simpleType name="Eligibility">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="exam"/>
+      <xsd:enumeration value="practice"/>
+      <xsd:enumeration value="both"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+
+  <!-- ============================
+       ROOT ELEMENT
+       ============================ -->
+
+  <!-- Root <tasks> container: contains multiple <task> entries -->
+  <xsd:element name="tasks">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element name="task" type="Task" maxOccurs="unbounded"/>
+      </xsd:sequence>
+    </xsd:complexType>
+
+    <!-- Ensure that task IDs are globally unique within the document -->
+    <xsd:key name="TaskIdUnique">
+      <xsd:selector xpath="task"/>
+      <xsd:field xpath="@id"/>
+    </xsd:key>
+  </xsd:element>
+
+  <!-- ============================
+       TASK DEFINITION
+       ============================ -->
+
+  <!-- A <task> represents a topic (e.g. "SQL Basics") -->
+  <xsd:complexType name="Task">
+    <xsd:sequence>
+      <xsd:element name="subtask" type="Subtask" maxOccurs="unbounded"/>
+    </xsd:sequence>
+    <!-- Task attributes -->
+    <xsd:attribute name="id" type="NumericId" use="required"/>   <!-- numeric ID, e.g. "0001" -->
+    <xsd:attribute name="title" type="xsd:string" use="required"/> <!-- task title -->
+
+    <!-- Ensure subtask IDs are unique within the same task -->
+    <xsd:key name="SubtaskIdUniqueWithinTask">
+      <xsd:selector xpath="subtask"/>
+      <xsd:field xpath="@id"/>
+    </xsd:key>
+  </xsd:complexType>
+
+  <!-- ============================
+       SUBTASK DEFINITION
+       ============================ -->
+
+  <!-- A <subtask> belongs to exactly one task -->
+  <xsd:complexType name="Subtask">
+    <xsd:sequence>
+      <xsd:element name="variants" type="Variants"/>
+    </xsd:sequence>
+    <!-- Subtask attributes -->
+    <xsd:attribute name="id" type="NumericId" use="required"/>        <!-- numeric ID -->
+    <xsd:attribute name="points" type="xsd:decimal" use="required"/>  <!-- number of points -->
+    <xsd:attribute name="difficulty" type="Difficulty" use="required"/> <!-- easy/medium/hard -->
+    <xsd:attribute name="eligibility" type="Eligibility" use="required"/> <!-- exam/practice/both -->
+
+    <!-- Ensure variant IDs are unique within the same subtask -->
+    <xsd:key name="VariantIdUniqueWithinSubtask">
+      <xsd:selector xpath="variants/variant"/>
+      <xsd:field xpath="@id"/>
+    </xsd:key>
+  </xsd:complexType>
+
+  <!-- ============================
+       VARIANTS CONTAINER
+       ============================ -->
+
+  <!-- A <variants> element groups one or more <variant> entries.
+       The optional "group" attribute can describe the variant set. -->
+  <xsd:complexType name="Variants">
+    <xsd:sequence>
+      <xsd:element name="variant" type="Variant" maxOccurs="unbounded"/>
+    </xsd:sequence>
+    <xsd:attribute name="group" type="xsd:string" use="optional"/>
+  </xsd:complexType>
+
+  <!-- ============================
+       VARIANT DEFINITION
+       ============================ -->
+
+  <!-- A <variant> contains the text of the question and its own solution.
+       The <solution> element may be left empty (<solution/>) if no solution is provided. -->
+  <xsd:complexType name="Variant">
+    <xsd:sequence>
+      <xsd:element name="text" type="xsd:string"/>       <!-- question text -->
+      <xsd:element name="solution" type="xsd:string"/>   <!-- solution text (can be empty) -->
+    </xsd:sequence>
+    <xsd:attribute name="id" type="NumericId" use="required"/> <!-- numeric ID -->
+  </xsd:complexType>
+
+</xsd:schema>

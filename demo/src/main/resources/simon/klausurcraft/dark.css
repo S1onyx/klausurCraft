@@ -1,0 +1,128 @@
+/* Dark Theme for JavaFX
+   - Low-luminance background, high-contrast text
+   - Mirrors light.css variables for easy switching
+*/
+
+.root {
+    -color-bg: #0b0d10;
+    -color-surface: #14181d;
+    -color-border: #232a32;
+    -color-text: #e9eef5;
+    -color-muted: #9aa7b5;
+    -color-accent: #60a5fa; /* blue-400/500 range */
+    -color-accent-contrast: #0b0d10;
+    -color-focus: #3b82f6;
+
+    -fx-background-color: -color-bg;
+    -fx-text-fill: -color-text;
+
+    -fx-font-family: "Inter", "Segoe UI", "SF Pro Text", system-ui, sans-serif;
+    -fx-font-size: 13px;
+
+    -fx-accent: -color-accent;
+}
+
+.pane, .anchor-pane, .border-pane, .stack-pane, .vbox, .hbox, .flow-pane, .grid-pane {
+    -fx-background-color: transparent;
+}
+
+.card {
+    -fx-background-color: -color-surface;
+    -fx-background-radius: 10;
+    -fx-padding: 16;
+    -fx-border-color: -color-border;
+    -fx-border-radius: 10;
+}
+
+.label {
+    -fx-text-fill: -color-text;
+}
+
+.label.muted {
+    -fx-text-fill: -color-muted;
+}
+
+.button {
+    -fx-background-color: #1b2128;
+    -fx-text-fill: -color-text;
+    -fx-background-radius: 8;
+    -fx-padding: 8 14 8 14;
+    -fx-border-color: -color-border;
+    -fx-border-radius: 8;
+    -fx-cursor: hand;
+}
+
+.button:hover {
+    -fx-background-color: #232a32;
+}
+
+.button:pressed {
+    -fx-background-color: #2a333d;
+}
+
+.button.primary {
+    -fx-background-color: -color-accent;
+    -fx-text-fill: -color-accent-contrast;
+    -fx-border-color: transparent;
+}
+
+.button.primary:hover {
+    -fx-background-color: #3b82f6;
+}
+
+.button.primary:pressed {
+    -fx-background-color: #2563eb;
+}
+
+/* Inputs */
+.text-field, .password-field, .text-area {
+    -fx-background-color: #171c22;
+    -fx-text-fill: -color-text;
+    -fx-background-radius: 8;
+    -fx-border-color: -color-border;
+    -fx-border-radius: 8;
+    -fx-padding: 8 10 8 10;
+}
+
+.text-area .content {
+    -fx-background-color: #171c22;
+    -fx-background-radius: 8;
+}
+
+.text-field:focused, .password-field:focused, .text-area:focused {
+    -fx-border-color: -color-focus;
+    -fx-effect: dropshadow(gaussian, rgba(59,130,246,0.45), 6, 0.25, 0, 0);
+}
+
+/* Lists / Tables */
+.list-view, .table-view {
+    -fx-background-color: -color-surface;
+    -fx-background-insets: 0;
+    -fx-background-radius: 10;
+    -fx-border-color: -color-border;
+    -fx-border-radius: 10;
+}
+
+.table-view .column-header-background {
+    -fx-background-color: #1b2128;
+    -fx-background-radius: 10 10 0 0;
+    -fx-border-color: -color-border;
+    -fx-border-width: 0 0 1 0;
+}
+
+.table-row-cell:filled:selected, .list-cell:filled:selected {
+    -fx-background-color: rgba(96,165,250,0.20);
+    -fx-text-fill: -color-text;
+}
+
+/* Scrollbar */
+.scroll-bar:vertical, .scroll-bar:horizontal {
+    -fx-background-color: transparent;
+}
+.scroll-bar .thumb {
+    -fx-background-color: #2d3742;
+    -fx-background-radius: 8;
+}
+.scroll-bar .thumb:hover {
+    -fx-background-color: #364250;
+}

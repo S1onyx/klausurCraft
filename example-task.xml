@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tasks xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="exam-tasks.xsd">
+
+  <!-- ============================
+       Task 0001: SQL Basics
+       ============================ -->
+  <task id="0001" title="SQL Basics">
+
+    <!-- Subtask 0001: Easy, both exam & practice -->
+    <subtask id="0001" points="5" difficulty="easy" eligibility="both">
+      <variants group="SELECT DISTINCT">
+
+        <!-- Variant 0001 -->
+        <variant id="0001">
+          <text>Return distinct city names from Customers.</text>
+          <solution>SELECT DISTINCT city FROM Customers;</solution>
+        </variant>
+
+        <!-- Variant 0002 (solution intentionally left empty) -->
+        <variant id="0002">
+          <text>List unique cities found in the Customers table.</text>
+          <solution/>
+        </variant>
+
+      </variants>
+    </subtask>
+
+    <!-- Subtask 0002: Medium, exam only -->
+    <subtask id="0002" points="10" difficulty="medium" eligibility="exam">
+      <variants group="Aggregations">
+
+        <!-- Variant 0001 -->
+        <variant id="0001">
+          <text>Show department name and number of employees.</text>
+          <solution>SELECT d.name, COUNT(*) FROM Dept d JOIN Emp e ON d.id = e.dept_id GROUP BY d.name;</solution>
+        </variant>
+
+        <!-- Variant 0002 -->
+        <variant id="0002">
+          <text>List all departments that have at least 5 employees.</text>
+          <solution>SELECT d.name FROM Dept d JOIN Emp e ON d.id = e.dept_id GROUP BY d.name HAVING COUNT(*) &gt;= 5;</solution>
+        </variant>
+
+      </variants>
+    </subtask>
+
+  </task>
+
+  <!-- ============================
+       Task 0002: Relational Model
+       ============================ -->
+  <task id="0002" title="Relational Model">
+
+    <!-- Subtask 0001: Easy -->
+    <subtask id="0001" points="6" difficulty="easy" eligibility="both">
+      <variants group="Keys and Constraints">
+
+        <!-- Variant 0001 -->
+        <variant id="0001">
+          <text>Define a primary key and provide one example.</text>
+          <solution>A primary key uniquely identifies a row, e.g. StudentID in a Students table.</solution>
+        </variant>
+
+        <!-- Variant 0002 -->
+        <variant id="0002">
+          <text>What is the difference between a primary key and a foreign key?</text>
+          <solution>A primary key uniquely identifies rows; a foreign key references a primary key in another table.</solution>
+        </variant>
+
+      </variants>
+    </subtask>
+
+    <!-- Subtask 0002: Hard -->
+    <subtask id="0002" points="12" difficulty="hard" eligibility="exam">
+      <variants group="Functional Dependencies">
+
+        <!-- Variant 0001 -->
+        <variant id="0001">
+          <text>Given a set of functional dependencies, compute a minimal cover.</text>
+          <solution>Decompose FDs, remove extraneous attributes, and ensure left sides are minimal.</solution>
+        </variant>
+
+      </variants>
+    </subtask>
+
+  </task>
+
+</tasks>
