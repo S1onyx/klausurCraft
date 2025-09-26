@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<HBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="simon.klausurcraft.controller.home.HomeTopbarController"
+      spacing="12">
+    <padding>
+        <Insets top="12" right="12" bottom="12" left="12"/>
+    </padding>
+    <children>
+        <TextField fx:id="searchField" promptText="Search (title, text, solution)"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Label text="Difficulty:"/>
+        <CheckBox fx:id="fltEasy" text="easy" selected="true"/>
+        <CheckBox fx:id="fltMedium" text="medium" selected="true"/>
+        <CheckBox fx:id="fltHard" text="hard" selected="true"/>
+        <!-- Generate-Button wurde in die Statusleiste (home.fxml bottom) verlegt -->
+    </children>
+</HBox>

@@ -1,73 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
 
 <StackPane xmlns="http://javafx.com/javafx"
            xmlns:fx="http://javafx.com/fxml"
-           fx:controller="simon.klausurcraft.controller.HomeController">
+           fx:controller="simon.klausurcraft.controller.home.HomeController">
 
     <children>
         <BorderPane>
-            <!-- Top: search + filters -->
             <top>
-                <HBox spacing="12">
-                    <padding>
-                        <Insets top="12" right="12" bottom="12" left="12"/>
-                    </padding>
-                    <children>
-                        <TextField fx:id="searchField" promptText="Search (title, text, solution)"/>
-                        <Region HBox.hgrow="ALWAYS"/>
-                        <Label text="Difficulty:"/>
-                        <CheckBox fx:id="fltEasy" text="easy" selected="true"/>
-                        <CheckBox fx:id="fltMedium" text="medium" selected="true"/>
-                        <CheckBox fx:id="fltHard" text="hard" selected="true"/>
-                    </children>
-                </HBox>
+                <fx:include source="HomeTopbar.fxml" fx:id="topbar"/>
             </top>
 
-            <!-- Left: TOC -->
             <left>
-                <VBox spacing="8" BorderPane.alignment="CENTER">
-                    <padding>
-                        <Insets top="12" right="8" bottom="12" left="12"/>
-                    </padding>
-                    <children>
-                        <Label text="Contents" />
-                        <TreeView fx:id="tocTree" prefWidth="280" prefHeight="400"/>
-                        <Button text="Load XML…" onAction="#onClickLoadXml"/>
-                    </children>
-                </VBox>
+                <fx:include source="HomeSidebar.fxml" fx:id="sidebar"/>
             </left>
 
-            <!-- Center: scroll with cards -->
             <center>
-                <ScrollPane fx:id="centerScroll" fitToWidth="true">
-                    <content>
-                        <VBox fx:id="centerContainer" spacing="12">
-                            <padding>
-                                <Insets top="12" right="12" bottom="12" left="12"/>
-                            </padding>
-                        </VBox>
-                    </content>
-                </ScrollPane>
+                <fx:include source="HomeCenter.fxml" fx:id="center"/>
             </center>
 
-            <!-- Bottom: status bar -->
             <bottom>
                 <HBox spacing="12" styleClass="status-bar">
-                    <padding>
-                        <Insets top="10" right="10" bottom="10" left="10"/>
-                    </padding>
+                    <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
                     <children>
                         <Label fx:id="fileLabel" text="No file loaded" />
                         <Label text="•"/>
-                        <Label fx:id="countsLabel" text="Tasks: 0   Subtasks: 0" styleClass="muted"/>
+                        <Label fx:id="countsLabel" text="0 / 0" styleClass="muted"/>
                         <Region HBox.hgrow="ALWAYS"/>
+                        <Button fx:id="btnGenerateBottom" text="Generate" styleClass="primary"/>
                         <ToggleButton fx:id="themeToggle" text="Light/Dark"/>
-                        <Button fx:id="btnSwitchFile" text="Switch file…" onAction="#onClickLoadXml"/>
-                        <Button fx:id="btnGenerate" text="Generate" onAction="#onClickGenerate" styleClass="primary"/>
+                        <Button text="Switch file…" onAction="#onSwitchFile" visible="false"/>
+                        <!-- Button versteckt, Laden ist im Sidebar -->
                     </children>
                 </HBox>
             </bottom>

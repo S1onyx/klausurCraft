@@ -8,9 +8,9 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.stage.Stage;
+import simon.klausurcraft.utils.ThemeManager;
 
 import java.io.IOException;
-import java.util.prefs.Preferences;
 
 /**
  * JavaFX App entry
@@ -35,9 +35,6 @@ public class App extends Application {
         stage.setTitle("klausurCraft");
         stage.setScene(scene);
         stage.show();
-
-        // Optional: auto switch to last theme from prefs in the future
-        // (kept simple for now)
     }
 
     static void setRoot(String fxml) throws IOException {

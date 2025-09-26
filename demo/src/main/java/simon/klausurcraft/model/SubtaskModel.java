@@ -44,7 +44,7 @@ public class SubtaskModel {
 
     public List<VariantModel> getVariants() { return variants; }
 
-    public boolean isEligibleFor(simon.klausurcraft.controller.HomeController.GenerateScope scope) {
+    public boolean isEligibleFor(GenerateScope scope) {
         return switch (scope) {
             case EXAM -> eligibility == Eligibility.EXAM || eligibility == Eligibility.BOTH;
             case PRACTICE -> eligibility == Eligibility.PRACTICE || eligibility == Eligibility.BOTH;

@@ -1,6 +1,8 @@
-package simon.klausurcraft;
+package simon.klausurcraft.utils;
 
 import javafx.scene.Scene;
+import simon.klausurcraft.App;
+
 import java.util.Objects;
 
 public final class ThemeManager {

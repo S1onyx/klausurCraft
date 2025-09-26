@@ -238,3 +238,7 @@ Wichtig ist das alles mit den css klassen light.css und dark.css funktioniert. A
 Dann soll oben rechts ein "+"-Button integriert werden Mit diesem Button soll man die Möglichkeit haben eine neue Aufgabe anzulegen. Man soll in ein Sheet kommen indem man einfach den Titel der Task angeben kann. 
 Neben jeder Task im Startscreen ist ein kleiner Button mit einem Mülleimer, so kann man direkt mittels einem klick und einer anschliesenden bestätigung die gesamte Task inklusiver aller Subtasks löschen. Dann gibt es noch einen Stift, hier kann man den Name der Task bearbeiten und ein Plus dann wird man auf ein Sheet geleitet in dem man eine neue Subtask zur Aufgabe anlegen kann. Man gibt zuerst die Punktzahl, schwierigkeit und sichtbarkeit an. Dann kann man den group name angeben und den Aufgabentext, sowie optional Lösung hinzufügen. Mittels eines weiteren Plus kann dann eine weitere Variante erstellt werden. Wenn man zufireden ist klickt man oben rechts auf den Haken zum bestätigen. 
 Neben jeder Subtask gibt es einen mülleimer zum löschen der subtask inkklusive aller varianten und einen stift zum bearbeiten des group namens und der varianten, so kann bspw. der aufgabentext oder die lösung bearbeitet werden, oder auch einzelne varianten hinzugefügt oder gelöscht werden.
+
+
+
+$$

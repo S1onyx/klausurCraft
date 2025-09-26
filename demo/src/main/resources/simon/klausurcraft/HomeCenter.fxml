@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<ScrollPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="simon.klausurcraft.controller.home.HomeCenterController"
+            fx:id="centerScroll"
+            fitToWidth="true">
+    <content>
+        <VBox fx:id="centerContainer" spacing="12">
+            <padding>
+                <Insets top="12" right="12" bottom="12" left="12"/>
+            </padding>
+        </VBox>
+    </content>
+</ScrollPane>

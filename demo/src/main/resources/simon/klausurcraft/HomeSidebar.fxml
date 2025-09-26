@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="simon.klausurcraft.controller.home.HomeSidebarController"
+      spacing="8" BorderPane.alignment="CENTER">
+    <padding>
+        <Insets top="12" right="8" bottom="12" left="12"/>
+    </padding>
+    <children>
+        <Label text="Contents" />
+        <TreeView fx:id="tocTree" prefWidth="280" prefHeight="400"/>
+        <Button fx:id="btnLoad" text="Load XML…"/>
+    </children>
+</VBox>

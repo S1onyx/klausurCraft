@@ -20,6 +20,23 @@
 
 /* viewports / tree */
 .scroll-pane, .scroll-pane .viewport, .scroll-pane .corner { -fx-background-color: transparent; -fx-background: transparent; }
+
+.split-pane, .tab-pane, .titled-pane, .menu-bar, .tool-bar { -fx-background-color: transparent; }
+.tab-pane .tab-header-area {
+    -fx-background-color: -color-surface;
+    -fx-border-color: -color-border;
+}
+.titled-pane > .title {
+    -fx-background-color: -color-surface;
+    -fx-text-fill: -color-text;
+    -fx-border-color: -color-border;
+}
+.tooltip {
+    -fx-background-color: #ffffff;
+    -fx-text-fill: -color-text;
+    -fx-border-color: -color-border;
+}
+
 .tree-view, .tree-view .virtual-flow, .tree-view .clipped-container, .tree-view .viewport { -fx-background-color: -color-surface; }
 .tree-cell { -fx-background-color: -color-surface; -fx-text-fill: -color-text; }
 .tree-cell:filled:selected, .tree-cell:filled:selected:hover { -fx-background-color: rgba(59,130,246,0.15); -fx-text-fill: -color-text; }
@@ -102,3 +119,11 @@
 #fltMedium { -fx-background-color: #fff2df; -fx-border-color: #ffd8a8; -fx-text-fill: #92400e; }
 #fltHard   { -fx-background-color: #ffe8e8; -fx-border-color: #ffc0c0; -fx-text-fill: #7f1d1d; }
 .check-box > .label { -fx-text-fill: inherit; }
+
+/* Context menu to keep consistency */
+.context-menu {
+    -fx-background-color: #ffffff;
+    -fx-text-fill: -color-text;
+    -fx-border-color: -color-border;
+}
+.menu-item:focused { -fx-background-color: rgba(59,130,246,0.15); }
