@@ -1,135 +1,104 @@
-/* Light Theme for JavaFX
-   - Clean, high-contrast light palette
-   - Uses looked-up colors so components inherit consistently
-*/
+/* Light Theme for JavaFX */
 
 .root {
-    /* Looked-up colors (custom variables) */
     -color-bg: #f7f7f9;
     -color-surface: #ffffff;
     -color-border: #e3e5e8;
     -color-text: #111418;
     -color-muted: #5a6472;
-    -color-accent: #3b82f6; /* blue-500 */
+    -color-accent: #3b82f6;
     -color-accent-contrast: #ffffff;
     -color-focus: #94c2ff;
 
     -fx-background-color: -color-bg;
     -fx-text-fill: -color-text;
 
-    /* Global font */
     -fx-font-family: "Inter", "Segoe UI", "SF Pro Text", system-ui, sans-serif;
     -fx-font-size: 13px;
-
-    /* JavaFX uses -fx-accent in some controls (progress, selection) */
     -fx-accent: -color-accent;
 }
 
-/* Generic containers (e.g., VBox/HBox panes shown as cards) */
-.pane, .anchor-pane, .border-pane, .stack-pane, .vbox, .hbox, .flow-pane, .grid-pane {
-    -fx-background-color: transparent;
-}
+/* viewports / tree */
+.scroll-pane, .scroll-pane .viewport, .scroll-pane .corner { -fx-background-color: transparent; -fx-background: transparent; }
+.tree-view, .tree-view .virtual-flow, .tree-view .clipped-container, .tree-view .viewport { -fx-background-color: -color-surface; }
+.tree-cell { -fx-background-color: -color-surface; -fx-text-fill: -color-text; }
+.tree-cell:filled:selected, .tree-cell:filled:selected:hover { -fx-background-color: rgba(59,130,246,0.15); -fx-text-fill: -color-text; }
+.tree-cell:hover { -fx-background-color: rgba(0,0,0,0.03); }
 
-/* Card-like containers (use styleClass="card" if you want this look) */
-.card {
-    -fx-background-color: -color-surface;
-    -fx-background-radius: 10;
-    -fx-padding: 16;
-    -fx-border-color: -color-border;
-    -fx-border-radius: 10;
-}
+.pane, .anchor-pane, .border-pane, .stack-pane, .vbox, .hbox, .flow-pane, .grid-pane { -fx-background-color: transparent; }
 
-/* Labels */
-.label {
-    -fx-text-fill: -color-text;
-}
+.card { -fx-background-color: -color-surface; -fx-background-radius: 10; -fx-padding: 16; -fx-border-color: -color-border; -fx-border-radius: 10; }
 
-.label.muted {
-    -fx-text-fill: -color-muted;
-}
+.label { -fx-text-fill: -color-text; }
+.label.muted { -fx-text-fill: -color-muted; }
 
-/* Buttons */
-.button {
-    -fx-background-color: -color-surface;
-    -fx-text-fill: -color-text;
-    -fx-background-radius: 8;
-    -fx-padding: 8 14 8 14;
-    -fx-border-color: -color-border;
-    -fx-border-radius: 8;
-    -fx-cursor: hand;
-}
+.button { -fx-background-color: -color-surface; -fx-text-fill: -color-text; -fx-background-radius: 8; -fx-padding: 8 14 8 14; -fx-border-color: -color-border; -fx-border-radius: 8; -fx-cursor: hand; }
+.button:hover { -fx-background-color: #fafbfc; }
+.button:pressed { -fx-background-color: #f1f3f5; }
+.button.primary { -fx-background-color: -color-accent; -fx-text-fill: -color-accent-contrast; -fx-border-color: transparent; }
+.button.primary:hover { -fx-background-color: #2563eb; }
+.button.primary:pressed { -fx-background-color: #1d4ed8; }
 
-.button:hover {
-    -fx-background-color: #fafbfc;
-}
+.text-field, .password-field, .text-area, .combo-box-base { -fx-background-color: -color-surface; -fx-text-fill: -color-text; -fx-background-radius: 8; -fx-border-color: -color-border; -fx-border-radius: 8; -fx-padding: 8 10 8 10; }
+.text-area .content { -fx-background-color: -color-surface; -fx-background-radius: 8; }
+.text-field:focused, .password-field:focused, .text-area:focused, .combo-box-base:focused { -fx-border-color: -color-focus; -fx-effect: dropshadow(gaussian, rgba(148,194,255,0.45), 6, 0.25, 0, 0); }
+.combo-box-base .arrow-button { -fx-background-color: transparent; }
+.combo-box .list-cell { -fx-text-fill: -color-text; }
 
-.button:pressed {
-    -fx-background-color: #f1f3f5;
-}
+/* Colored ComboBoxes (match badges) */
+.combo-diff-easy  { -fx-background-color: #e8f8ee; -fx-border-color: #b7ebcd; -fx-text-fill: #166534; }
+.combo-diff-medium{ -fx-background-color: #fff2df; -fx-border-color: #ffd8a8; -fx-text-fill: #92400e; }
+.combo-diff-hard  { -fx-background-color: #ffe8e8; -fx-border-color: #ffc0c0; -fx-text-fill: #7f1d1d; }
 
-.button.primary {
-    -fx-background-color: -color-accent;
-    -fx-text-fill: -color-accent-contrast;
-    -fx-border-color: transparent;
-}
+.combo-elig-exam     { -fx-background-color: #ece4ff; -fx-border-color: #d6c7ff; -fx-text-fill: #4c1d95; }
+.combo-elig-practice { -fx-background-color: #ffe4fa; -fx-border-color: #ffc7f2; -fx-text-fill: #9d174d; }
+.combo-elig-both     { -fx-background-color: #e8ecff; -fx-border-color: #cad4ff; -fx-text-fill: #3730a3; }
 
-.button.primary:hover {
-    -fx-background-color: #2563eb; /* blue-600 */
-}
-
-.button.primary:pressed {
-    -fx-background-color: #1d4ed8; /* blue-700 */
-}
-
-/* Inputs */
-.text-field, .password-field, .text-area {
-    -fx-background-color: -color-surface;
-    -fx-text-fill: -color-text;
-    -fx-background-radius: 8;
-    -fx-border-color: -color-border;
-    -fx-border-radius: 8;
-    -fx-padding: 8 10 8 10;
-}
-
-.text-area .content {
-    -fx-background-color: -color-surface;
-    -fx-background-radius: 8;
-}
-
-.text-field:focused, .password-field:focused, .text-area:focused {
-    -fx-border-color: -color-focus;
-    -fx-effect: dropshadow(gaussian, rgba(148,194,255,0.45), 6, 0.25, 0, 0);
-}
+.combo-box-base.combo-diff-easy  .arrow,
+.combo-box-base.combo-diff-medium .arrow,
+.combo-box-base.combo-diff-hard .arrow,
+.combo-box-base.combo-elig-exam .arrow,
+.combo-box-base.combo-elig-practice .arrow,
+.combo-box-base.combo-elig-both .arrow { -fx-background-color: transparent; }
 
 /* Lists / Tables */
-.list-view, .table-view {
-    -fx-background-color: -color-surface;
-    -fx-background-insets: 0;
-    -fx-background-radius: 10;
-    -fx-border-color: -color-border;
-    -fx-border-radius: 10;
+.list-view, .table-view { -fx-background-color: -color-surface; -fx-background-insets: 0; -fx-background-radius: 10; -fx-border-color: -color-border; -fx-border-radius: 10; }
+.table-view .column-header-background { -fx-background-color: #f2f3f6; -fx-background-radius: 10 10 0 0; -fx-border-color: -color-border; -fx-border-width: 0 0 1 0; }
+.table-row-cell:filled:selected, .list-cell:filled:selected { -fx-background-color: rgba(59,130,246,0.15); -fx-text-fill: -color-text; }
+
+.scroll-bar:vertical, .scroll-bar:horizontal { -fx-background-color: transparent; }
+.scroll-bar .thumb { -fx-background-color: #d6dae1; -fx-background-radius: 8; }
+.scroll-bar .thumb:hover { -fx-background-color: #c7ccd5; }
+
+.status-bar { -fx-background-color: -color-surface; -fx-border-color: -color-border; -fx-border-width: 1 0 0 0; -fx-padding: 8 12; -fx-background-radius: 10; }
+.sheet { -fx-background-color: -color-surface; -fx-border-color: -color-border; -fx-border-width: 0 0 0 1; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 14, 0.15, -4, 0); -fx-background-radius: 0; }
+.header { -fx-font-size: 14px; -fx-font-weight: bold; }
+.chip { -fx-background-radius: 999; -fx-padding: 4 10; }
+
+/* Base badge */
+.badge { -fx-padding: 2 8; -fx-background-radius: 999; -fx-border-radius: 999; -fx-font-size: 11px; }
+
+/* Difficulty badges (green/orange/red) */
+.badge-diff-easy   { -fx-background-color: #e8f8ee; -fx-border-color: #b7ebcd; -fx-text-fill: #166534; }
+.badge-diff-medium { -fx-background-color: #fff2df; -fx-border-color: #ffd8a8; -fx-text-fill: #92400e; }
+.badge-diff-hard   { -fx-background-color: #ffe8e8; -fx-border-color: #ffc0c0; -fx-text-fill: #7f1d1d; }
+
+/* Eligibility badges (more distinct) */
+.badge-elig-exam     { -fx-background-color: #ece4ff; -fx-border-color: #d6c7ff; -fx-text-fill: #4c1d95; }
+.badge-elig-practice { -fx-background-color: #ffe4fa; -fx-border-color: #ffc7f2; -fx-text-fill: #9d174d; }
+.badge-elig-both     { -fx-background-color: #e8ecff; -fx-border-color: #cad4ff; -fx-text-fill: #3730a3; }
+
+/* Neutral (points) badge */
+.badge:not(.badge-diff-easy):not(.badge-diff-medium):not(.badge-diff-hard)
+       :not(.badge-elig-exam):not(.badge-elig-practice):not(.badge-elig-both) {
+    -fx-background-color: #eef2f7;
+    -fx-text-fill: #2b3645;
+    -fx-border-color: #dbe2ea;
 }
 
-.table-view .column-header-background {
-    -fx-background-color: #f2f3f6;
-    -fx-background-radius: 10 10 0 0;
-    -fx-border-color: -color-border;
-    -fx-border-width: 0 0 1 0;
-}
-
-.table-row-cell:filled:selected, .list-cell:filled:selected {
-    -fx-background-color: rgba(59,130,246,0.15);
-    -fx-text-fill: -color-text;
-}
-
-/* Scrollbar (subtle) */
-.scroll-bar:vertical, .scroll-bar:horizontal {
-    -fx-background-color: transparent;
-}
-.scroll-bar .thumb {
-    -fx-background-color: #d6dae1;
-    -fx-background-radius: 8;
-}
-.scroll-bar .thumb:hover {
-    -fx-background-color: #c7ccd5;
-}
+/* Top-right difficulty filters */
+#fltEasy, #fltMedium, #fltHard { -fx-background-radius: 999; -fx-border-radius: 999; -fx-padding: 2 10; -fx-border-width: 1; }
+#fltEasy   { -fx-background-color: #e8f8ee; -fx-border-color: #b7ebcd; -fx-text-fill: #166534; }
+#fltMedium { -fx-background-color: #fff2df; -fx-border-color: #ffd8a8; -fx-text-fill: #92400e; }
+#fltHard   { -fx-background-color: #ffe8e8; -fx-border-color: #ffc0c0; -fx-text-fill: #7f1d1d; }
+.check-box > .label { -fx-text-fill: inherit; }

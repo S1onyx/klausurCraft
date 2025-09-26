@@ -221,3 +221,20 @@ Tehemreihenfolge soll definierbar sein, teilaufbaben von eifnach nach schwer sor
 - Fehlerhandling:  
   - Meldungen bei zu wenig Aufgaben in einer Kategorie  
   - Plausibilitätsprüfung bei Generierung (Punkte, Themen etc.)  
+
+# UI-Konzept
+- Startseite mit Auffoerderung zum laden des xml-files
+- Dann Startscreen -> Links "Inhaltsverzeichnis" in dem die Struktur der Tasks-Subtasks dargestellt wird. Beim klick auf eine Task oder Subtask wird dann im mittleren Bildabschnitt zur korrekten Stelle gespruchgen, der mittlere Bildabschnitt enthält alle Tasks-Subtasks-Varianten. Man kann die Subtasks Anklicken und bekommt dann in einem "Sheet" einen detailierten View der Subtask mit allen Infos und Varianten.
+Unten am Startscreen ist so eine kleine Leiste in der Steht welches xml file man gerade impoertiert hat und wie viele Tasks und Subtasks es gerade gibt. Hier soll es auch einen Button geben mit dem man das geladene xml-file wechseln kann.
+Auf dem Startscreen im Rechten Eck in der Leiste ist dann ein Button auf dem "Generate" steht. Beim klicken wird man ebenfalls mit Sheets durch den generierungsprozess geleitet:
+1. Radio Button Auswahl zwischen exam/practice/both
+2. Dann kommt eine Übersicht aller Themen/Tasks die ertmal ausgegraut sind, Hier kann man die Themen/Tasks mittels einer Checkbox links Aktivieren, dann wird das jeweilige Thema erstmal leicht rot bis man auf der rechten Seite aus einem Dropdownmenü in dem alle Möglichen Punktekombinationen der Subtasks verfügbar sind eine Punktzahl auswählt. Man kann die Themen dann auch in der Reihenfolge verschieben. Unten gibt es eine Leiste in der man die Gesamtpunktzahl der Klausur sieht, die sich aus den ausgewählten Themen zusammensetzt. Zudem ist dort ein "Generate Exam" Button mit dem man die Generirung startet und eine Checkbox mit "Sample Solution"
+3. Beim klicken auf "Generte Exam" startet die Generirung des PDFs und wahlweise auch der Sample Solution. Wenn die Generierung geklappt hat wird ein Fenster angezeigt, in dem auswählen kann wo die generierten Files auf dem Computer gespeichert werden sollen.
+
+Danach kommt man wieder auf den Startscreen
+
+Wichtig ist das alles mit den css klassen light.css und dark.css funktioniert. Also das Theme soll auch von dunkel auf hell umgeschalten werden können.
+
+Dann soll oben rechts ein "+"-Button integriert werden Mit diesem Button soll man die Möglichkeit haben eine neue Aufgabe anzulegen. Man soll in ein Sheet kommen indem man einfach den Titel der Task angeben kann. 
+Neben jeder Task im Startscreen ist ein kleiner Button mit einem Mülleimer, so kann man direkt mittels einem klick und einer anschliesenden bestätigung die gesamte Task inklusiver aller Subtasks löschen. Dann gibt es noch einen Stift, hier kann man den Name der Task bearbeiten und ein Plus dann wird man auf ein Sheet geleitet in dem man eine neue Subtask zur Aufgabe anlegen kann. Man gibt zuerst die Punktzahl, schwierigkeit und sichtbarkeit an. Dann kann man den group name angeben und den Aufgabentext, sowie optional Lösung hinzufügen. Mittels eines weiteren Plus kann dann eine weitere Variante erstellt werden. Wenn man zufireden ist klickt man oben rechts auf den Haken zum bestätigen. 
+Neben jeder Subtask gibt es einen mülleimer zum löschen der subtask inkklusive aller varianten und einen stift zum bearbeiten des group namens und der varianten, so kann bspw. der aufgabentext oder die lösung bearbeitet werden, oder auch einzelne varianten hinzugefügt oder gelöscht werden.

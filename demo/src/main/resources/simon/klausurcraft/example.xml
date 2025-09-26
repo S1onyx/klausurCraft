@@ -1,0 +1,398 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<tasks xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="exam-tasks.xsd">
+        
+  
+  
+  <!-- Task 0001 -->
+        
+  
+  
+  <task id="0001" title="SQL Basics">
+                
+    
+    
+    <subtask difficulty="easy" eligibility="both" id="0001" points="5">
+                        
+      
+      
+      <variants group="SELECT DISTINCT">
+                                
+        
+        
+        <variant id="0001">
+                                        
+          
+          
+          <text>Return distinct city names from the Customers table. test
+</text>
+                                        
+          
+          
+          <solution>SELECT DISTINCT city FROM Customers;</solution>
+                                      
+        
+        
+        </variant>
+                                
+        
+        
+        <variant id="0002">
+                                        
+          
+          
+          <text>List unique countries of customers.</text>
+                                        
+          
+          
+          <solution>SELECT DISTINCT country FROM Customers;</solution>
+                                      
+        
+        
+        </variant>
+                              
+      
+      
+      </variants>
+                      
+    
+    
+    </subtask>
+                
+    
+    
+    <subtask difficulty="medium" eligibility="exam" id="0002" points="8">
+                        
+      
+      
+      <variants group="Aggregations">
+                                
+        
+        
+        <variant id="0001">
+                                        
+          
+          
+          <text>Show department name and number of employees.</text>
+                                        
+          
+          
+          <solution>SELECT d.name, COUNT(*) FROM Dept d
+JOIN Emp e ON d.id = e.dept_id GROUP BY d.name;</solution>
+                                      
+        
+        
+        </variant>
+                                
+        
+        
+        <variant id="0002">
+                                        
+          
+          
+          <text>List departments that have at least 5 employees.</text>
+                                        
+          
+          
+          <solution>SELECT d.name FROM Dept d
+JOIN Emp e ON d.id = e.dept_id GROUP BY d.name HAVING COUNT(*) &gt;= 5;</solution>
+                                      
+        
+        
+        </variant>
+                              
+      
+      
+      </variants>
+                      
+    
+    
+    </subtask>
+                
+    
+    
+    <subtask difficulty="hard" eligibility="exam" id="0003" points="12">
+                        
+      
+      
+      <variants group="Joins">
+                                
+        
+        
+        <variant id="0001">
+                                        
+          
+          
+          <text>List employees with their managers using a self-join.</text>
+                                        
+          
+          
+          <solution>SELECT e.name, m.name AS manager FROM Emp e
+LEFT JOIN Emp m ON e.manager_id = m.id;</solution>
+                                      
+        
+        
+        </variant>
+                              
+      
+      
+      </variants>
+                      
+    
+    
+    </subtask>
+              
+  
+  
+  </task>
+        
+  
+  
+  <!-- Task 0002 -->
+        
+  
+  
+  <task id="0002" title="Relational Model">
+                
+    
+    
+    <subtask difficulty="easy" eligibility="both" id="0001" points="6">
+                        
+      
+      
+      <variants group="Keys and Constraints">
+                                
+        
+        
+        <variant id="0001">
+                                        
+          
+          
+          <text>Define a primary key and give one example.</text>
+                                        
+          
+          
+          <solution>A primary key uniquely identifies a row, e.g., StudentID in Students.</solution>
+                                      
+        
+        
+        </variant>
+                                
+        
+        
+        <variant id="0002">
+                                        
+          
+          
+          <text>Difference between primary key and foreign key?</text>
+                                        
+          
+          
+          <solution>A primary key uniquely identifies rows; a foreign key references a primary key in another table.</solution>
+                                      
+        
+        
+        </variant>
+                              
+      
+      
+      </variants>
+                      
+    
+    
+    </subtask>
+                
+    
+    
+    <subtask difficulty="medium" eligibility="both" id="0002" points="9">
+                        
+      
+      
+      <variants group="Constraints">
+                                
+        
+        
+        <variant id="0001">
+                                        
+          
+          
+          <text>What is a NOT NULL constraint?</text>
+                                        
+          
+          
+          <solution>Ensures a column cannot contain NULL values.</solution>
+                                      
+        
+        
+        </variant>
+                                
+        
+        
+        <variant id="0002">
+                                        
+          
+          
+          <text>Explain UNIQUE constraint with example.</text>
+                                        
+          
+          
+          <solution>Ensures all values in a column are unique, e.g., email in Users.</solution>
+                                      
+        
+        
+        </variant>
+                              
+      
+      
+      </variants>
+                      
+    
+    
+    </subtask>
+                
+    
+    
+    <subtask difficulty="hard" eligibility="exam" id="0003" points="12">
+                        
+      
+      
+      <variants group="Functional Dependencies">
+                                
+        
+        
+        <variant id="0001">
+                                        
+          
+          
+          <text>Given a set of functional dependencies, compute a minimal cover.</text>
+                                        
+          
+          
+          <solution>Decompose dependencies, remove extraneous attributes, and minimize left sides.</solution>
+                                      
+        
+        
+        </variant>
+                              
+      
+      
+      </variants>
+                      
+    
+    
+    </subtask>
+              
+  
+  
+  </task>
+        
+  
+  
+  <!-- Task 0003 -->
+        
+  
+  
+  <task id="0003" title="ER Modeling">
+                
+    
+    
+    <subtask difficulty="easy" eligibility="practice" id="0001" points="4">
+                        
+      
+      
+      <variants group="Basic Entities">
+                                
+        
+        
+        <variant id="0001">
+                                        
+          
+          
+          <text>Draw an ER diagram for Students and Courses with a many-to-many relation.</text>
+                                        
+          
+          
+          <solution/>
+                                      
+        
+        
+        </variant>
+                              
+      
+      
+      </variants>
+                      
+    
+    
+    </subtask>
+                
+    
+    
+    <subtask difficulty="medium" eligibility="both" id="0002" points="10">
+                        
+      
+      
+      <variants group="Relationships">
+                                
+        
+        
+        <variant id="0001">
+                                        
+          
+          
+          <text>What is a weak entity? Provide an example.</text>
+                                        
+          
+          
+          <solution>A weak entity cannot be uniquely identified by its attributes alone, e.g., Dependents in insurance.</solution>
+                                      
+        
+        
+        </variant>
+                              
+      
+      
+      </variants>
+                      
+    
+    
+    </subtask>
+                
+    
+    
+    <subtask difficulty="hard" eligibility="both" id="0003" points="6">
+                        
+      
+      
+      <variants group="Cardinalities">
+                                
+        
+        
+        <variant id="0001">
+                                        
+          
+          
+          <text>Explain the difference between 1:1, 1:N, and M:N relationships.</text>
+                                        
+          
+          
+          <solution>1:1 pairs unique rows; 1:N maps one to many; M:N maps many to many via a junction table.</solution>
+                                      
+        
+        
+        </variant>
+                              
+      
+      
+      </variants>
+                      
+    
+    
+    </subtask>
+              
+  
+  
+  </task>
+      
+
+
+</tasks>

@@ -1,4 +1,13 @@
+/Users/simonriedinger/dev/klausurCraft/demo/src/main/java/simon/klausurcraft/controller/SlideOverPane.java
+/Users/simonriedinger/dev/klausurCraft/demo/src/main/java/simon/klausurcraft/model/Eligibility.java
+/Users/simonriedinger/dev/klausurCraft/demo/src/main/java/simon/klausurcraft/controller/PointCombination.java
+/Users/simonriedinger/dev/klausurCraft/demo/src/main/java/simon/klausurcraft/model/SubtaskModel.java
+/Users/simonriedinger/dev/klausurCraft/demo/src/main/java/simon/klausurcraft/pdf/PdfExporter.java
 /Users/simonriedinger/dev/klausurCraft/demo/src/main/java/module-info.java
+/Users/simonriedinger/dev/klausurCraft/demo/src/main/java/simon/klausurcraft/services/XmlService.java
+/Users/simonriedinger/dev/klausurCraft/demo/src/main/java/simon/klausurcraft/model/Difficulty.java
+/Users/simonriedinger/dev/klausurCraft/demo/src/main/java/simon/klausurcraft/ThemeManager.java
+/Users/simonriedinger/dev/klausurCraft/demo/src/main/java/simon/klausurcraft/model/VariantModel.java
 /Users/simonriedinger/dev/klausurCraft/demo/src/main/java/simon/klausurcraft/App.java
-/Users/simonriedinger/dev/klausurCraft/demo/src/main/java/simon/klausurcraft/PrimaryController.java
-/Users/simonriedinger/dev/klausurCraft/demo/src/main/java/simon/klausurcraft/SecondaryController.java
+/Users/simonriedinger/dev/klausurCraft/demo/src/main/java/simon/klausurcraft/controller/HomeController.java
+/Users/simonriedinger/dev/klausurCraft/demo/src/main/java/simon/klausurcraft/model/TaskModel.java

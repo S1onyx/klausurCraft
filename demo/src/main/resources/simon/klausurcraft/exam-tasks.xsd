@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- exam-tasks.xsd (fixed: keys must be declared under xs:element, not inside xs:complexType) -->
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+
+  <!-- ===== BASIC TYPES ===== -->
+  <xsd:simpleType name="NumericId">
+    <xsd:restriction base="xsd:string">
+      <xsd:pattern value="\d+"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+
+  <xsd:simpleType name="Difficulty">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="easy"/>
+      <xsd:enumeration value="medium"/>
+      <xsd:enumeration value="hard"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+
+  <xsd:simpleType name="Eligibility">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="exam"/>
+      <xsd:enumeration value="practice"/>
+      <xsd:enumeration value="both"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+
+  <!-- ===== ROOT ELEMENT ===== -->
+  <xsd:element name="tasks">
+    <xsd:complexType>
+      <xsd:sequence>
+        <!-- task element declared inline so we can attach xsd:key here -->
+        <xsd:element name="task" maxOccurs="unbounded">
+          <xsd:complexType>
+            <xsd:sequence>
+              <!-- subtask element declared inline so we can attach xsd:key here -->
+              <xsd:element name="subtask" maxOccurs="unbounded">
+                <xsd:complexType>
+                  <xsd:sequence>
+                    <xsd:element name="variants">
+                      <xsd:complexType>
+                        <xsd:sequence>
+                          <!-- variant element declared inline -->
+                          <xsd:element name="variant" maxOccurs="unbounded">
+                            <xsd:complexType>
+                              <xsd:sequence>
+                                <xsd:element name="text" type="xsd:string"/>
+                                <xsd:element name="solution" type="xsd:string"/>
+                              </xsd:sequence>
+                              <xsd:attribute name="id" type="NumericId" use="required"/>
+                            </xsd:complexType>
+                          </xsd:element>
+                        </xsd:sequence>
+                        <xsd:attribute name="group" type="xsd:string" use="optional"/>
+                      </xsd:complexType>
+                    </xsd:element>
+                  </xsd:sequence>
+                  <xsd:attribute name="id" type="NumericId" use="required"/>
+                  <xsd:attribute name="points" type="xsd:decimal" use="required"/>
+                  <xsd:attribute name="difficulty" type="Difficulty" use="required"/>
+                  <xsd:attribute name="eligibility" type="Eligibility" use="required"/>
+                </xsd:complexType>
+
+                <!-- Variant IDs must be unique within the same subtask -->
+                <xsd:key name="VariantIdUniqueWithinSubtask">
+                  <xsd:selector xpath="variants/variant"/>
+                  <xsd:field xpath="@id"/>
+                </xsd:key>
+              </xsd:element>
+            </xsd:sequence>
+            <xsd:attribute name="id" type="NumericId" use="required"/>
+            <xsd:attribute name="title" type="xsd:string" use="required"/>
+          </xsd:complexType>
+
+          <!-- Subtask IDs must be unique within the same task -->
+          <xsd:key name="SubtaskIdUniqueWithinTask">
+            <xsd:selector xpath="subtask"/>
+            <xsd:field xpath="@id"/>
+          </xsd:key>
+        </xsd:element>
+      </xsd:sequence>
+    </xsd:complexType>
+
+    <!-- Task IDs must be unique within the document -->
+    <xsd:key name="TaskIdUnique">
+      <xsd:selector xpath="task"/>
+      <xsd:field xpath="@id"/>
+    </xsd:key>
+  </xsd:element>
+
+</xsd:schema>
