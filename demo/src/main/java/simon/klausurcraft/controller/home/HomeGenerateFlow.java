@@ -91,7 +91,7 @@ final class HomeGenerateFlow {
         Button next = new Button("Next");
         next.getStyleClass().add("primary");
         next.setDefaultButton(true);
-        next.setOnAction(e -> openStep2(root)); // öffnet modales Fenster
+        next.setOnAction(e -> openStep2(root)); // opens modal window
 
         actions.getChildren().addAll(filler, cancel, next);
         sheet.setBottom(actions);
@@ -104,15 +104,15 @@ final class HomeGenerateFlow {
         tfTitle.requestFocus();
     }
 
-    /** Step 2 jetzt als separates MODALES Fenster (keine horizontale Scrollbar). */
+    /** Step 2 now as a separate MODAL window (no horizontal scrollbar). */
     static void openStep2(HomeController root) {
-        // Slide-over schließen, damit nur das modale Fenster sichtbar ist
+        // Close slide-over so only the modal window is visible
         if (root.getSlideOver().isShown()) {
             root.getSlideOver().hide();
             root.rootStack.setMouseTransparent(true);
         }
 
-        // ----- Inhalt (identisch zu vorher, aber in eigenem Stage) -----
+        // ----- Content (identical to before, but in its own Stage) -----
         BorderPane pane = new BorderPane();
         pane.setPadding(new Insets(0));
 
@@ -131,7 +131,7 @@ final class HomeGenerateFlow {
         list.getItems().forEach(ts -> ts.recomputeAchievable(root.scope.get()));
 
         Label total = new Label();
-        // Robust: Binding beobachtet alle Items + deren Properties
+        // Robust: Binding observes all items + their properties
         total.textProperty().bind(TaskSelection.totalPointsBinding(list.getItems()));
 
         CheckBox cbSample = new CheckBox("Sample Solution");
@@ -141,14 +141,14 @@ final class HomeGenerateFlow {
 
         ScrollPane sp = new ScrollPane(content);
         sp.setFitToWidth(true);
-        sp.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER); // keine horizontale Scrollbar
+        sp.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER); // no horizontal scrollbar
         pane.setCenter(sp);
 
-        // Footer: links Theme-Toggle, rechts Sample+Total+Generate
+        // Footer: left theme toggle, right sample+total+generate
         HBox actions = new HBox(8);
         actions.getStyleClass().add("sheet-footer");
 
-        // Theme Toggle (links)
+        // Theme Toggle (left)
         Button themeToggle = new Button("◐");
         themeToggle.setPickOnBounds(true);
         themeToggle.setFocusTraversable(false);
@@ -168,30 +168,30 @@ final class HomeGenerateFlow {
         actions.getChildren().addAll(themeToggle, back, spacer, right, btnGenerateExam);
         pane.setBottom(actions);
 
-        // ----- Modales Fenster -----
+        // ----- Modal window -----
         Stage stage = new Stage();
         stage.initOwner(root.getWindow());
         stage.initModality(Modality.APPLICATION_MODAL);
         stage.setTitle("Generate — Select tasks");
-        stage.setMinWidth(1100);   // breit genug -> keine Zeilenumbrüche nötig
+        stage.setMinWidth(1100);   // wide enough -> no line breaks needed
         stage.setMinHeight(700);
         stage.setResizable(true);
 
         Scene scene = new Scene(pane, 1100, 750);
-        // Styles der App übernehmen (Dark/Light konsistent)
+        // Adopt app styles (dark/light consistent)
         try {
             scene.getStylesheets().setAll(App.getScene().getStylesheets());
         } catch (Exception ignored) { /* best effort */ }
         stage.setScene(scene);
 
-        // Theme Toggle & Shortcut (Ctrl+D) im Dialog
+        // Theme Toggle & Shortcut (Ctrl+D) in dialog
         themeToggle.setOnAction(e -> ThemeManager.toggle(scene));
         scene.getAccelerators().put(
             new KeyCodeCombination(KeyCode.D, KeyCombination.CONTROL_DOWN),
             () -> ThemeManager.toggle(scene)
         );
 
-        // Aktionen
+        // Actions
         back.setOnAction(e -> {
             stage.close();
             openStep1(root);
@@ -242,7 +242,7 @@ final class HomeGenerateFlow {
 
             exporter.export(root.getWindow(), root.examTitle.get(), root.examDate.get(), assemblies, root.withSampleSolution.get());
 
-            // Banner & Cleanup (SlideOver ist hier eh zu)
+            // Banner & Cleanup (SlideOver is closed here anyway)
             HomeNotifications.showInfo("PDF(s) generated.");
         } catch (Exception ex) {
             HomeNotifications.showError("Generation failed: " + ex.getMessage());

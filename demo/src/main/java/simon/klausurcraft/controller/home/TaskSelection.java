@@ -48,22 +48,22 @@ public class TaskSelection {
     }
 
     /**
-     * Binding, das die Summe dynamisch neu berechnet,
-     * sobald Items hinzugefügt/entfernt werden ODER sich enabled/points ändern.
+     * Binding that dynamically recalculates the sum,
+     * whenever items are added/removed OR enabled/points change.
      */
     public static StringBinding totalPointsBinding(ObservableList<TaskSelection> items) {
         class TotalBinding extends StringBinding {
             private final List<Observable> observables = new ArrayList<>();
 
             private void rebind() {
-                // alte Bindungen lösen
+                // unbind old bindings
                 super.unbind(observables.toArray(Observable[]::new));
                 observables.clear();
 
-                // an Liste selbst binden
+                // bind to the list itself
                 observables.add(items);
 
-                // und an alle relevanten Properties der Items
+                // and to all relevant properties of the items
                 for (TaskSelection ts : items) {
                     observables.add(ts.enabledProperty());
                     observables.add(ts.chosenPointsProperty());
@@ -73,7 +73,7 @@ public class TaskSelection {
             }
 
             {
-                // Rebind wenn sich die Liste strukturell ändert
+                // Rebind when the list structurally changes
                 items.addListener((ListChangeListener<TaskSelection>) c -> rebind());
                 // Initial
                 rebind();

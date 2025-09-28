@@ -15,6 +15,7 @@ import java.io.FileOutputStream;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.prefs.Preferences;
 
@@ -104,8 +105,12 @@ public class PdfExporter {
             for (SubtaskModel st : ta.chosenSubtasks) {
                 char letter = (char) ('a' + subIndex.getAndIncrement());
 
-                // Select exactly one variant: pick first non-empty text, else first
-                VariantModel variant = st.getVariants().stream().findFirst().orElse(null);
+                // NEU: Zufällige Variante wählen
+                List<VariantModel> variants = st.getVariants();
+                VariantModel variant = variants.isEmpty()
+                        ? null
+                        : variants.get(ThreadLocalRandom.current().nextInt(variants.size()));
+
                 String text = (variant != null ? variant.getText() : "").trim();
                 if (text.isEmpty()) text = "(no text)";
                 String sol = (variant != null ? variant.getSolution() : "").trim();
