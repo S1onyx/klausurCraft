@@ -16,6 +16,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.prefs.Preferences;
 
 /**
  * Generates two PDFs: exam and optional sample solution.
@@ -25,6 +26,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  * - Solutions inline in the solution PDF; "(no solution provided)" if missing
  */
 public class PdfExporter {
+
+    private static final String PREFS_NODE = "simon.klausurcraft";
+    private static final String PREF_LAST_EXPORT_DIR = "lastExportDir";
 
     public static class TaskAssembly {
         public final int number; // 1..N
@@ -41,10 +45,24 @@ public class PdfExporter {
     public void export(Window owner, String title, LocalDate date,
                        List<TaskAssembly> tasks, boolean withSolution) throws Exception {
 
+        Preferences p = Preferences.userRoot().node(PREFS_NODE);
+
         DirectoryChooser chooser = new DirectoryChooser();
         chooser.setTitle("Choose export directory");
+
+        String lastDir = p.get(PREF_LAST_EXPORT_DIR, null);
+        if (lastDir != null) {
+            File dir = new File(lastDir);
+            if (dir.exists() && dir.isDirectory()) {
+                chooser.setInitialDirectory(dir);
+            }
+        }
+
         File dir = chooser.showDialog(owner);
         if (dir == null) return;
+
+        // remember chosen directory
+        p.put(PREF_LAST_EXPORT_DIR, dir.getAbsolutePath());
 
         String ts = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss").format(java.time.LocalDateTime.now());
         File examFile = new File(dir, "exam_" + ts + ".pdf");
@@ -52,7 +70,7 @@ public class PdfExporter {
 
         if (withSolution) {
             File solFile = new File(dir, "solution_" + ts + ".pdf");
-            writeExam(solFile, title + " – Solutions", date, tasks, true);
+            writeExam(solFile, title + " — Solutions", date, tasks, true);
         }
     }
 
@@ -66,7 +84,6 @@ public class PdfExporter {
         Font h1 = new Font(Font.HELVETICA, 16, Font.BOLD);
         Font normal = new Font(Font.HELVETICA, 11, Font.NORMAL);
         Font bold = new Font(Font.HELVETICA, 11, Font.BOLD);
-        Font muted = new Font(Font.HELVETICA, 10, Font.ITALIC);
 
         Paragraph pTitle = new Paragraph(title, h1);
         pTitle.setSpacingAfter(8);
@@ -122,9 +139,6 @@ public class PdfExporter {
                 }
             }
         }
-
-        // Footer: simple page numbers (OpenPDF has HeaderFooter, but we keep it minimal)
-        // (Skipping custom footer to keep PDF simple; many readers show page count)
 
         doc.close();
     }

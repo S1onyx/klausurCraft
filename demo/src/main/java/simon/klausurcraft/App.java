@@ -11,6 +11,7 @@ import javafx.stage.Stage;
 import simon.klausurcraft.utils.ThemeManager;
 
 import java.io.IOException;
+import java.util.Locale;
 
 /**
  * JavaFX App entry
@@ -51,6 +52,9 @@ public class App extends Application {
     }
 
     public static void main(String[] args) {
+        // Force English locale globally
+        Locale.setDefault(Locale.ENGLISH);
+
         launch();
     }
 }

@@ -23,17 +23,30 @@
             </center>
 
             <bottom>
+                <!-- Status bar -->
                 <HBox spacing="12" styleClass="status-bar">
-                    <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
+                    <!-- Right padding removed so the rightmost button is flush to the edge -->
+                    <padding><Insets top="10" right="0" bottom="10" left="10"/></padding>
                     <children>
+                        <!-- Light/Dark toggle: icon-only, subtle, far left -->
+                        <Button fx:id="themeToggle" text="◐" pickOnBounds="true">
+                            <tooltip>
+                                <Tooltip text="Toggle theme (Ctrl+D)"/>
+                            </tooltip>
+                        </Button>
+
                         <Label fx:id="fileLabel" text="No file loaded" />
                         <Label text="•"/>
                         <Label fx:id="countsLabel" text="0 / 0" styleClass="muted"/>
+
                         <Region HBox.hgrow="ALWAYS"/>
-                        <Button fx:id="btnGenerateBottom" text="Generate" styleClass="primary"/>
-                        <ToggleButton fx:id="themeToggle" text="Light/Dark"/>
-                        <Button text="Switch file…" onAction="#onSwitchFile" visible="false"/>
-                        <!-- Button versteckt, Laden ist im Sidebar -->
+
+                        <!-- Right side: +Task left of Generate Exam, Generate Exam is flush right -->
+                        <Button fx:id="btnAddTask" text="+ Task"/>
+                        <Button fx:id="btnGenerateBottom" text="Generate Exam" styleClass="primary"/>
+
+                        <!-- Hidden switch-file control should NOT reserve space -->
+                        <Button text="Switch file…" onAction="#onSwitchFile" visible="false" managed="false"/>
                     </children>
                 </HBox>
             </bottom>

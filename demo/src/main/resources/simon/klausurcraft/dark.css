@@ -3,6 +3,7 @@
 .root {
     -color-bg: #0b0d10;
     -color-surface: #14181d;
+    -color-surface-2: #1a2027;
     -color-border: #232a32;
     -color-text: #e9eef5;
     -color-muted: #9aa7b5;
@@ -240,3 +241,41 @@
     -fx-border-color: -color-border;
 }
 .menu-item:focused { -fx-background-color: rgba(96,165,250,0.20); }
+
+/* ===== Dialogs (Alerts, TextInputDialog) – Dark Mode Fix ===== */
+.dialog-pane {
+    -fx-background-color: -color-surface;
+    -fx-border-color: -color-border;
+    -fx-border-width: 1;
+}
+.dialog-pane > .content.label {
+    -fx-text-fill: -color-text;
+}
+.dialog-pane > .header-panel {
+    -fx-background-color: -color-surface-2;
+    -fx-border-color: -color-border;
+    -fx-border-width: 0 0 1 0;
+}
+.dialog-pane > .header-panel > .label {
+    -fx-text-fill: -color-text;
+}
+.dialog-pane .button-bar .button {
+    -fx-background-color: #1b2128;
+    -fx-text-fill: -color-text;
+    -fx-border-color: -color-border;
+}
+.dialog-pane .button-bar .button:hover { -fx-background-color: #232a32; }
+.dialog-pane .button-bar .button:default {
+    -fx-background-color: -color-accent;
+    -fx-text-fill: -color-accent-contrast;
+    -fx-border-color: transparent;
+}
+.dialog-pane .button-bar .button:default:hover { -fx-background-color: #3b82f6; }
+
+/* ===== Slide-over footer (sticky bar) ===== */
+.sheet-footer {
+    -fx-background-color: -color-surface-2;
+    -fx-border-color: -color-border;
+    -fx-border-width: 1 0 0 0;
+    -fx-padding: 8 12;
+}

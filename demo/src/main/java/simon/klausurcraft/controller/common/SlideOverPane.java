@@ -42,6 +42,7 @@ public class SlideOverPane {
 
     public StackPane getContainer() { return container; }
 
+    /** Replace the full content of the sheet. Use a layout with bottom bar for sticky footer. */
     public void setContent(Node content) {
         sheet.getChildren().setAll(content);
     }
@@ -65,6 +66,8 @@ public class SlideOverPane {
         sheet.setTranslateX(520);
         backdrop.setVisible(false);
     }
+
+    public boolean isShown() { return shown; }
 
     private void animateTo(double x) {
         TranslateTransition tt = new TranslateTransition(Duration.millis(220), sheet);

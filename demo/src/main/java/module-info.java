@@ -14,7 +14,7 @@ module simon.klausurcraft {
     opens simon.klausurcraft.controller.home to javafx.fxml;
     opens simon.klausurcraft.controller.common to javafx.fxml;
 
-    // expoert only vor public APIs
+    // export only for public APIs
     exports simon.klausurcraft;
     exports simon.klausurcraft.controller.home;
     exports simon.klausurcraft.controller.common;

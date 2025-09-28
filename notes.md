@@ -239,6 +239,7 @@ Dann soll oben rechts ein "+"-Button integriert werden Mit diesem Button soll ma
 Neben jeder Task im Startscreen ist ein kleiner Button mit einem Mülleimer, so kann man direkt mittels einem klick und einer anschliesenden bestätigung die gesamte Task inklusiver aller Subtasks löschen. Dann gibt es noch einen Stift, hier kann man den Name der Task bearbeiten und ein Plus dann wird man auf ein Sheet geleitet in dem man eine neue Subtask zur Aufgabe anlegen kann. Man gibt zuerst die Punktzahl, schwierigkeit und sichtbarkeit an. Dann kann man den group name angeben und den Aufgabentext, sowie optional Lösung hinzufügen. Mittels eines weiteren Plus kann dann eine weitere Variante erstellt werden. Wenn man zufireden ist klickt man oben rechts auf den Haken zum bestätigen. 
 Neben jeder Subtask gibt es einen mülleimer zum löschen der subtask inkklusive aller varianten und einen stift zum bearbeiten des group namens und der varianten, so kann bspw. der aufgabentext oder die lösung bearbeitet werden, oder auch einzelne varianten hinzugefügt oder gelöscht werden.
 
-
-
-$$
+Jetzt soll die Option des des hinzufügens und löschens implementiert werden. Man soll eine Task oder subtask durch rechtsklick und dann der option delete doer mit dem klick auf die task und dann der delete taste im linken Übersichtsmenü löschen können. auf der hauptseite soll neben jeder Task ein kleiner Mülleimer und ein Stift sein, mit dem man die Task bearbeiten oder lösdhen kann. Wenn eine Task glöscht wird, werden automatisch alle subtasks gelöscht. 
+Neben jeder Task ist auch noch ein Plus, mit dem eine neue Subtask angelegt werden kann.
+Eine neue Task kann man mit dem "+" button unten in der statusleiste neu erstellen.
+In den Subtaskdetails kann man dann entwerder die ganze subtasks löschen inklusiver aller varianten. Oder eine neue variatne hinzufügen. oder auch die variante löscchen.

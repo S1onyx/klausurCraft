@@ -19,6 +19,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static javax.xml.transform.OutputKeys.ENCODING;
 import static javax.xml.transform.OutputKeys.INDENT;
@@ -164,6 +165,160 @@ public class XmlService {
         eSol.setTextContent(v.getSolution() == null ? "" : v.getSolution());
 
         save();
+    }
+
+    // ====== NEW: create/delete APIs for tasks, subtasks, variants ======
+
+    /** Create a new task with a 4-digit id and empty body. Returns the created TaskModel. */
+    public Optional<TaskModel> addTask(String title) {
+        if (doc == null) return Optional.empty();
+        Element root = doc.getDocumentElement(); // <tasks>
+        String nextId = nextId4(root, "task");
+        Element eTask = doc.createElement("task");
+        eTask.setAttribute("id", nextId);
+        eTask.setAttribute("title", title == null ? "" : title);
+        root.appendChild(eTask);
+
+        TaskModel tm = new TaskModel(eTask, nextId, title);
+        save();
+        return Optional.of(tm);
+    }
+
+    /** Delete a task including all its subtasks. */
+    public boolean deleteTask(TaskModel t) {
+        try {
+            Element eTask = t.getDom();
+            eTask.getParentNode().removeChild(eTask);
+            save();
+            return true;
+        } catch (Exception ex) {
+            System.err.println("[XML DELETE TASK] " + ex.getMessage());
+            return false;
+        }
+    }
+
+    /** Create a subtask under given task with default meta and one empty variant. */
+    public Optional<SubtaskModel> addSubtask(TaskModel task) {
+        try {
+            Element eTask = task.getDom();
+            Document d = eTask.getOwnerDocument();
+
+            String sid = nextId4(eTask, "subtask");
+            Element eSub = d.createElement("subtask");
+            eSub.setAttribute("id", sid);
+            eSub.setAttribute("points", "1");
+            eSub.setAttribute("difficulty", Difficulty.EASY.toString());
+            eSub.setAttribute("eligibility", Eligibility.BOTH.toString());
+
+            Element eVars = d.createElement("variants");
+            eSub.appendChild(eVars);
+
+            String vid = "0001";
+            Element eVar = d.createElement("variant");
+            eVar.setAttribute("id", vid);
+            Element eText = d.createElement("text");
+            eText.setTextContent("");
+            Element eSol = d.createElement("solution");
+            eSol.setTextContent("");
+            eVar.appendChild(eText);
+            eVar.appendChild(eSol);
+            eVars.appendChild(eVar);
+
+            eTask.appendChild(eSub);
+
+            SubtaskModel st = new SubtaskModel(eSub, task, sid, new BigDecimal("1"), Difficulty.EASY, Eligibility.BOTH);
+            VariantModel vm = new VariantModel(eVar, vid, "", "");
+            st.getVariants().add(vm);
+            task.getSubtasks().add(st);
+
+            save();
+            return Optional.of(st);
+        } catch (Exception ex) {
+            System.err.println("[XML ADD SUBTASK] " + ex.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    /** Delete a subtask node. */
+    public boolean deleteSubtask(TaskModel task, SubtaskModel st) {
+        try {
+            Element eSub = st.getDom();
+            eSub.getParentNode().removeChild(eSub);
+            save();
+            return true;
+        } catch (Exception ex) {
+            System.err.println("[XML DELETE SUBTASK] " + ex.getMessage());
+            return false;
+        }
+    }
+
+    /** Create a new variant under given subtask. */
+    public Optional<VariantModel> addVariant(SubtaskModel sub) {
+        try {
+            Element eSub = sub.getDom();
+            Document d = eSub.getOwnerDocument();
+
+            Element eVars = ensureVariants(eSub);
+
+            String vid = nextId4(eVars, "variant");
+            Element eVar = d.createElement("variant");
+            eVar.setAttribute("id", vid);
+            Element eText = d.createElement("text");
+            eText.setTextContent("");
+            Element eSol = d.createElement("solution");
+            eSol.setTextContent("");
+            eVar.appendChild(eText);
+            eVar.appendChild(eSol);
+
+            eVars.appendChild(eVar);
+
+            VariantModel vm = new VariantModel(eVar, vid, "", "");
+            sub.getVariants().add(vm);
+
+            save();
+            return Optional.of(vm);
+        } catch (Exception ex) {
+            System.err.println("[XML ADD VARIANT] " + ex.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    /** Delete a variant node. */
+    public boolean deleteVariant(SubtaskModel sub, VariantModel v) {
+        try {
+            Element eVar = v.getDom();
+            eVar.getParentNode().removeChild(eVar);
+            save();
+            return true;
+        } catch (Exception ex) {
+            System.err.println("[XML DELETE VARIANT] " + ex.getMessage());
+            return false;
+        }
+    }
+
+    private Element ensureVariants(Element eSub) {
+        NodeList vars = eSub.getElementsByTagName("variants");
+        if (vars.getLength() > 0) return (Element) vars.item(0);
+        Element eVars = eSub.getOwnerDocument().createElement("variants");
+        eSub.appendChild(eVars);
+        return eVars;
+    }
+
+    /** Compute next 4-digit id for direct children with given tag (e.g., "task", "subtask", "variant"). */
+    private String nextId4(Element parent, String tag) {
+        int max = 0;
+        NodeList list = parent.getElementsByTagName(tag);
+        for (int i = 0; i < list.getLength(); i++) {
+            Element e = (Element) list.item(i);
+            if (!e.getParentNode().isSameNode(parent)) continue; // only direct children
+            String s = e.getAttribute("id");
+            try {
+                int n = Integer.parseInt(s);
+                if (n > max) max = n;
+            } catch (NumberFormatException ignored) {}
+        }
+        int next = max + 1;
+        return String.format("%04d", next);
     }
 
     private void save() {

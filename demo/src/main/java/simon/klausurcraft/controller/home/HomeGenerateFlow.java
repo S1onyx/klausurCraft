@@ -7,7 +7,6 @@ import simon.klausurcraft.model.GenerateScope;
 import simon.klausurcraft.model.SubtaskModel;
 import simon.klausurcraft.model.TaskModel;
 import simon.klausurcraft.pdf.PdfExporter;
-import simon.klausurcraft.services.PointCombination;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,8 +17,11 @@ final class HomeGenerateFlow {
     private HomeGenerateFlow(){}
 
     static void openStep1(HomeController root) {
-        VBox step1 = new VBox(12);
-        step1.setPadding(new Insets(16));
+        BorderPane sheet = new BorderPane();
+        sheet.setPadding(new Insets(0));
+
+        VBox content = new VBox(12);
+        content.setPadding(new Insets(16));
 
         Label header = new Label("Generate");
         header.getStyleClass().add("header");
@@ -47,34 +49,54 @@ final class HomeGenerateFlow {
         dp.valueProperty().addListener((o, ov, nv) -> root.examDate.set(nv));
 
         CheckBox cbSample = new CheckBox("Sample Solution");
-        cbSample.selectedProperty().bindBidirectional(root.withSampleSolution);
+        cbSample.selectedProperty().bindBidirectionally(root.withSampleSolution);
 
-        Button next = new Button("Next");
-        next.getStyleClass().add("primary");
-        next.setOnAction(e -> openStep2(root));
+        content.getChildren().addAll(header,
+                new Label("Scope"),
+                new HBox(8, rbExam, rbPractice, rbBoth),
+                new Label("Title"), tfTitle,
+                new Label("Date"), dp,
+                cbSample);
+
+        ScrollPane sp = new ScrollPane(content);
+        sp.setFitToWidth(true);
+        sp.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        sheet.setCenter(sp);
+
+        HBox actions = new HBox(8);
+        actions.getStyleClass().add("sheet-footer");
+        Region filler = new Region(); HBox.setHgrow(filler, Priority.ALWAYS);
 
         Button cancel = new Button("Cancel");
+        cancel.setCancelButton(true);
         cancel.setOnAction(e -> {
             root.getSlideOver().hide();
             root.rootStack.setMouseTransparent(true);
         });
 
-        HBox actions = new HBox(8, cancel, next);
+        Button next = new Button("Next");
+        next.getStyleClass().add("primary");
+        next.setDefaultButton(true);
+        next.setOnAction(e -> openStep2(root));
 
-        step1.getChildren().addAll(header, new Label("Scope"),
-                new HBox(8, rbExam, rbPractice, rbBoth),
-                new Label("Title"), tfTitle,
-                new Label("Date"), dp,
-                cbSample, actions);
+        actions.getChildren().addAll(filler, cancel, next);
+        sheet.setBottom(actions);
 
-        root.getSlideOver().setContent(step1);
+        root.getSlideOver().setContent(sheet);
         root.getSlideOver().show();
         root.rootStack.setMouseTransparent(false);
+
+        // Autofocus first field
+        tfTitle.requestFocus();
     }
 
     static void openStep2(HomeController root) {
-        VBox step2 = new VBox(12);
-        step2.setPadding(new Insets(16));
+        BorderPane sheet = new BorderPane();
+        sheet.setPadding(new Insets(0));
+
+        VBox content = new VBox(12);
+        content.setPadding(new Insets(16));
+
         Label header = new Label("Select topics");
         header.getStyleClass().add("header");
 
@@ -82,27 +104,47 @@ final class HomeGenerateFlow {
         list.setCellFactory(v -> new TaskSelectionCell(root));
         list.setItems(TaskSelection.ensureFor(root.getTasks()));
 
+        // initial achievable based on current scope
+        list.getItems().forEach(ts -> ts.recomputeAchievable(root.scope.get()));
+
         Label total = new Label();
         total.textProperty().bind(TaskSelection.totalPointsBinding(list.getItems()));
 
         CheckBox cbSample = new CheckBox("Sample Solution");
-        cbSample.selectedProperty().bindBidirectional(root.withSampleSolution);
+        cbSample.selectedProperty().bindBidirectionally(root.withSampleSolution);
+
+        content.getChildren().addAll(header, list);
+
+        ScrollPane sp = new ScrollPane(content);
+        sp.setFitToWidth(true);
+        sp.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        sheet.setCenter(sp);
+
+        HBox actions = new HBox(8);
+        actions.getStyleClass().add("sheet-footer");
+        Region spacer = new Region(); HBox.setHgrow(spacer, Priority.ALWAYS);
 
         Button back = new Button("Back");
         back.setOnAction(e -> openStep1(root));
 
+        HBox right = new HBox(8, cbSample, total);
         Button btnGenerateExam = new Button("Generate Exam");
         btnGenerateExam.getStyleClass().add("primary");
+        btnGenerateExam.setDefaultButton(true);
         btnGenerateExam.setOnAction(e -> generateExamNow(root, list.getItems()));
 
-        HBox actions = new HBox(8, back, new Region(), cbSample, total, btnGenerateExam);
-        HBox.setHgrow(actions.getChildren().get(1), Priority.ALWAYS);
+        actions.getChildren().addAll(back, spacer, right, btnGenerateExam);
+        sheet.setBottom(actions);
 
-        step2.getChildren().addAll(header, list, actions);
-
-        root.getSlideOver().setContent(step2);
+        root.getSlideOver().setContent(sheet);
         root.getSlideOver().show();
         root.rootStack.setMouseTransparent(false);
+
+        // Auto-recompute achievable sums when scope changes
+        root.scope.addListener((o, ov, nv) -> list.getItems().forEach(ts -> {
+            ts.recomputeAchievable(nv);
+            // If selection becomes invalid, keep first valid or clear handled in recompute
+        }));
     }
 
     static void generateExamNow(HomeController root, List<TaskSelection> selections) {
@@ -120,7 +162,7 @@ final class HomeGenerateFlow {
                         .filter(st -> st.isEligibleFor(root.scope.get()))
                         .collect(Collectors.toList());
 
-                List<SubtaskModel> chosen = PointCombination.pickSubtasksWithDistribution(
+                List<SubtaskModel> chosen = simon.klausurcraft.services.PointCombination.pickSubtasksWithDistribution(
                         eligible, chosenPts);
 
                 if (chosen == null) {
