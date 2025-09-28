@@ -1,14 +1,16 @@
 package simon.klausurcraft.controller.home;
 
-import javafx.beans.binding.Bindings;
+import javafx.beans.Observable;
+import javafx.beans.binding.StringBinding;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.collections.ObservableMap;
-import simon.klausurcraft.model.TaskModel;
 import simon.klausurcraft.model.GenerateScope;
+import simon.klausurcraft.model.TaskModel;
 import simon.klausurcraft.services.PointCombination;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class TaskSelection {
@@ -45,12 +47,48 @@ public class TaskSelection {
         return list;
     }
 
-    public static javafx.beans.binding.StringBinding totalPointsBinding(ObservableList<TaskSelection> items) {
-        return Bindings.createStringBinding(() ->
-                        "Total points: " + items.stream()
-                                .filter(TaskSelection::isEnabled)
-                                .map(TaskSelection::getChosenPoints)
-                                .mapToInt(Integer::intValue).sum(),
-                items);
+    /**
+     * Binding, das die Summe dynamisch neu berechnet,
+     * sobald Items hinzugefügt/entfernt werden ODER sich enabled/points ändern.
+     */
+    public static StringBinding totalPointsBinding(ObservableList<TaskSelection> items) {
+        class TotalBinding extends StringBinding {
+            private final List<Observable> observables = new ArrayList<>();
+
+            private void rebind() {
+                // alte Bindungen lösen
+                super.unbind(observables.toArray(Observable[]::new));
+                observables.clear();
+
+                // an Liste selbst binden
+                observables.add(items);
+
+                // und an alle relevanten Properties der Items
+                for (TaskSelection ts : items) {
+                    observables.add(ts.enabledProperty());
+                    observables.add(ts.chosenPointsProperty());
+                }
+                super.bind(observables.toArray(Observable[]::new));
+                invalidate();
+            }
+
+            {
+                // Rebind wenn sich die Liste strukturell ändert
+                items.addListener((ListChangeListener<TaskSelection>) c -> rebind());
+                // Initial
+                rebind();
+            }
+
+            @Override
+            protected String computeValue() {
+                int sum = items.stream()
+                        .filter(TaskSelection::isEnabled)
+                        .map(TaskSelection::getChosenPoints)
+                        .mapToInt(Integer::intValue)
+                        .sum();
+                return "Total points: " + sum;
+            }
+        }
+        return new TotalBinding();
     }
 }

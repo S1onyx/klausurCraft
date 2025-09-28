@@ -1,9 +1,10 @@
 package simon.klausurcraft.controller.home;
 
+import javafx.geometry.Pos;
+import javafx.scene.control.*;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
-import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -35,9 +36,26 @@ public class TaskSelectionCell extends ListCell<TaskSelection> {
         HBox.setHgrow(title, Priority.ALWAYS);
 
         // Keep the points combo reasonably small to avoid horizontal overflow.
-        cbPoints.setPrefWidth(70);
-        cbPoints.setMaxWidth(100);
-        cbPoints.setMinWidth(60);
+        cbPoints.setPrefWidth(80);
+        cbPoints.setMaxWidth(110);
+        cbPoints.setMinWidth(68);
+        cbPoints.setVisibleRowCount(10);
+
+        // Ensure value rendering is readable in dark & light themes
+        cbPoints.setButtonCell(new ListCell<>() {
+            @Override protected void updateItem(Integer item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? "" : String.valueOf(item));
+                setAlignment(Pos.CENTER_LEFT);
+            }
+        });
+        cbPoints.setCellFactory(listView -> new ListCell<>() {
+            @Override protected void updateItem(Integer item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? "" : String.valueOf(item));
+                setAlignment(Pos.CENTER_LEFT);
+            }
+        });
 
         btnUp.getStyleClass().add("chip");
         btnDown.getStyleClass().add("chip");

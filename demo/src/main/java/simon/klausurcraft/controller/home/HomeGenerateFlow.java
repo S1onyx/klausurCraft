@@ -1,12 +1,20 @@
 package simon.klausurcraft.controller.home;
 
 import javafx.geometry.Insets;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.*;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import simon.klausurcraft.App;
 import simon.klausurcraft.model.GenerateScope;
 import simon.klausurcraft.model.SubtaskModel;
 import simon.klausurcraft.model.TaskModel;
 import simon.klausurcraft.pdf.PdfExporter;
+import simon.klausurcraft.utils.ThemeManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -83,7 +91,7 @@ final class HomeGenerateFlow {
         Button next = new Button("Next");
         next.getStyleClass().add("primary");
         next.setDefaultButton(true);
-        next.setOnAction(e -> openStep2(root));
+        next.setOnAction(e -> openStep2(root)); // öffnet modales Fenster
 
         actions.getChildren().addAll(filler, cancel, next);
         sheet.setBottom(actions);
@@ -96,9 +104,17 @@ final class HomeGenerateFlow {
         tfTitle.requestFocus();
     }
 
+    /** Step 2 jetzt als separates MODALES Fenster (keine horizontale Scrollbar). */
     static void openStep2(HomeController root) {
-        BorderPane sheet = new BorderPane();
-        sheet.setPadding(new Insets(0));
+        // Slide-over schließen, damit nur das modale Fenster sichtbar ist
+        if (root.getSlideOver().isShown()) {
+            root.getSlideOver().hide();
+            root.rootStack.setMouseTransparent(true);
+        }
+
+        // ----- Inhalt (identisch zu vorher, aber in eigenem Stage) -----
+        BorderPane pane = new BorderPane();
+        pane.setPadding(new Insets(0));
 
         VBox content = new VBox(12);
         content.setPadding(new Insets(16));
@@ -109,49 +125,87 @@ final class HomeGenerateFlow {
         ListView<TaskSelection> list = new ListView<>();
         list.setCellFactory(v -> new TaskSelectionCell(root));
         list.setItems(TaskSelection.ensureFor(root.getTasks()));
+        list.setFocusTraversable(false);
 
         // initial achievable based on current scope
         list.getItems().forEach(ts -> ts.recomputeAchievable(root.scope.get()));
 
         Label total = new Label();
+        // Robust: Binding beobachtet alle Items + deren Properties
         total.textProperty().bind(TaskSelection.totalPointsBinding(list.getItems()));
 
         CheckBox cbSample = new CheckBox("Sample Solution");
-        // FIX: JavaFX API uses bindBidirectional(Property<T>), not "bindBidirectionally"
         cbSample.selectedProperty().bindBidirectional(root.withSampleSolution);
 
         content.getChildren().addAll(header, list);
 
         ScrollPane sp = new ScrollPane(content);
         sp.setFitToWidth(true);
-        sp.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        sheet.setCenter(sp);
+        sp.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER); // keine horizontale Scrollbar
+        pane.setCenter(sp);
 
+        // Footer: links Theme-Toggle, rechts Sample+Total+Generate
         HBox actions = new HBox(8);
         actions.getStyleClass().add("sheet-footer");
+
+        // Theme Toggle (links)
+        Button themeToggle = new Button("◐");
+        themeToggle.setPickOnBounds(true);
+        themeToggle.setFocusTraversable(false);
+        Tooltip.install(themeToggle, new Tooltip("Toggle theme (Ctrl+D)"));
+
         Region spacer = new Region(); HBox.setHgrow(spacer, Priority.ALWAYS);
 
         Button back = new Button("Back");
-        back.setOnAction(e -> openStep1(root));
 
-        HBox right = new HBox(12, cbSample, total);
+        HBox right = new HBox(12);
+        right.getChildren().addAll(new Label(""), cbSample, total);
+
         Button btnGenerateExam = new Button("Generate Exam");
         btnGenerateExam.getStyleClass().add("primary");
         btnGenerateExam.setDefaultButton(true);
-        btnGenerateExam.setOnAction(e -> generateExamNow(root, list.getItems()));
 
-        actions.getChildren().addAll(back, spacer, right, btnGenerateExam);
-        sheet.setBottom(actions);
+        actions.getChildren().addAll(themeToggle, back, spacer, right, btnGenerateExam);
+        pane.setBottom(actions);
 
-        root.getSlideOver().setContent(sheet);
-        root.getSlideOver().show();
-        root.rootStack.setMouseTransparent(false);
+        // ----- Modales Fenster -----
+        Stage stage = new Stage();
+        stage.initOwner(root.getWindow());
+        stage.initModality(Modality.APPLICATION_MODAL);
+        stage.setTitle("Generate — Select tasks");
+        stage.setMinWidth(1100);   // breit genug -> keine Zeilenumbrüche nötig
+        stage.setMinHeight(700);
+        stage.setResizable(true);
+
+        Scene scene = new Scene(pane, 1100, 750);
+        // Styles der App übernehmen (Dark/Light konsistent)
+        try {
+            scene.getStylesheets().setAll(App.getScene().getStylesheets());
+        } catch (Exception ignored) { /* best effort */ }
+        stage.setScene(scene);
+
+        // Theme Toggle & Shortcut (Ctrl+D) im Dialog
+        themeToggle.setOnAction(e -> ThemeManager.toggle(scene));
+        scene.getAccelerators().put(
+            new KeyCodeCombination(KeyCode.D, KeyCombination.CONTROL_DOWN),
+            () -> ThemeManager.toggle(scene)
+        );
+
+        // Aktionen
+        back.setOnAction(e -> {
+            stage.close();
+            openStep1(root);
+        });
+
+        btnGenerateExam.setOnAction(e -> {
+            generateExamNow(root, list.getItems());
+            stage.close();
+        });
 
         // Auto-recompute achievable sums when scope changes
-        root.scope.addListener((o, ov, nv) -> list.getItems().forEach(ts -> {
-            ts.recomputeAchievable(nv);
-            // If selection becomes invalid, keep first valid or clear handled in recompute
-        }));
+        root.scope.addListener((o, ov, nv) -> list.getItems().forEach(ts -> ts.recomputeAchievable(nv)));
+
+        stage.showAndWait();
     }
 
     static void generateExamNow(HomeController root, List<TaskSelection> selections) {
@@ -188,8 +242,7 @@ final class HomeGenerateFlow {
 
             exporter.export(root.getWindow(), root.examTitle.get(), root.examDate.get(), assemblies, root.withSampleSolution.get());
 
-            root.getSlideOver().hide();
-            root.rootStack.setMouseTransparent(true);
+            // Banner & Cleanup (SlideOver ist hier eh zu)
             HomeNotifications.showInfo("PDF(s) generated.");
         } catch (Exception ex) {
             HomeNotifications.showError("Generation failed: " + ex.getMessage());
