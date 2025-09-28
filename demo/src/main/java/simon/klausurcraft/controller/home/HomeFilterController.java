@@ -24,6 +24,11 @@ public class HomeFilterController {
     void init(HomeController root) {
         this.root = root;
 
+        // Attach semantic classes so theme CSS can color them consistently.
+        fltEasy.getStyleClass().addAll("difficulty-filter", "difficulty-easy");
+        fltMedium.getStyleClass().addAll("difficulty-filter", "difficulty-medium");
+        fltHard.getStyleClass().addAll("difficulty-filter", "difficulty-hard");
+
         // initial states (keep all active by default)
         fltEasy.setSelected(true);
         fltMedium.setSelected(true);

@@ -26,11 +26,18 @@ final class HomeGenerateFlow {
         Label header = new Label("Generate");
         header.getStyleClass().add("header");
 
+        // --- Scope as colored "badges"
         ToggleGroup tg = new ToggleGroup();
         RadioButton rbExam = new RadioButton("exam");
         RadioButton rbPractice = new RadioButton("practice");
         RadioButton rbBoth = new RadioButton("both");
         rbExam.setToggleGroup(tg); rbPractice.setToggleGroup(tg); rbBoth.setToggleGroup(tg);
+
+        // add pill styles (CSS provides colors per scope)
+        rbExam.getStyleClass().addAll("scope-chip", "scope-exam");
+        rbPractice.getStyleClass().addAll("scope-chip", "scope-practice");
+        rbBoth.getStyleClass().addAll("scope-chip", "scope-both");
+
         rbExam.setSelected(root.scope.get() == GenerateScope.EXAM);
         rbPractice.setSelected(root.scope.get() == GenerateScope.PRACTICE);
         rbBoth.setSelected(root.scope.get() == GenerateScope.BOTH);
@@ -41,6 +48,8 @@ final class HomeGenerateFlow {
             else root.scope.set(GenerateScope.BOTH);
         });
 
+        HBox scopeRow = new HBox(10, rbExam, rbPractice, rbBoth);
+
         TextField tfTitle = new TextField(root.examTitle.get());
         tfTitle.setPromptText("Title (e.g., Databases – Exam)");
         tfTitle.textProperty().addListener((o, ov, nv) -> root.examTitle.set(nv));
@@ -48,15 +57,12 @@ final class HomeGenerateFlow {
         DatePicker dp = new DatePicker(root.examDate.get());
         dp.valueProperty().addListener((o, ov, nv) -> root.examDate.set(nv));
 
-        CheckBox cbSample = new CheckBox("Sample Solution");
-        cbSample.selectedProperty().bindBidirectionally(root.withSampleSolution);
+        // NOTE: Sample solution checkbox intentionally removed from step 1
 
         content.getChildren().addAll(header,
-                new Label("Scope"),
-                new HBox(8, rbExam, rbPractice, rbBoth),
+                new Label("Scope"), scopeRow,
                 new Label("Title"), tfTitle,
-                new Label("Date"), dp,
-                cbSample);
+                new Label("Date"), dp);
 
         ScrollPane sp = new ScrollPane(content);
         sp.setFitToWidth(true);
@@ -111,7 +117,8 @@ final class HomeGenerateFlow {
         total.textProperty().bind(TaskSelection.totalPointsBinding(list.getItems()));
 
         CheckBox cbSample = new CheckBox("Sample Solution");
-        cbSample.selectedProperty().bindBidirectionally(root.withSampleSolution);
+        // FIX: JavaFX API uses bindBidirectional(Property<T>), not "bindBidirectionally"
+        cbSample.selectedProperty().bindBidirectional(root.withSampleSolution);
 
         content.getChildren().addAll(header, list);
 
@@ -127,7 +134,7 @@ final class HomeGenerateFlow {
         Button back = new Button("Back");
         back.setOnAction(e -> openStep1(root));
 
-        HBox right = new HBox(8, cbSample, total);
+        HBox right = new HBox(12, cbSample, total);
         Button btnGenerateExam = new Button("Generate Exam");
         btnGenerateExam.getStyleClass().add("primary");
         btnGenerateExam.setDefaultButton(true);

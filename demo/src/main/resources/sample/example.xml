@@ -1,613 +1,987 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <tasks>
-        
+            
+  
+  
   
   
   <!-- Task 0001: Databases -->
-        
+            
+  
+  
   
   
   <task id="0001" title="Relational Databases &amp; SQL">
-                
+                        
+    
+    
     
     
     <subtask difficulty="easy" eligibility="both" id="0001" points="4">
-                        
+                                    
+      
+      
       
       
       <variants group="SELECT basics">
-                                
+                                                
+        
+        
         
         
         <variant id="0001">
-                                        
+                                                            
+          
+          
           
           
           <text>Write an SQL query to select all columns from table "students" where the column "active" is true.</text>
-                                        
+                                                            
+          
+          
           
           
           <solution>SELECT * FROM students WHERE active = TRUE;</solution>
-                                      
+                                                          
+        
+        
         
         
         </variant>
-                              
+                                              
+      
+      
       
       
       </variants>
-                      
+                                  
+    
+    
     
     
     </subtask>
-                
+                        
+    
+    
     
     
     <subtask difficulty="medium" eligibility="exam" id="0002" points="6">
-                        
+                                    
+      
+      
       
       
       <variants group="JOINs">
-                                
+                                                
+        
+        
         
         
         <variant id="0001">
-                                        
+                                                            
+          
+          
           
           
           <text>Explain the difference between INNER JOIN and LEFT JOIN, and provide one example query for each.</text>
-                                        
+                                                            
+          
+          
           
           
           <solution>INNER JOIN returns only matching rows across both tables; LEFT JOIN returns all rows from the left table and matches from the right when they exist. Example: SELECT s.id, e.course_id FROM students s INNER JOIN enrollments e ON s.id = e.student_id; LEFT JOIN example: SELECT s.id, e.course_id FROM students s LEFT JOIN enrollments e ON s.id = e.student_id;</solution>
-                                      
+                                                          
+        
+        
         
         
         </variant>
-                              
+                                              
+      
+      
       
       
       </variants>
-                      
+                                  
+    
+    
     
     
     </subtask>
-                
+                        
+    
+    
     
     
     <subtask difficulty="hard" eligibility="practice" id="0003" points="8">
-                        
+                                    
+      
+      
       
       
       <variants group="Normalization">
-                                
+                                                
+        
+        
         
         
         <variant id="0001">
-                                        
+                                                            
+          
+          
           
           
           <text>Given a denormalized table containing repeating groups, describe a step-by-step approach to transform it into 3NF.</text>
-                                        
+                                                            
+          
+          
           
           
           <solution>Identify repeating groups and split into separate tables; ensure each table has a primary key; remove partial dependencies (2NF); then remove transitive dependencies (3NF), creating foreign keys to preserve relationships.</solution>
-                                      
+                                                          
+        
+        
         
         
         </variant>
-                              
+                                              
+      
+      
       
       
       </variants>
-                      
+                                  
+    
+    
     
     
     </subtask>
-              
+                      
+    
+    
     
     
     <subtask difficulty="medium" eligibility="both" id="0004" points="6">
-                  
+                              
+      
+      
       
       <variants group="SELECT intermediate">
-                        
+                                        
+        
+        
         
         <variant id="0001">
-                              
+                                                  
+          
+          
           
           <text/>
-                              
+                                                  
+          
+          
           
           <solution/>
-                            
+                                                
+        
+        
         
         </variant>
-                      
+                                      
+      
+      
       
       </variants>
-                
+                            
+    
+    
     
     </subtask>
-          
+                  
+  
+  
   
   </task>
-        
+            
+  
+  
   
   
   <!-- Task 0002: Algorithms -->
-        
+            
+  
+  
   
   
   <task id="0002" title="Algorithms &amp; Data Structures">
-                
+                        
+    
+    
     
     
     <subtask difficulty="easy" eligibility="both" id="0001" points="3">
-                        
+                                    
+      
+      
       
       
       <variants group="Big-O basics">
-                                
+                                                
+        
+        
         
         
         <variant id="0001">
-                                        
+                                                            
+          
+          
           
           
           <text>State the time complexity of binary search on a sorted array and briefly justify.</text>
-                                        
+                                                            
+          
+          
           
           
           <solution>O(log n) because the search space halves each step.</solution>
-                                      
+                                                          
+        
+        
         
         
         </variant>
-                              
+                                              
+      
+      
       
       
       </variants>
-                      
+                                  
+    
+    
     
     
     </subtask>
-                
+                        
+    
+    
     
     
     <subtask difficulty="medium" eligibility="exam" id="0002" points="7">
-                        
+                                    
+      
+      
       
       
       <variants group="Hash tables">
-                                
+                                                
+        
+        
         
         
         <variant id="0001">
-                                        
+                                                            
+          
+          
           
           
           <text>Describe how a hash table resolves collisions using separate chaining and discuss its average-case complexity for insert and search.</text>
-                                        
+                                                            
+          
+          
           
           
           <solution>Separate chaining stores collisions in linked lists per bucket; average-case insert/search are O(1) if the load factor is controlled.</solution>
-                                      
+                                                          
+        
+        
         
         
         </variant>
-                              
+                                              
+      
+      
       
       
       </variants>
-                      
+                                  
+    
+    
     
     
     </subtask>
-                
+                        
+    
+    
     
     
     <subtask difficulty="hard" eligibility="practice" id="0003" points="5">
-                        
+                                    
+      
+      
       
       
       <variants group="Graph traversal">
-                                
+                                                
+        
+        
         
         
         <variant id="0001">
-                                        
+                                                            
+          
+          
           
           
           <text>Compare BFS and DFS regarding typical use cases and memory characteristics.</text>
-                                        
+                                                            
+          
+          
           
           
           <solution>BFS finds shortest paths in unweighted graphs; DFS is better for exploring depth, topological sorting; BFS can require more memory due to frontier.</solution>
-                                      
+                                                          
+        
+        
         
         
         </variant>
-                              
+                                              
+      
+      
       
       
       </variants>
-                      
+                                  
+    
+    
     
     
     </subtask>
-              
+                      
+  
+  
   
   
   </task>
-        
+            
+  
+  
   
   
   <!-- Task 0003: Networks -->
-        
+            
+  
+  
   
   
   <task id="0003" title="Computer Networks">
-                
+                        
+    
+    
     
     
     <subtask difficulty="easy" eligibility="both" id="0001" points="4">
-                        
+                                    
+      
+      
       
       
       <variants group="OSI vs. TCP/IP">
-                                
+                                                
+        
+        
         
         
         <variant id="0001">
-                                        
+                                                            
+          
+          
           
           
           <text>Map the TCP/IP layers to the OSI model and name one protocol for each TCP/IP layer.</text>
-                                        
+                                                            
+          
+          
           
           
           <solution>Application: HTTP; Transport: TCP/UDP; Internet: IP; Link: Ethernet/Wi-Fi. OSI mapping: App/Presentation/Session ≈ Application; Transport = Transport; Network = Internet; Data Link/Physical = Link.</solution>
-                                      
+                                                          
+        
+        
         
         
         </variant>
-                              
+                                              
+      
+      
       
       
       </variants>
-                      
+                                  
+    
+    
     
     
     </subtask>
-                
+                        
+    
+    
     
     
     <subtask difficulty="medium" eligibility="exam" id="0002" points="6">
-                        
+                                    
+      
+      
       
       
       <variants group="IP addressing">
-                                
+                                                
+        
+        
         
         
         <variant id="0001">
-                                        
+                                                            
+          
+          
           
           
           <text>Given the CIDR block 192.168.10.0/26, provide the usable host range and broadcast address.</text>
-                                        
+                                                            
+          
+          
           
           
           <solution>Ranges per /26: 192.168.10.0–63. Usable: 192.168.10.1–62. Broadcast: 192.168.10.63.</solution>
-                                      
+                                                          
+        
+        
         
         
         </variant>
-                              
+                                              
+      
+      
       
       
       </variants>
-                      
+                                  
+    
+    
     
     
     </subtask>
-                
+                        
+    
+    
     
     
     <subtask difficulty="hard" eligibility="practice" id="0003" points="6">
-                        
+                                    
+      
+      
       
       
       <variants group="Transport protocols">
-                                
+                                                
+        
+        
         
         
         <variant id="0001">
-                                        
+                                                            
+          
+          
           
           
           <text>Explain how TCP achieves reliability and flow control. Mention sequence numbers, ACKs, sliding window, and congestion control.</text>
-                                        
+                                                            
+          
+          
           
           
           <solution>TCP uses sequence numbers/ACKs for reliable delivery, sliding window for flow control, and algorithms like slow start/Congestion Avoidance for congestion control.</solution>
-                                      
+                                                          
+        
+        
         
         
         </variant>
-                              
+                                              
+      
+      
       
       
       </variants>
-                      
+                                  
+    
+    
     
     
     </subtask>
-              
+                      
   
   
+  
+  
+    <subtask difficulty="easy" eligibility="both" id="0004" points="1">
+      <variants>
+        <variant id="0001">
+          <text/>
+          <solution/>
+        </variant>
+      </variants>
+    </subtask>
   </task>
-        
+            
+  
+  
   
   
   <!-- Task 0004: OOP -->
-        
+            
+  
+  
   
   
   <task id="0004" title="Object-Oriented Programming">
-                
+                        
+    
+    
     
     
     <subtask difficulty="easy" eligibility="both" id="0001" points="3">
-                        
+                                    
+      
+      
       
       
       <variants group="Principles">
-                                
+                                                
+        
+        
         
         
         <variant id="0001">
-                                        
+                                                            
+          
+          
           
           
           <text>Define encapsulation and give a short Java example.</text>
-                                        
+                                                            
+          
+          
           
           
           <solution>Encapsulation hides internal state and requires all interaction to be performed through methods. Example: private fields with public getters/setters.</solution>
-                                      
+                                                          
+        
+        
         
         
         </variant>
-                              
+                                              
+      
+      
       
       
       </variants>
-                      
+                                  
+    
+    
     
     
     </subtask>
-                
+                        
+    
+    
     
     
     <subtask difficulty="medium" eligibility="practice" id="0002" points="7">
-                        
+                                    
+      
+      
       
       
       <variants group="Inheritance vs. Composition">
-                                
+                                                
+        
+        
         
         
         <variant id="0001">
-                                        
+                                                            
+          
+          
           
           
           <text>Discuss when composition is preferable to inheritance and provide an example.</text>
-                                        
+                                                            
+          
+          
           
           
           <solution>Prefer composition to reuse behavior without tight coupling; e.g., a Car has an Engine (composition) instead of extending Engine.</solution>
-                                      
+                                                          
+        
+        
         
         
         </variant>
-                              
+                                              
+      
+      
       
       
       </variants>
-                      
+                                  
+    
+    
     
     
     </subtask>
-                
+                        
+    
+    
     
     
     <subtask difficulty="hard" eligibility="exam" id="0003" points="8">
-                        
+                                    
+      
+      
       
       
       <variants group="Design patterns">
-                                
+                                                
+        
+        
         
         
         <variant id="0001">
-                                        
+                                                            
+          
+          
           
           
           <text>Explain the Strategy pattern and show how it enables runtime behavior changes.</text>
-                                        
+                                                            
+          
+          
           
           
           <solution>Encapsulate algorithms behind a common interface; inject different implementations at runtime to change behavior without modifying the context.</solution>
-                                      
+                                                          
+        
+        
         
         
         </variant>
-                              
+                                              
+      
+      
       
       
       </variants>
-                      
+                                  
+    
+    
     
     
     </subtask>
-              
+                      
+  
+  
   
   
   </task>
-        
+            
+  
+  
   
   
   <!-- Task 0005: Operating Systems -->
-        
+            
+  
+  
   
   
   <task id="0005" title="Operating Systems">
-                
+                        
+    
+    
     
     
     <subtask difficulty="easy" eligibility="both" id="0001" points="4">
-                        
+                                    
+      
+      
       
       
       <variants group="Processes vs. Threads">
-                                
+                                                
+        
+        
         
         
         <variant id="0001">
-                                        
+                                                            
+          
+          
           
           
           <text>Differentiate processes and threads. Why are threads considered lightweight?</text>
-                                        
+                                                            
+          
+          
           
           
           <solution>Threads share the same address space/resources within a process, reducing context-switch overhead compared to processes.</solution>
-                                      
+                                                          
+        
+        
         
         
         </variant>
-                              
+                                              
+        
+        
         
         
         <variant id="0002">
-                              
+                                                  
+          
+          
           
           <text/>
-                              
+                                                  
+          
+          
           
           <solution/>
-                            
+                                                
+        
+        
         
         </variant>
-                        
+                                        
+        
+        
         
         <variant id="0003">
-                              
+                                                  
+          
+          
           
           <text/>
-                              
+                                                  
+          
+          
           
           <solution/>
-                            
+                                                
+        
+        
         
         </variant>
-                        
+                                        
+        
+        
         
         <variant id="0004">
-                              
+                                                  
+          
+          
           
           <text/>
-                              
+                                                  
+          
+          
           
           <solution/>
-                            
+                                                
+        
+        
         
         </variant>
-                        
+                                        
+        
+        
         
         <variant id="0005">
-                              
+                                                  
+          
+          
           
           <text/>
-                              
+                                                  
+          
+          
           
           <solution/>
-                            
+                                                
+        
+        
         
         </variant>
-                        
+                                        
+        
+        
         
         <variant id="0006">
-                              
+                                                  
+          
+          
           
           <text/>
-                              
+                                                  
+          
+          
           
           <solution/>
-                            
+                                                
+        
+        
         
         </variant>
-                        
+                                        
+        
+        
         
         <variant id="0007">
-                              
+                                                  
+          
+          
           
           <text/>
-                              
+                                                  
+          
+          
           
           <solution/>
-                            
+                                                
+        
+        
         
         </variant>
-                      
+                                      
+      
+      
       
       </variants>
-                      
+                                  
+    
+    
     
     
     </subtask>
-                
+                        
+    
+    
     
     
     <subtask difficulty="medium" eligibility="exam" id="0002" points="6">
-                        
+                                    
+      
+      
       
       
       <variants group="Scheduling">
-                                
+                                                
+        
+        
         
         
         <variant id="0001">
-                                        
+                                                            
+          
+          
           
           
           <text>Compare Round-Robin and Shortest-Job-First scheduling in terms of fairness and average waiting time.</text>
-                                        
+                                                            
+          
+          
           
           
           <solution>RR is fair among tasks but may have higher average waiting time; SJF can minimize average waiting time but may starve long jobs.</solution>
-                                      
+                                                          
+        
+        
         
         
         </variant>
-                              
+                                              
+      
+      
       
       
       </variants>
-                      
+                                  
+    
+    
     
     
     </subtask>
-                
+                        
+    
+    
     
     
     <subtask difficulty="hard" eligibility="practice" id="0003" points="6">
-                        
+                                    
+      
+      
       
       
       <variants group="Synchronization">
+                                                
+        
+        
+        
+        
+        <variant id="0001">
+                                                            
+          
+          
+          
+          
+          <text>Explain the producer-consumer problem and outline a solution using semaphores.</text>
+                                                            
+          
+          
+          
+          
+          <solution>Use two semaphores (empty, full) and a mutex to coordinate producers and consumers accessing a bounded buffer.</solution>
+                                                          
+        
+        
+        
+        
+        </variant>
+                                              
+      
+      
+      
+      
+      </variants>
+                                  
+    
+    
+    
+    
+    </subtask>
+                      
+  
+    
+    
+    
+    <subtask difficulty="easy" eligibility="both" id="0004" points="1">
+                        
+      
+      
+      <variants>
                                 
         
         
@@ -615,11 +989,11 @@
                                         
           
           
-          <text>Explain the producer-consumer problem and outline a solution using semaphores.</text>
+          <text/>
                                         
           
           
-          <solution>Use two semaphores (empty, full) and a mutex to coordinate producers and consumers accessing a bounded buffer.</solution>
+          <solution/>
                                       
         
         
@@ -634,25 +1008,19 @@
     </subtask>
               
   
-    
-    <subtask difficulty="easy" eligibility="both" id="0004" points="1">
-            
+  
+    <subtask difficulty="easy" eligibility="both" id="0005" points="1">
       <variants>
-                
         <variant id="0001">
-                    
           <text/>
-                    
           <solution/>
-                  
         </variant>
-              
       </variants>
-          
     </subtask>
-      
   </task>
-      
+          
+
+
 
 
 </tasks>

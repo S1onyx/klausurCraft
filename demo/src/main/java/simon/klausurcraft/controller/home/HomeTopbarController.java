@@ -20,6 +20,12 @@ public class HomeTopbarController {
     public void init(HomeController root) {
         this.root = root;
 
+        // Attach semantic style classes so CSS can color them (IDs are not CSS ids).
+        // This fixes the "grey checkboxes" issue.
+        fltEasy.getStyleClass().addAll("difficulty-filter", "difficulty-easy");
+        fltMedium.getStyleClass().addAll("difficulty-filter", "difficulty-medium");
+        fltHard.getStyleClass().addAll("difficulty-filter", "difficulty-hard");
+
         // default all on
         fltEasy.setSelected(true);
         fltMedium.setSelected(true);

@@ -22,8 +22,8 @@ import java.util.prefs.Preferences;
  * Generates two PDFs: exam and optional sample solution.
  * - Heading with title and date
  * - Tasks numbered 1..N; Subtasks a), b), ...
- * - Under each question: answer box with rectangular frame, height proportional to points (min 3 lines)
- * - Solutions inline in the solution PDF; "(no solution provided)" if missing
+ * - Answer boxes proportional to points (min height)
+ * - Solutions inline in solution PDF
  */
 public class PdfExporter {
 
@@ -80,10 +80,10 @@ public class PdfExporter {
         PdfWriter.getInstance(doc, new FileOutputStream(out));
         doc.open();
 
-        // Title block
-        Font h1 = new Font(Font.HELVETICA, 16, Font.BOLD);
+        // Fonts (larger, clearer task headers)
+        Font h1 = new Font(Font.HELVETICA, 18, Font.BOLD);
         Font normal = new Font(Font.HELVETICA, 11, Font.NORMAL);
-        Font bold = new Font(Font.HELVETICA, 11, Font.BOLD);
+        Font bold = new Font(Font.HELVETICA, 13, Font.BOLD); // ↑ bigger for task headers
 
         Paragraph pTitle = new Paragraph(title, h1);
         pTitle.setSpacingAfter(8);
@@ -96,7 +96,7 @@ public class PdfExporter {
         // Content
         for (TaskAssembly ta : tasks) {
             Paragraph taskHeader = new Paragraph("Task " + ta.number + " — " + ta.task.getTitle(), bold);
-            taskHeader.setSpacingBefore(8);
+            taskHeader.setSpacingBefore(10);
             taskHeader.setSpacingAfter(6);
             doc.add(taskHeader);
 
@@ -111,8 +111,9 @@ public class PdfExporter {
                 String sol = (variant != null ? variant.getSolution() : "").trim();
 
                 Paragraph subHeader = new Paragraph(
-                    String.format("%d.%c  (%s pts)", ta.number, letter, st.getPoints().stripTrailingZeros().toPlainString()),
-                    bold);
+                        String.format("%d.%c  (%s pts)",
+                                ta.number, letter, st.getPoints().stripTrailingZeros().toPlainString()),
+                        new Font(Font.HELVETICA, 11, Font.BOLD));
                 subHeader.setSpacingBefore(4);
                 subHeader.setSpacingAfter(3);
                 doc.add(subHeader);
@@ -132,7 +133,7 @@ public class PdfExporter {
                     PdfPCell cell = new PdfPCell();
                     cell.setMinimumHeight(answerBoxHeight(st));
                     cell.setBorderWidth(1f);
-                    cell.setPhrase(new com.lowagie.text.Phrase("")); // empty
+                    cell.setPhrase(new Phrase(""));
                     table.addCell(cell);
                     table.setSpacingAfter(10);
                     doc.add(table);
@@ -144,7 +145,7 @@ public class PdfExporter {
     }
 
     private float answerBoxHeight(SubtaskModel st) {
-        // Minimum ~3 lines at 11pt -> ~45-50pt, add per point ~10-12pt
+        // Minimum ~3 lines at 11pt -> ~48pt, add per point ~11pt
         int pts = st.getPoints().intValue();
         float base = 48f;
         float perPoint = 11f;
