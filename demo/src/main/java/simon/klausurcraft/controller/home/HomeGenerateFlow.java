@@ -1,5 +1,7 @@
 package simon.klausurcraft.controller.home;
 
+import javafx.beans.binding.Bindings;
+import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -104,7 +106,7 @@ final class HomeGenerateFlow {
         tfTitle.requestFocus();
     }
 
-    /** Step 2 now as a separate MODAL window (no horizontal scrollbar). */
+    /** Step 2 redesigned: single modal window with two stacked lists: Selected (top) and Task pool (bottom). */
     static void openStep2(HomeController root) {
         // Close slide-over so only the modal window is visible
         if (root.getSlideOver().isShown()) {
@@ -112,32 +114,39 @@ final class HomeGenerateFlow {
             root.rootStack.setMouseTransparent(true);
         }
 
-        // ----- Content (identical to before, but in its own Stage) -----
+        // ----- Content (new layout) -----
         BorderPane pane = new BorderPane();
         pane.setPadding(new Insets(0));
 
-        VBox content = new VBox(12);
+        VBox content = new VBox(16);
         content.setPadding(new Insets(16));
 
-        Label header = new Label("Select topics");
+        Label header = new Label("Select tasks");
         header.getStyleClass().add("header");
 
-        ListView<TaskSelection> list = new ListView<>();
-        list.setCellFactory(v -> new TaskSelectionCell(root));
-        list.setItems(TaskSelection.ensureFor(root.getTasks()));
-        list.setFocusTraversable(false);
+        // Build TaskSelection lists
+        var all = TaskSelection.ensureFor(root.getTasks());
+        var selected = FXCollections.<TaskSelection>observableArrayList();
+        var pool = FXCollections.<TaskSelection>observableArrayList();
 
-        // initial achievable based on current scope
-        list.getItems().forEach(ts -> ts.recomputeAchievable(root.scope.get()));
+        // recompute achievable upfront based on fixed scope
+        all.forEach(ts -> ts.recomputeAchievable(root.scope.get()));
+        // initial: none selected
+        pool.setAll(all);
 
-        Label total = new Label();
-        // Robust: Binding observes all items + their properties
-        total.textProperty().bind(TaskSelection.totalPointsBinding(list.getItems()));
+        // --- Selected (top)
+        Label lblSelected = new Label("Selected tasks");
+        ListView<TaskSelection> lvSelected = new ListView<>(selected);
+        lvSelected.setCellFactory(v -> new SelectedTaskCell(root, selected, pool));
+        lvSelected.setFocusTraversable(false);
 
-        CheckBox cbSample = new CheckBox("Sample Solution");
-        cbSample.selectedProperty().bindBidirectional(root.withSampleSolution);
+        // --- Pool (bottom)
+        Label lblPool = new Label("Task pool");
+        ListView<TaskSelection> lvPool = new ListView<>(pool);
+        lvPool.setCellFactory(v -> new PoolTaskCell(root, selected, pool));
+        lvPool.setFocusTraversable(false);
 
-        content.getChildren().addAll(header, list);
+        content.getChildren().addAll(header, lblSelected, lvSelected, new Separator(), lblPool, lvPool);
 
         ScrollPane sp = new ScrollPane(content);
         sp.setFitToWidth(true);
@@ -154,18 +163,22 @@ final class HomeGenerateFlow {
         themeToggle.setFocusTraversable(false);
         Tooltip.install(themeToggle, new Tooltip("Toggle theme (Ctrl+D)"));
 
-        Region spacer = new Region(); HBox.setHgrow(spacer, Priority.ALWAYS);
-
         Button back = new Button("Back");
 
-        HBox right = new HBox(12);
-        right.getChildren().addAll(new Label(""), cbSample, total);
+        Region spacer = new Region(); HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        CheckBox cbSample = new CheckBox("Sample Solution");
+        cbSample.selectedProperty().bindBidirectional(root.withSampleSolution);
+
+        Label total = new Label();
+        total.textProperty().bind(TaskSelection.totalPointsBinding(selected));
 
         Button btnGenerateExam = new Button("Generate Exam");
         btnGenerateExam.getStyleClass().add("primary");
         btnGenerateExam.setDefaultButton(true);
+        btnGenerateExam.disableProperty().bind(Bindings.isEmpty(selected));
 
-        actions.getChildren().addAll(themeToggle, back, spacer, right, btnGenerateExam);
+        actions.getChildren().addAll(themeToggle, back, spacer, cbSample, total, btnGenerateExam);
         pane.setBottom(actions);
 
         // ----- Modal window -----
@@ -198,12 +211,9 @@ final class HomeGenerateFlow {
         });
 
         btnGenerateExam.setOnAction(e -> {
-            generateExamNow(root, list.getItems());
+            generateExamNow(root, selected);
             stage.close();
         });
-
-        // Auto-recompute achievable sums when scope changes
-        root.scope.addListener((o, ov, nv) -> list.getItems().forEach(ts -> ts.recomputeAchievable(nv)));
 
         stage.showAndWait();
     }

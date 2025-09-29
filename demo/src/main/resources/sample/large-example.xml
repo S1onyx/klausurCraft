@@ -1,844 +1,1684 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <tasks>
+    
   <!-- ======================= Task 1 ======================= -->
+    
   <task id="1" title="Relational Fundamentals">
-    <subtask id="1" points="4" difficulty="easy" eligibility="both">
+        
+    <subtask difficulty="easy" eligibility="both" id="1" points="4">
+            
       <variants group="Keys &amp; Attributes">
+                
         <variant id="1">
+                    
           <text>Define primary and foreign keys on a small schema.</text>
+                    
           <solution>A primary key uniquely identifies rows; a foreign key references a primary/unique key in another table and enforces referential integrity.</solution>
+                  
         </variant>
+                
         <variant id="2">
+                    
           <text>Explain candidate vs. surrogate keys.</text>
+                    
           <solution>Candidate keys are minimal unique attribute sets; surrogate keys are artificial identifiers (e.g., generated IDs) used when no stable natural key exists.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="2" points="6" difficulty="medium" eligibility="exam">
+        
+    <subtask difficulty="medium" eligibility="exam" id="2" points="6">
+            
       <variants group="Functional Dependencies">
+                
         <variant id="1">
+                    
           <text>Given FDs {A→B, B→C}, show whether A→C holds and justify.</text>
+                    
           <solution>Yes, by transitivity: A→B and B→C imply A→C.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="3" points="8" difficulty="hard" eligibility="both">
+        
+    <subtask difficulty="hard" eligibility="both" id="3" points="8">
+            
       <variants group="Normalization">
+                
         <variant id="1">
+                    
           <text>Decompose R(A,B,C,D) with FDs A→B, B→C, C→D to BCNF.</text>
+                    
           <solution>Iteratively decompose on violating determinants until all determinants are superkeys; one valid result is R1(A,B), R2(B,C), R3(C,D) with lossless join.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="4" points="5" difficulty="easy" eligibility="practice">
+        
+    <subtask difficulty="easy" eligibility="practice" id="4" points="5">
+            
       <variants group="ER &amp; Relational Mapping">
+                
         <variant id="1">
+                    
           <text>Map a 1:N relationship from ER to relational tables.</text>
+                    
           <solution>Place the foreign key of the 1-side's PK into the N-side table; optionally add NOT NULL if mandatory.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="5" points="7" difficulty="medium" eligibility="both">
+        
+    <subtask difficulty="medium" eligibility="both" id="5" points="7">
+            
       <variants group="Anomalies">
+                
         <variant id="1">
+                    
           <text>Provide an example of update, insertion, and deletion anomaly.</text>
+                    
           <solution>Update: duplicated customer address fields; Insertion: cannot add a course without students; Deletion: removing last enrollment deletes course data.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="6" points="3" difficulty="easy" eligibility="both">
+        
+    <subtask difficulty="easy" eligibility="both" id="6" points="3">
+            
       <variants group="Terminology">
+                
         <variant id="1">
+                    
           <text>Define relation, tuple, attribute, and domain.</text>
+                    
           <solution>Relation: table; tuple: row; attribute: column; domain: allowed values type for an attribute.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="7" points="9" difficulty="hard" eligibility="exam">
+        
+    <subtask difficulty="hard" eligibility="exam" id="7" points="9">
+            
       <variants group="Lossless Decomposition">
+                
         <variant id="1">
+                    
           <text>Prove whether decomposition of R(A,B,C) into (A,B) and (B,C) is lossless w.r.t. B as common attribute.</text>
+                    
           <solution>It is lossless if B→A or B→C (or AB, BC are keys). With B as common attribute and appropriate FDs, the chase shows losslessness.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="8" points="4" difficulty="easy" eligibility="practice">
+        
+    <subtask difficulty="easy" eligibility="practice" id="8" points="4">
+            
       <variants group="Set vs. Bag">
+                
         <variant id="1">
+                    
           <text>State differences between set and bag semantics in SQL.</text>
+                    
           <solution>SQL uses bag semantics by default: duplicates allowed; DISTINCT enforces set semantics.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="9" points="6" difficulty="medium" eligibility="both">
+        
+    <subtask difficulty="medium" eligibility="both" id="9" points="6">
+            
       <variants group="Keys in Practice">
+                
         <variant id="1">
+                    
           <text>When would you prefer a surrogate key over a natural key?</text>
+                    
           <solution>When the natural key is wide, mutable, or not guaranteed unique long-term; surrogate keys are narrow and stable.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="10" points="5" difficulty="medium" eligibility="both">
+        
+    <subtask difficulty="medium" eligibility="both" id="10" points="5">
+            
       <variants group="Integrity">
+                
         <variant id="1">
+                    
           <text>Explain referential actions: RESTRICT, CASCADE, SET NULL.</text>
+                    
           <solution>RESTRICT: block parent deletion; CASCADE: delete/update children; SET NULL: nullify FK on parent change when allowed.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
+      
   </task>
-
+    
   <!-- ======================= Task 2 ======================= -->
+    
   <task id="2" title="SQL Querying &amp; Optimization">
-    <subtask id="1" points="4" difficulty="easy" eligibility="both">
+        
+    <subtask difficulty="easy" eligibility="both" id="1" points="4">
+            
       <variants group="Basic SELECT">
+                
         <variant id="1">
+                    
           <text>Write a query to list distinct departments from Employees.</text>
+                    
           <solution>SELECT DISTINCT department FROM Employees;</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="2" points="6" difficulty="medium" eligibility="both">
+        
+    <subtask difficulty="medium" eligibility="both" id="2" points="6">
+            
       <variants group="JOINs">
+                
         <variant id="1">
+                    
           <text>Return employees and their manager names using a self join.</text>
+                    
           <solution>SELECT e.name, m.name AS manager FROM Emp e LEFT JOIN Emp m ON e.manager_id=m.id;</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="3" points="7" difficulty="medium" eligibility="exam">
+        
+    <subtask difficulty="medium" eligibility="exam" id="3" points="7">
+            
       <variants group="Aggregation">
+                
         <variant id="1">
+                    
           <text>For each department, show count and average salary of employees with salary &gt; 3000.</text>
+                    
           <solution>SELECT dept, COUNT(*), AVG(salary) FROM Emp WHERE salary&gt;3000 GROUP BY dept;</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="4" points="8" difficulty="hard" eligibility="both">
+        
+    <subtask difficulty="hard" eligibility="both" id="4" points="8">
+            
       <variants group="Window Functions">
+                
         <variant id="1">
+                    
           <text>Compute each employee's salary rank within their department (dense ranking).</text>
+                    
           <solution>SELECT name, dept, DENSE_RANK() OVER (PARTITION BY dept ORDER BY salary DESC) AS r FROM Emp;</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="5" points="3" difficulty="easy" eligibility="practice">
+        
+    <subtask difficulty="easy" eligibility="practice" id="5" points="3">
+            
       <variants group="Filters">
+                
         <variant id="1">
+                    
           <text>Find products with NULL price or price=0.</text>
+                    
           <solution>SELECT * FROM Products WHERE price IS NULL OR price=0;</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="6" points="5" difficulty="medium" eligibility="both">
+        
+    <subtask difficulty="medium" eligibility="both" id="6" points="5">
+            
       <variants group="Subqueries">
+                
         <variant id="1">
+                    
           <text>List employees earning above their department's average.</text>
+                    
           <solution>SELECT e.* FROM Emp e WHERE salary &gt; (SELECT AVG(salary) FROM Emp WHERE dept=e.dept);</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="7" points="9" difficulty="hard" eligibility="exam">
+        
+    <subtask difficulty="hard" eligibility="exam" id="7" points="9">
+            
       <variants group="Query Plans">
+                
         <variant id="1">
+                    
           <text>Explain nested loop vs. hash join trade-offs.</text>
+                    
           <solution>Nested loop suits small outer and indexed inner; hash join suits large, non-indexed inputs; memory and skew affect performance.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="8" points="4" difficulty="easy" eligibility="both">
+        
+    <subtask difficulty="easy" eligibility="both" id="8" points="4">
+            
       <variants group="Order &amp; Limit">
+                
         <variant id="1">
+                    
           <text>Return top 5 highest-paid employees globally.</text>
+                    
           <solution>SELECT * FROM Emp ORDER BY salary DESC FETCH FIRST 5 ROWS ONLY;</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="9" points="6" difficulty="medium" eligibility="both">
+        
+    <subtask difficulty="medium" eligibility="both" id="9" points="6">
+            
       <variants group="Set Ops">
+                
         <variant id="1">
+                    
           <text>Show customers who bought in 2023 but not in 2024.</text>
+                    
           <solution>(SELECT c_id FROM Sales WHERE year=2023) EXCEPT (SELECT c_id FROM Sales WHERE year=2024);</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="10" points="7" difficulty="medium" eligibility="both">
+        
+    <subtask difficulty="medium" eligibility="both" id="10" points="7">
+            
       <variants group="Index Hints">
+                
         <variant id="1">
+                    
           <text>When can an index make a query slower?</text>
+                    
           <solution>For low selectivity predicates or frequent writes causing maintenance; optimizer may pick full scans that outperform index access.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
+      
   </task>
-
+    
   <!-- ======================= Task 3 ======================= -->
+    
   <task id="3" title="Transactions &amp; Concurrency">
-    <subtask id="1" points="4" difficulty="easy" eligibility="both">
+        
+    <subtask difficulty="easy" eligibility="both" id="1" points="4">
+            
       <variants group="ACID">
+                
         <variant id="1">
+                    
           <text>Briefly define A, C, I, D.</text>
+                    
           <solution>Atomicity: all-or-nothing; Consistency: preserves invariants; Isolation: as-if serial; Durability: persists after commit.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="2" points="6" difficulty="medium" eligibility="both">
+        
+    <subtask difficulty="medium" eligibility="both" id="2" points="6">
+            
       <variants group="Phenomena">
+                
         <variant id="1">
+                    
           <text>Give examples for dirty read, non-repeatable read, phantom.</text>
+                    
           <solution>Dirty read: uncommitted value seen; Non-repeatable: value changes between reads; Phantom: new rows appear.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="3" points="8" difficulty="hard" eligibility="exam">
+        
+    <subtask difficulty="hard" eligibility="exam" id="3" points="8">
+            
       <variants group="2PL">
+                
         <variant id="1">
+                    
           <text>Prove that rigorous 2PL ensures serializability.</text>
+                    
           <solution>By precedence graph: exclusive locks held until commit prevent cycles, implying conflict-serializable schedules.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="4" points="5" difficulty="easy" eligibility="practice">
+        
+    <subtask difficulty="easy" eligibility="practice" id="4" points="5">
+            
       <variants group="Isolation Levels">
+                
         <variant id="1">
+                    
           <text>Map SQL isolation levels to allowed phenomena.</text>
+                    
           <solution>Read Uncommitted: allows dirty; Read Committed: forbids dirty; Repeatable Read: forbids dirty &amp; non-repeatable; Serializable: forbids all three.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="5" points="7" difficulty="medium" eligibility="both">
+        
+    <subtask difficulty="medium" eligibility="both" id="5" points="7">
+            
       <variants group="Deadlocks">
+                
         <variant id="1">
+                    
           <text>Explain wait-die vs. wound-wait schemes.</text>
+                    
           <solution>Timestamp ordering: old waits (wait-die) vs. old preempts (wound-wait) to avoid starvation and break cycles.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="6" points="9" difficulty="hard" eligibility="both">
+        
+    <subtask difficulty="hard" eligibility="both" id="6" points="9">
+            
       <variants group="MVCC">
+                
         <variant id="1">
+                    
           <text>How does MVCC achieve snapshot isolation?</text>
+                    
           <solution>Readers use transaction start timestamps to read previous committed versions; writers create new versions; write-write conflicts detect &amp; abort.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="7" points="3" difficulty="easy" eligibility="both">
+        
+    <subtask difficulty="easy" eligibility="both" id="7" points="3">
+            
       <variants group="Logging">
+                
         <variant id="1">
+                    
           <text>Why do ARIES logs need LSNs?</text>
+                    
           <solution>To order and chain records for redo/undo traversals and pageLSN checks during recovery.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="8" points="6" difficulty="medium" eligibility="exam">
+        
+    <subtask difficulty="medium" eligibility="exam" id="8" points="6">
+            
       <variants group="Recovery">
+                
         <variant id="1">
+                    
           <text>Outline ARIES phases.</text>
+                    
           <solution>Analysis (find winners/losers), Redo (repeat history), Undo (roll back losers using compensation log records).</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="9" points="5" difficulty="medium" eligibility="both">
+        
+    <subtask difficulty="medium" eligibility="both" id="9" points="5">
+            
       <variants group="Starvation">
+                
         <variant id="1">
+                    
           <text>How can starvation occur with locks and how to mitigate?</text>
+                    
           <solution>Repeated preemption of a transaction; mitigate via fair queues or priorities/aging.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="10" points="7" difficulty="hard" eligibility="practice">
+        
+    <subtask difficulty="hard" eligibility="practice" id="10" points="7">
+            
       <variants group="Serializability Graph">
+                
         <variant id="1">
+                    
           <text>Build a precedence graph for a given schedule and decide serializability.</text>
+                    
           <solution>Nodes are transactions; edges for conflicting RW/WR/WW in order; cycle ⇒ not conflict-serializable.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
+      
   </task>
-
+    
   <!-- ======================= Task 4 ======================= -->
+    
   <task id="4" title="Indexing &amp; Storage">
-    <subtask id="1" points="4" difficulty="easy" eligibility="both">
+        
+    <subtask difficulty="easy" eligibility="both" id="1" points="4">
+            
       <variants group="B+Trees">
+                
         <variant id="1">
+                    
           <text>State differences between B-Tree and B+Tree.</text>
+                    
           <solution>B+Tree stores keys in internal nodes and values only in leaves with linked leaves for range scans; B-Tree may store values in internal nodes.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="2" points="6" difficulty="medium" eligibility="both">
+        
+    <subtask difficulty="medium" eligibility="both" id="2" points="6">
+            
       <variants group="Clustering">
+                
         <variant id="1">
+                    
           <text>What is a clustered index and when to use it?</text>
+                    
           <solution>Data ordered by index key; great for range queries and sorting; only one clustered index per table.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="3" points="7" difficulty="medium" eligibility="exam">
+        
+    <subtask difficulty="medium" eligibility="exam" id="3" points="7">
+            
       <variants group="Hash Index">
+                
         <variant id="1">
+                    
           <text>Why are hash indexes poor at range queries?</text>
+                    
           <solution>Hashing destroys ordering; ranges require scanning many buckets.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="4" points="8" difficulty="hard" eligibility="both">
+        
+    <subtask difficulty="hard" eligibility="both" id="4" points="8">
+            
       <variants group="Cost Model">
+                
         <variant id="1">
+                    
           <text>Estimate I/O cost for an index nested loop join with given cardinalities.</text>
+                    
           <solution>Cost ≈ outer pages + outer tuples × (index probe cost + expected inner page reads); plug in given figures.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="5" points="3" difficulty="easy" eligibility="practice">
+        
+    <subtask difficulty="easy" eligibility="practice" id="5" points="3">
+            
       <variants group="Compression">
+                
         <variant id="1">
+                    
           <text>Name two common page compression techniques.</text>
+                    
           <solution>Dictionary encoding and run-length encoding; others: delta, bitpacking.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="6" points="5" difficulty="medium" eligibility="both">
+        
+    <subtask difficulty="medium" eligibility="both" id="6" points="5">
+            
       <variants group="Fill Factor">
+                
         <variant id="1">
+                    
           <text>Why set a non-100% fill factor on frequently inserted tables?</text>
+                    
           <solution>Leave free space to reduce page splits and maintain performance.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="7" points="9" difficulty="hard" eligibility="exam">
+        
+    <subtask difficulty="hard" eligibility="exam" id="7" points="9">
+            
       <variants group="Write Amplification">
+                
         <variant id="1">
+                    
           <text>Explain write amplification in LSM-tree engines.</text>
+                    
           <solution>Data is rewritten across levels during compaction; mitigations include tiered compaction and tuning level sizes/bloom filters.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="8" points="4" difficulty="easy" eligibility="both">
+        
+    <subtask difficulty="easy" eligibility="both" id="8" points="4">
+            
       <variants group="Covering Index">
+                
         <variant id="1">
+                    
           <text>What is a covering index?</text>
+                    
           <solution>An index that contains all referenced columns of a query, enabling index-only scans.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="9" points="6" difficulty="medium" eligibility="both">
+        
+    <subtask difficulty="medium" eligibility="both" id="9" points="6">
+            
       <variants group="Bloom Filters">
+                
         <variant id="1">
+                    
           <text>How do bloom filters reduce I/O?</text>
+                    
           <solution>Probabilistic structure to test set membership; quickly rejects negatives, avoiding unnecessary disk lookups.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="10" points="7" difficulty="medium" eligibility="both">
+        
+    <subtask difficulty="medium" eligibility="both" id="10" points="7">
+            
       <variants group="Hotspotting">
+                
         <variant id="1">
+                    
           <text>How to avoid hotspotting on monotonically increasing keys?</text>
+                    
           <solution>Use key hashing/sharding, reverse keys, or time-windowed partitions with load balancing.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
+      
   </task>
-
+    
   <!-- ======================= Task 5 ======================= -->
+    
   <task id="5" title="Design &amp; Modeling">
-    <subtask id="1" points="4" difficulty="easy" eligibility="both">
+        
+    <subtask difficulty="easy" eligibility="both" id="1" points="4">
+            
       <variants group="ER Basics">
+                
         <variant id="1">
+                    
           <text>Differentiate entity, attribute, relationship.</text>
+                    
           <solution>Entity: object; attribute: property; relationship: association between entities.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="2" points="6" difficulty="medium" eligibility="both">
+        
+    <subtask difficulty="medium" eligibility="both" id="2" points="6">
+            
       <variants group="Weak Entities">
+                
         <variant id="1">
+                    
           <text>How are weak entities represented relationally?</text>
+                    
           <solution>Include a foreign key to owner and partial key; PK is (ownerPK, partialKey).</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="3" points="7" difficulty="medium" eligibility="exam">
+        
+    <subtask difficulty="medium" eligibility="exam" id="3" points="7">
+            
       <variants group="ISA Hierarchies">
+                
         <variant id="1">
+                    
           <text>Compare single-table, class-table, and concrete-table inheritance.</text>
+                    
           <solution>Single-table: sparse columns; class-table: joins; concrete-table: duplication; choose per access patterns.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="4" points="8" difficulty="hard" eligibility="both">
+        
+    <subtask difficulty="hard" eligibility="both" id="4" points="8">
+            
       <variants group="UML to Relational">
+                
         <variant id="1">
+                    
           <text>Map a UML aggregation vs. composition to tables.</text>
+                    
           <solution>Both become FKs; composition implies lifecycle dependency and cascading deletes.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="5" points="3" difficulty="easy" eligibility="practice">
+        
+    <subtask difficulty="easy" eligibility="practice" id="5" points="3">
+            
       <variants group="Naming">
+                
         <variant id="1">
+                    
           <text>Give two conventions for naming tables/columns.</text>
+                    
           <solution>Snake_case or lowerCamelCase; singular table names; no spaces; consistent prefixes for FKs.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="6" points="5" difficulty="medium" eligibility="both">
+        
+    <subtask difficulty="medium" eligibility="both" id="6" points="5">
+            
       <variants group="Constraints">
+                
         <variant id="1">
+                    
           <text>Example of a CHECK constraint that enforces non-negative price.</text>
+                    
           <solution>CHECK (price &gt;= 0).</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="7" points="9" difficulty="hard" eligibility="exam">
+        
+    <subtask difficulty="hard" eligibility="exam" id="7" points="9">
+            
       <variants group="Denormalization">
+                
         <variant id="1">
+                    
           <text>When is denormalization justified?</text>
+                    
           <solution>High read performance with acceptable redundancy, controlled by ETL/materialized views; ensure consistency strategies.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="8" points="4" difficulty="easy" eligibility="both">
+        
+    <subtask difficulty="easy" eligibility="both" id="8" points="4">
+            
       <variants group="Surrogate Keys">
+                
         <variant id="1">
+                    
           <text>Pros and cons of surrogate keys?</text>
+                    
           <solution>Pros: stability, narrow PKs; cons: loss of meaning, need unique constraints on natural keys to prevent duplicates.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="9" points="6" difficulty="medium" eligibility="both">
+        
+    <subtask difficulty="medium" eligibility="both" id="9" points="6">
+            
       <variants group="Cardinality">
+                
         <variant id="1">
+                    
           <text>Model M:N relationship between Students and Courses.</text>
+                    
           <solution>Association table Enrollment(student_id FK, course_id FK, ...), PK (student_id, course_id).</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="10" points="7" difficulty="medium" eligibility="both">
+        
+    <subtask difficulty="medium" eligibility="both" id="10" points="7">
+            
       <variants group="Soft Deletes">
+                
         <variant id="1">
+                    
           <text>Implement soft deletes and ensure uniqueness.</text>
+                    
           <solution>Add deleted_at column; include partial unique index on (key) WHERE deleted_at IS NULL.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
+      
   </task>
-
+    
   <!-- ======================= Task 6 ======================= -->
+    
   <task id="6" title="NoSQL &amp; Distributed Systems">
-    <subtask id="1" points="4" difficulty="easy" eligibility="both">
+        
+    <subtask difficulty="easy" eligibility="both" id="1" points="4">
+            
       <variants group="CAP">
+                
         <variant id="1">
+                    
           <text>State CAP theorem in one sentence.</text>
+                    
           <solution>Under network partitions, a distributed system must choose between availability and strong consistency.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="2" points="6" difficulty="medium" eligibility="both">
+        
+    <subtask difficulty="medium" eligibility="both" id="2" points="6">
+            
       <variants group="Data Models">
+                
         <variant id="1">
+                    
           <text>Compare document, key-value, column-family at a high level.</text>
+                    
           <solution>Document: nested JSON; Key-value: opaque blobs; Column-family: wide sparse rows with column groups.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="3" points="7" difficulty="medium" eligibility="exam">
+        
+    <subtask difficulty="medium" eligibility="exam" id="3" points="7">
+            
       <variants group="Consistency">
+                
         <variant id="1">
+                    
           <text>What is eventual consistency and read-your-writes?</text>
+                    
           <solution>Eventual: replicas converge without bounds; Read-your-writes: session guarantees to see own updates.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="4" points="8" difficulty="hard" eligibility="both">
+        
+    <subtask difficulty="hard" eligibility="both" id="4" points="8">
+            
       <variants group="Sharding">
+                
         <variant id="1">
+                    
           <text>Explain pros/cons of range vs. hash sharding.</text>
+                    
           <solution>Range enables efficient ranges but hotspots; hash balances load but breaks ranges; hybrids add indirection.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="5" points="3" difficulty="easy" eligibility="practice">
+        
+    <subtask difficulty="easy" eligibility="practice" id="5" points="3">
+            
       <variants group="Replication">
+                
         <variant id="1">
+                    
           <text>Leader-follower vs. leaderless.</text>
+                    
           <solution>Leader-follower centralizes writes; leaderless uses quorum reads/writes with vector clocks.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="6" points="5" difficulty="medium" eligibility="both">
+        
+    <subtask difficulty="medium" eligibility="both" id="6" points="5">
+            
       <variants group="Conflict Resolution">
+                
         <variant id="1">
+                    
           <text>Describe last-write-wins and CRDTs at a glance.</text>
+                    
           <solution>LWW: timestamp-based, may drop writes; CRDTs: mergeable data types ensuring convergence without coordination.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="7" points="9" difficulty="hard" eligibility="exam">
+        
+    <subtask difficulty="hard" eligibility="exam" id="7" points="9">
+            
       <variants group="Quorums">
+                
         <variant id="1">
+                    
           <text>Given N=5, choose (R,W) to achieve strong consistency and discuss latency trade-offs.</text>
+                    
           <solution>Require R+W&gt;N (e.g., R=3,W=3). Higher W increases write latency; higher R increases read latency.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="8" points="4" difficulty="easy" eligibility="both">
+        
+    <subtask difficulty="easy" eligibility="both" id="8" points="4">
+            
       <variants group="Schema Design">
+                
         <variant id="1">
+                    
           <text>One-to-few vs. one-to-many embedding vs. referencing in a document DB.</text>
+                    
           <solution>Embed small bounded lists; reference large/unbounded with separate collections; denormalize for read patterns.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="9" points="6" difficulty="medium" eligibility="both">
+        
+    <subtask difficulty="medium" eligibility="both" id="9" points="6">
+            
       <variants group="Secondary Indexes">
+                
         <variant id="1">
+                    
           <text>Why are global secondary indexes hard in distributed KV stores?</text>
+                    
           <solution>They require cross-shard maintenance and consistency; solutions add write amplification or async lag.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="10" points="7" difficulty="medium" eligibility="both">
+        
+    <subtask difficulty="medium" eligibility="both" id="10" points="7">
+            
       <variants group="Caching">
+                
         <variant id="1">
+                    
           <text>Explain cache stampede and two mitigations.</text>
+                    
           <solution>Many clients miss and recompute; mitigations: request coalescing, jittered TTL, stale-while-revalidate.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
+      
   </task>
-
+    
   <!-- ======================= Task 7 ======================= -->
+    
   <task id="7" title="Analytics &amp; Warehousing">
-    <subtask id="1" points="4" difficulty="easy" eligibility="both">
+        
+    <subtask difficulty="easy" eligibility="both" id="1" points="4">
+            
       <variants group="Star Schema">
+                
         <variant id="1">
+                    
           <text>Differentiate fact and dimension tables.</text>
+                    
           <solution>Fact: measurements with FKs; Dimensions: descriptive attributes for slicing and filtering.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="2" points="6" difficulty="medium" eligibility="both">
+        
+    <subtask difficulty="medium" eligibility="both" id="2" points="6">
+            
       <variants group="Slowly Changing Dimensions">
+                
         <variant id="1">
+                    
           <text>Compare SCD Type 1 and Type 2.</text>
+                    
           <solution>Type 1 overwrites; Type 2 keeps history via versioned rows with effective dates.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="3" points="7" difficulty="medium" eligibility="exam">
+        
+    <subtask difficulty="medium" eligibility="exam" id="3" points="7">
+            
       <variants group="Partitioning">
+                
         <variant id="1">
+                    
           <text>When to use time-based partitioning? Mention pruning.</text>
+                    
           <solution>Large time-series facts; enables pruning partitions by date filters to cut scan costs.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="4" points="8" difficulty="hard" eligibility="both">
+        
+    <subtask difficulty="hard" eligibility="both" id="4" points="8">
+            
       <variants group="Columnar Storage">
+                
         <variant id="1">
+                    
           <text>Why are column stores good at aggregation scans?</text>
+                    
           <solution>Read only needed columns; compress well; vectorized execution; late materialization.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="5" points="3" difficulty="easy" eligibility="practice">
+        
+    <subtask difficulty="easy" eligibility="practice" id="5" points="3">
+            
       <variants group="ETL vs. ELT">
+                
         <variant id="1">
+                    
           <text>Define ETL vs. ELT succinctly.</text>
+                    
           <solution>ETL: transform before load; ELT: load then transform using warehouse compute.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="6" points="5" difficulty="medium" eligibility="both">
+        
+    <subtask difficulty="medium" eligibility="both" id="6" points="5">
+            
       <variants group="Materialized Views">
+                
         <variant id="1">
+                    
           <text>Two view maintenance strategies.</text>
+                    
           <solution>Incremental updates on change; scheduled refreshes; choose based on freshness vs. cost.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="7" points="9" difficulty="hard" eligibility="exam">
+        
+    <subtask difficulty="hard" eligibility="exam" id="7" points="9">
+            
       <variants group="Cost-Based Optimizer">
+                
         <variant id="1">
+                    
           <text>Explain cardinality estimation errors and their impact.</text>
+                    
           <solution>Poor estimates lead to suboptimal join orders/access paths; mitigations include histograms, sampling, feedback.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="8" points="4" difficulty="easy" eligibility="both">
+        
+    <subtask difficulty="easy" eligibility="both" id="8" points="4">
+            
       <variants group="OLAP Cubes">
+                
         <variant id="1">
+                    
           <text>Roll-up vs. drill-down in OLAP.</text>
+                    
           <solution>Roll-up aggregates to higher levels; drill-down navigates to finer granularity.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="9" points="6" difficulty="medium" eligibility="both">
+        
+    <subtask difficulty="medium" eligibility="both" id="9" points="6">
+            
       <variants group="Data Lakes">
+                
         <variant id="1">
+                    
           <text>What problems do lakehouse architectures try to solve?</text>
+                    
           <solution>ACID over files, schema evolution, time travel, and governance on top of cheap object storage.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="10" points="7" difficulty="medium" eligibility="both">
+        
+    <subtask difficulty="medium" eligibility="both" id="10" points="7">
+            
       <variants group="Batch vs. Stream">
+                
         <variant id="1">
+                    
           <text>Name two scenarios favoring streaming over batch.</text>
+                    
           <solution>Low-latency dashboards; fraud detection; alerting; continuous ETL with late data handling.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
+      
   </task>
-
+    
   <!-- ======================= Task 8 ======================= -->
+    
   <task id="8" title="Application Layer &amp; ORMs">
-    <subtask id="1" points="4" difficulty="easy" eligibility="both">
+        
+    <subtask difficulty="easy" eligibility="both" id="1" points="4">
+            
       <variants group="N+1 Problem">
+                
         <variant id="1">
+                    
           <text>What is the N+1 query problem?</text>
+                    
           <solution>Executing one query per item causing O(N) extra queries; solved by eager loading or batching.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="2" points="6" difficulty="medium" eligibility="both">
+        
+    <subtask difficulty="medium" eligibility="both" id="2" points="6">
+            
       <variants group="Migrations">
+                
         <variant id="1">
+                    
           <text>Safe sequence to add a NOT NULL column with default in production.</text>
+                    
           <solution>Add nullable column; backfill in chunks; add default; set NOT NULL; update application.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="3" points="7" difficulty="medium" eligibility="exam">
+        
+    <subtask difficulty="medium" eligibility="exam" id="3" points="7">
+            
       <variants group="Optimistic Locking">
+                
         <variant id="1">
+                    
           <text>How does a version column prevent lost updates?</text>
+                    
           <solution>UPDATE ... WHERE id=? AND version=?; if 0 rows, retry; ensures write-write conflicts are detected.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="4" points="8" difficulty="hard" eligibility="both">
+        
+    <subtask difficulty="hard" eligibility="both" id="4" points="8">
+            
       <variants group="CQRS">
+                
         <variant id="1">
+                    
           <text>Why separate read and write models (CQRS)?</text>
+                    
           <solution>Independent scaling, specialized schemas, and simpler write validation; eventual consistency for reads.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="5" points="3" difficulty="easy" eligibility="practice">
+        
+    <subtask difficulty="easy" eligibility="practice" id="5" points="3">
+            
       <variants group="Pagination">
+                
         <variant id="1">
+                    
           <text>Offset/limit vs. keyset pagination.</text>
+                    
           <solution>Offset is simple but slow for large offsets; keyset uses stable cursors and index-friendly predicates.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="6" points="5" difficulty="medium" eligibility="both">
+        
+    <subtask difficulty="medium" eligibility="both" id="6" points="5">
+            
       <variants group="Connection Pooling">
+                
         <variant id="1">
+                    
           <text>Two symptoms of undersized pools.</text>
+                    
           <solution>High queue wait time, timeouts; monitor active vs. idle connections and tune.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="7" points="9" difficulty="hard" eligibility="exam">
+        
+    <subtask difficulty="hard" eligibility="exam" id="7" points="9">
+            
       <variants group="Multi-Tenancy">
+                
         <variant id="1">
+                    
           <text>Compare shared-schema, separate-schema, and separate-database isolation.</text>
+                    
           <solution>Shared-schema: cheapest, weakest isolation; separate-schema: moderate; separate-DB: strongest, costliest.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="8" points="4" difficulty="easy" eligibility="both">
+        
+    <subtask difficulty="easy" eligibility="both" id="8" points="4">
+            
       <variants group="SQL Injection">
+                
         <variant id="1">
+                    
           <text>How do prepared statements mitigate injection?</text>
+                    
           <solution>Parameters are bound, not concatenated; engine parses before binding, preventing code execution.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="9" points="6" difficulty="medium" eligibility="both">
+        
+    <subtask difficulty="medium" eligibility="both" id="9" points="6">
+            
       <variants group="Caching Layers">
+                
         <variant id="1">
+                    
           <text>Write-through vs. write-back cache policy.</text>
+                    
           <solution>Write-through: sync to DB on write; write-back: buffer and flush later; trade durability vs. latency.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="10" points="7" difficulty="medium" eligibility="both">
+        
+    <subtask difficulty="medium" eligibility="both" id="10" points="7">
+            
       <variants group="Batch Writes">
+                
         <variant id="1">
+                    
           <text>Pros/cons of batching inserts.</text>
+                    
           <solution>Fewer round-trips and better throughput; but memory spikes and bigger rollbacks on failure.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
+      
   </task>
-
+    
   <!-- ======================= Task 9 ======================= -->
+    
   <task id="9" title="Security &amp; Privacy">
-    <subtask id="1" points="4" difficulty="easy" eligibility="both">
+        
+    <subtask difficulty="easy" eligibility="both" id="1" points="4">
+            
       <variants group="Principle of Least Privilege">
+                
         <variant id="1">
+                    
           <text>Apply least privilege to database roles.</text>
+                    
           <solution>Grant minimal rights per role; separate admin and app roles; restrict DDL in app accounts.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="2" points="6" difficulty="medium" eligibility="both">
+        
+    <subtask difficulty="medium" eligibility="both" id="2" points="6">
+            
       <variants group="Encryption">
+                
         <variant id="1">
+                    
           <text>Difference between TDE and application-level encryption.</text>
+                    
           <solution>TDE protects at-rest files; app-level encrypts fields before DB, protecting DB admins but complicating queries.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="3" points="7" difficulty="medium" eligibility="exam">
+        
+    <subtask difficulty="medium" eligibility="exam" id="3" points="7">
+            
       <variants group="Auditing">
+                
         <variant id="1">
+                    
           <text>What must an audit log contain for non-repudiation?</text>
+                    
           <solution>Actor identity, timestamp, action, target, before/after values, integrity protections.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="4" points="8" difficulty="hard" eligibility="both">
+        
+    <subtask difficulty="hard" eligibility="both" id="4" points="8">
+            
       <variants group="Anonymization">
+                
         <variant id="1">
+                    
           <text>Contrast k-anonymity and differential privacy.</text>
+                    
           <solution>k-anonymity groups indistinguishable records; DP adds calibrated noise with formal epsilon guarantees.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="5" points="3" difficulty="easy" eligibility="practice">
+        
+    <subtask difficulty="easy" eligibility="practice" id="5" points="3">
+            
       <variants group="Hashing">
+                
         <variant id="1">
+                    
           <text>Why use bcrypt/argon2 for passwords instead of SHA-256?</text>
+                    
           <solution>They are slow and memory-hard, resisting brute-force; SHA-256 is fast and unsuitable.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="6" points="5" difficulty="medium" eligibility="both">
+        
+    <subtask difficulty="medium" eligibility="both" id="6" points="5">
+            
       <variants group="Row-Level Security">
+                
         <variant id="1">
+                    
           <text>Example policy to restrict rows by tenant_id.</text>
+                    
           <solution>CREATE POLICY ... USING (tenant_id = current_setting('app.tenant')::uuid); set setting per request.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="7" points="9" difficulty="hard" eligibility="exam">
+        
+    <subtask difficulty="hard" eligibility="exam" id="7" points="9">
+            
       <variants group="Key Management">
+                
         <variant id="1">
+                    
           <text>Outline envelope encryption.</text>
+                    
           <solution>Data encrypted with DEKs; DEKs encrypted with KEK in KMS; rotate KEK, rewrap DEKs, avoid large re-encryptions.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="8" points="4" difficulty="easy" eligibility="both">
+        
+    <subtask difficulty="easy" eligibility="both" id="8" points="4">
+            
       <variants group="SQL Injection Defense">
+                
         <variant id="1">
+                    
           <text>Why is escaping alone insufficient?</text>
+                    
           <solution>It is error-prone and DB/locale dependent; prefer parameterized queries and allowlists.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="9" points="6" difficulty="medium" eligibility="both">
+        
+    <subtask difficulty="medium" eligibility="both" id="9" points="6">
+            
       <variants group="PII Minimization">
+                
         <variant id="1">
+                    
           <text>Name two data minimization strategies.</text>
+                    
           <solution>Collect only necessary fields and reduce retention windows; tokenize sensitive fields.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="10" points="7" difficulty="medium" eligibility="both">
+        
+    <subtask difficulty="medium" eligibility="both" id="10" points="7">
+            
       <variants group="Access Reviews">
+                
         <variant id="1">
+                    
           <text>What should periodic access reviews verify?</text>
+                    
           <solution>Active users, role appropriateness, stale accounts, emergency access usage, and break-glass procedures.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
+      
   </task>
-
+    
   <!-- ======================= Task 10 ======================= -->
+    
   <task id="10" title="Performance Tuning">
-    <subtask id="1" points="4" difficulty="easy" eligibility="both">
+        
+    <subtask difficulty="easy" eligibility="both" id="1" points="4">
+            
       <variants group="Metrics">
+                
         <variant id="1">
+                    
           <text>List three core DB latency metrics to track.</text>
+                    
           <solution>P50/P95 latency, queue wait time, and disk I/O time; optionally buffer cache hit ratio.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="2" points="6" difficulty="medium" eligibility="both">
+        
+    <subtask difficulty="medium" eligibility="both" id="2" points="6">
+            
       <variants group="Normalization vs. Speed">
+                
         <variant id="1">
+                    
           <text>When does normalization hurt performance?</text>
+                    
           <solution>Heavily read-mostly workloads needing many joins; consider selective denormalization or materialized views.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="3" points="7" difficulty="medium" eligibility="exam">
+        
+    <subtask difficulty="medium" eligibility="exam" id="3" points="7">
+            
       <variants group="Hot Queries">
+                
         <variant id="1">
+                    
           <text>Steps to optimize a slow TOP-N query.</text>
+                    
           <solution>Add covering index, pushdown filters, limit early, consider pre-aggregation and partial indexes.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="4" points="8" difficulty="hard" eligibility="both">
+        
+    <subtask difficulty="hard" eligibility="both" id="4" points="8">
+            
       <variants group="Parallelism">
+                
         <variant id="1">
+                    
           <text>How does parallel query execution scale and when does it not?</text>
+                    
           <solution>Scales with partitionable work; bottlenecks: skew, network, memory, non-parallel operators.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="5" points="3" difficulty="easy" eligibility="practice">
+        
+    <subtask difficulty="easy" eligibility="practice" id="5" points="3">
+            
       <variants group="Explain Plans">
+                
         <variant id="1">
+                    
           <text>What is the difference between EXPLAIN and EXPLAIN ANALYZE?</text>
+                    
           <solution>EXPLAIN shows plan estimates; ANALYZE executes and shows actual timings and row counts.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="6" points="5" difficulty="medium" eligibility="both">
+        
+    <subtask difficulty="medium" eligibility="both" id="6" points="5">
+            
       <variants group="Caching Patterns">
+                
         <variant id="1">
+                    
           <text>Read-through vs. cache-aside.</text>
+                    
           <solution>Read-through: cache delegates to DB; cache-aside: app loads into cache on miss and writes-through selectively.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="7" points="9" difficulty="hard" eligibility="exam">
+        
+    <subtask difficulty="hard" eligibility="exam" id="7" points="9">
+            
       <variants group="Resource Limits">
+                
         <variant id="1">
+                    
           <text>How to diagnose CPU-bound vs. I/O-bound queries?</text>
+                    
           <solution>Use perf/pmc, I/O stats, wait events; CPU-bound: high CPU, low I/O waits; I/O-bound: high disk waits.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="8" points="4" difficulty="easy" eligibility="both">
+        
+    <subtask difficulty="easy" eligibility="both" id="8" points="4">
+            
       <variants group="Batch Windows">
+                
         <variant id="1">
+                    
           <text>What scheduling tactics prevent nightly batch overruns?</text>
+                    
           <solution>Back-pressure, prioritized queues, incremental loads, and resource reservations.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="9" points="6" difficulty="medium" eligibility="both">
+        
+    <subtask difficulty="medium" eligibility="both" id="9" points="6">
+            
       <variants group="Connection Limits">
+                
         <variant id="1">
+                    
           <text>Why can too many DB connections slow throughput?</text>
+                    
           <solution>Context switching and lock contention; prefer pooling and back-pressure.</solution>
+                  
         </variant>
+              
       </variants>
+          
     </subtask>
-    <subtask id="10" points="7" difficulty="medium" eligibility="both">
+        
+    <subtask difficulty="medium" eligibility="both" id="10" points="7">
+            
       <variants group="Benchmarking">
+                
         <variant id="1">
+                    
           <text>Three pitfalls of synthetic benchmarks.</text>
+                    
           <solution>Unrealistic data distributions, cache-warm artifacts, and missing mixed workload effects.</solution>
+                  
+        </variant>
+              
+      </variants>
+          
+    </subtask>
+      
+  </task>
+  
+  <task id="0011" title="Test JR">
+    <subtask difficulty="hard" eligibility="exam" id="0001" points="10">
+      <variants group="Jürgen special">
+        <variant id="0001">
+          <text>Wie heißt mein Sohn	</text>
+          <solution>Simon</solution>
+        </variant>
+        <variant id="0002">
+          <text>Wie heißt mein anderer Sohn	</text>
+          <solution>Lukas</solution>
         </variant>
       </variants>
     </subtask>
