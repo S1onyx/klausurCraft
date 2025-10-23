@@ -30,11 +30,11 @@
     <xsd:complexType>
       <xsd:sequence>
         <!-- task element declared inline so we can attach xsd:key here -->
-        <xsd:element name="task" maxOccurs="unbounded">
+        <xsd:element name="task" minOccurs="0" maxOccurs="unbounded">
           <xsd:complexType>
             <xsd:sequence>
               <!-- subtask element declared inline so we can attach xsd:key here -->
-              <xsd:element name="subtask" maxOccurs="unbounded">
+              <xsd:element name="subtask" minOccurs="0" maxOccurs="unbounded">
                 <xsd:complexType>
                   <xsd:sequence>
                     <xsd:element name="variants">

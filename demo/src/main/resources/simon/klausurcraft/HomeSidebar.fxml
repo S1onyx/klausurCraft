@@ -6,7 +6,7 @@
 
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
-      fx:controller="simon.klausurcraft.controller.home.HomeSidebarController"
+      fx:controller="simon.klausurcraft.ui.home.HomeSidebarController"
       spacing="8" BorderPane.alignment="CENTER">
     <padding>
         <Insets top="12" right="8" bottom="12" left="12"/>
@@ -14,6 +14,9 @@
     <children>
         <Label text="Contents" />
         <TreeView fx:id="tocTree" prefWidth="280" prefHeight="400"/>
-        <Button fx:id="btnLoad" text="Load XML…"/>
+        <HBox spacing="8">
+            <Button fx:id="btnLoad" text="Load XML…"/>
+            <Button fx:id="btnNewXml" text="New XML" styleClass="chip"/>
+        </HBox>
     </children>
 </VBox>

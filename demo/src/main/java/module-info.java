@@ -11,15 +11,15 @@ module simon.klausurcraft {
 
     // FXML reflection open only for existing packages
     opens simon.klausurcraft to javafx.fxml;
-    opens simon.klausurcraft.controller.home to javafx.fxml;
-    opens simon.klausurcraft.controller.common to javafx.fxml;
+    opens simon.klausurcraft.ui.home to javafx.fxml;
+    opens simon.klausurcraft.ui.common to javafx.fxml;
 
     // export only for public APIs
     exports simon.klausurcraft;
-    exports simon.klausurcraft.controller.home;
-    exports simon.klausurcraft.controller.common;
-    exports simon.klausurcraft.model;
-    exports simon.klausurcraft.services;
-    exports simon.klausurcraft.pdf;
-    exports simon.klausurcraft.utils;
+    exports simon.klausurcraft.ui.home;
+    exports simon.klausurcraft.ui.common;
+    exports simon.klausurcraft.core.model;
+    exports simon.klausurcraft.infrastructure.xml;
+    exports simon.klausurcraft.infrastructure.pdf;
+    exports simon.klausurcraft.ui.support;
 }

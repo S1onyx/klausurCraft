@@ -6,7 +6,7 @@
 
 <HBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
-      fx:controller="simon.klausurcraft.controller.home.HomeTopbarController"
+      fx:controller="simon.klausurcraft.ui.home.HomeTopbarController"
       spacing="12">
     <padding>
         <Insets top="12" right="12" bottom="12" left="12"/>
