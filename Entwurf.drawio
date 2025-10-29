@@ -1,0 +1,31 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/28.2.5 Chrome/138.0.7204.251 Electron/37.6.1 Safari/537.36" version="28.2.5">
+  <diagram name="Seite-1" id="dgX2iQgf48TGzIfDgm6Y">
+    <mxGraphModel dx="1113" dy="1961" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="aMnx6OlL5r07E3OSzlIQ-1" value="&lt;b&gt;simon.klausurcraft&lt;/b&gt;&lt;div&gt;JavaFX application bootstrap and global app configuration. Hosts the primary scene and FXML loading.&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="270" y="-30" width="240" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="aMnx6OlL5r07E3OSzlIQ-2" value="&lt;b&gt;simon.klausurcraft.controller.common&lt;/b&gt;&lt;div&gt;Reusable UI building blocks independent from the &quot;home&quot; screen specifics.&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="385" y="110" width="240" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="aMnx6OlL5r07E3OSzlIQ-3" value="&lt;b&gt;simon.klausurcraft.controller.home&lt;/b&gt;&lt;div&gt;Main screen orchestration (topbar/filters,sidebar, center list, generate flow, dialogs). Coordinates UI, services interaction, triggers renders, and handles user actions.&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="145" y="110" width="240" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="aMnx6OlL5r07E3OSzlIQ-4" value="&lt;b&gt;simon.klausurcraft.model&lt;/b&gt;&lt;div&gt;In-memory domain representatin of tasks, subtasks, and variants including lightweight enums. Each model holds a DOM handle for autosave.&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="270" y="400" width="240" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="aMnx6OlL5r07E3OSzlIQ-5" value="&lt;b&gt;simon.klausurcraft.services&lt;/b&gt;&lt;div&gt;Buisness logic and persistence helpers: XML parse/validate/autosave and combinatorics for points/difficulty distribution&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="270" y="260" width="240" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="aMnx6OlL5r07E3OSzlIQ-6" value="&lt;b&gt;simon.klausurcraft.pdf&lt;/b&gt;&lt;div&gt;PDF export of exam and solution sheets using OpenPDF. Encapsulates layout decisions and writing.&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="20" y="260" width="240" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="aMnx6OlL5r07E3OSzlIQ-7" value="&lt;b&gt;simon.klausurcraft.utils&lt;/b&gt;&lt;div&gt;Small UI/system helpers such as theme switching and dialog styling. No domain logic&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="520" y="260" width="240" height="130" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

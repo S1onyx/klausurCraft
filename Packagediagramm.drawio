@@ -1,0 +1,34 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/28.2.8 Chrome/140.0.7339.240 Electron/38.4.0 Safari/537.36" version="28.2.8">
+  <diagram name="Seite-1" id="dgX2iQgf48TGzIfDgm6Y">
+    <mxGraphModel dx="946" dy="669" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="kBwCPLjk2G5Nu26SjhQo-1" value="simon.klausurcraft&lt;div&gt;Enthält die JavaFX-Startklasse&amp;nbsp;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="40" y="50" width="320" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="kBwCPLjk2G5Nu26SjhQo-2" value="&lt;font face=&quot;Helvetica&quot;&gt;simon.klausurcraft.core.model&lt;br&gt;&lt;/font&gt;&lt;div&gt;&lt;span style=&quot;text-align: start;&quot;&gt;&lt;font style=&quot;color: light-dark(rgb(171, 178, 191), rgb(255, 255, 255));&quot; face=&quot;Helvetica&quot;&gt;Modelliert die fachlichen Entitäten (Prüfungsaufgaben, Unteraufgaben, Varianten) inkl. Metadaten wie Punkte, Schwierigkeit und Zulässigkeit.&lt;/font&gt;&lt;/span&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="40" y="170" width="320" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="kBwCPLjk2G5Nu26SjhQo-3" value="simon.klausurcraft.core.selection&lt;div&gt;Liefert Algorithmen zur Punkte- und Schwierigkeitsverteilung&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="370" y="170" width="320" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="kBwCPLjk2G5Nu26SjhQo-4" value="simon.klausurcraft.infastructure.xml&lt;div&gt;Kapselt das Laden, Validieren, Speichern und Bearbeiten der XML-Daten&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="370" y="290" width="320" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="kBwCPLjk2G5Nu26SjhQo-5" value="simon.klausurcraft.infrastructure.pdf&lt;div&gt;Generiert Exam- und Lösungs- PDFs auf Basis der ausgewählten Aufgaben/ Varianten&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="40" y="290" width="320" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="kBwCPLjk2G5Nu26SjhQo-6" value="simon.klausurcraft.ui.common&lt;div&gt;Wiederverwendbare JavaFX-Komponenten&amp;nbsp;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="370" y="410" width="320" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="kBwCPLjk2G5Nu26SjhQo-7" value="simon.klausurcraft.ui.home&lt;div&gt;Komplettes Home-Dashboard&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="700" y="410" width="320" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="kBwCPLjk2G5Nu26SjhQo-8" value="simon.klausurcraft.ui.support&lt;div&gt;UI-Helfer bspw. für Theme-Wechsel, etc...&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="40" y="410" width="320" height="110" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
