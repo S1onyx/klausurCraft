@@ -11,13 +11,13 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Window;
-import simon.klausurcraft.KlausurCraftApplication;
-import simon.klausurcraft.ui.common.SlideOverPane;
-import simon.klausurcraft.core.model.Difficulty;
-import simon.klausurcraft.core.model.GenerateScope;
-import simon.klausurcraft.core.model.TaskModel;
-import simon.klausurcraft.infrastructure.xml.TaskXmlRepository;
-import simon.klausurcraft.ui.support.ThemeManager;
+import simon.klausurcraft.app.KlausurCraftApp;
+import simon.klausurcraft.ui.components.SlideOverPane;
+import simon.klausurcraft.task.Difficulty;
+import simon.klausurcraft.task.GenerateScope;
+import simon.klausurcraft.task.Task;
+import simon.klausurcraft.task.io.TaskXmlStore;
+import simon.klausurcraft.ui.ThemeService;
 
 import java.time.LocalDate;
 import java.util.EnumSet;
@@ -42,8 +42,8 @@ public class HomeController {
     private SlideOverPane slideOver;
 
     // Models / Services
-    private final TaskXmlRepository taskRepository = new TaskXmlRepository();
-    private final ObservableList<TaskModel> tasks = FXCollections.observableArrayList();
+    private final TaskXmlStore taskRepository = new TaskXmlStore();
+    private final ObservableList<Task> tasks = FXCollections.observableArrayList();
 
     // State / binding
     private final StringProperty loadedFileName = new SimpleStringProperty("No file loaded");
@@ -56,10 +56,10 @@ public class HomeController {
     final ObjectProperty<LocalDate> examDate = new SimpleObjectProperty<>(LocalDate.now());
     final BooleanProperty withSampleSolution = new SimpleBooleanProperty(false);
 
-    public TaskXmlRepository getTaskRepository() { return taskRepository; }
-    public ObservableList<TaskModel> getTasks() { return tasks; }
+    public TaskXmlStore getTaskRepository() { return taskRepository; }
+    public ObservableList<Task> getTasks() { return tasks; }
     public SlideOverPane getSlideOver() { return slideOver; }
-    public Window getWindow() { return KlausurCraftApplication.getScene().getWindow(); }
+    public Window getWindow() { return KlausurCraftApp.getScene().getWindow(); }
 
     @FXML
     public void initialize() {
@@ -73,10 +73,10 @@ public class HomeController {
         fileLabel.textProperty().bind(loadedFileName);
         countsLabel.textProperty().bind(taskCount.asString().concat(" / ").concat(subtaskCount.asString()));
 
-        // Icon-only theme toggle -> ThemeManager.toggle
+        // Icon-only theme toggle -> ThemeService.toggle
         if (themeToggle != null) {
-            themeToggle.setOnAction(e -> ThemeManager.toggle(KlausurCraftApplication.getScene()));
-            // also keep keyboard accelerator (Ctrl+D) set in KlausurCraftApplication
+            themeToggle.setOnAction(e -> ThemeService.toggle(KlausurCraftApp.getScene()));
+            // also keep keyboard accelerator (Ctrl+D) set in KlausurCraftApp
         }
 
         // Wire sub-controllers
@@ -112,7 +112,7 @@ public class HomeController {
         });
 
         // React to task list changes
-        tasks.addListener((javafx.collections.ListChangeListener<? super TaskModel>) c -> {
+        tasks.addListener((javafx.collections.ListChangeListener<? super Task>) c -> {
             updateCounts();
             rebuildToc();
             centerController.render(tasks, currentQuery(), allowedDifficulties());

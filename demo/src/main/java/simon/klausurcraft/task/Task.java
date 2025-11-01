@@ -1,4 +1,4 @@
-package simon.klausurcraft.core.model;
+package simon.klausurcraft.task;
 
 import org.w3c.dom.Element;
 
@@ -8,13 +8,13 @@ import java.util.List;
 /**
  * Task/topic root. Holds DOM element for autosave-on-change.
  */
-public class TaskModel {
+public class Task {
     private final Element dom; // <task>
     private final String id;
     private String title;
-    private final List<SubtaskModel> subtasks = new ArrayList<>();
+    private final List<Subtask> subtasks = new ArrayList<>();
 
-    public TaskModel(Element dom, String id, String title) {
+    public Task(Element dom, String id, String title) {
         this.dom = dom;
         this.id = id;
         this.title = title == null ? "" : title;
@@ -25,10 +25,10 @@ public class TaskModel {
     public String getTitle() { return title; }
     public void setTitle(String t) { this.title = t == null ? "" : t; }
 
-    public List<SubtaskModel> getSubtasks() { return subtasks; }
+    public List<Subtask> getSubtasks() { return subtasks; }
 
     /** Lightweight shallow clone for filtering lists (not copying DOM). */
-    public TaskModel cloneShallow() {
-        return new TaskModel(dom, id, title);
+    public Task cloneShallow() {
+        return new Task(dom, id, title);
     }
 }

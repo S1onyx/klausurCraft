@@ -1,4 +1,4 @@
-package simon.klausurcraft.core.model;
+package simon.klausurcraft.task;
 
 public enum Eligibility {
     EXAM, PRACTICE, BOTH;

@@ -1,9 +1,9 @@
-package simon.klausurcraft.core.selection;
+package simon.klausurcraft.task.planning;
 
-import simon.klausurcraft.core.model.Difficulty;
-import simon.klausurcraft.core.model.SubtaskModel;
-import simon.klausurcraft.core.model.TaskModel;
-import simon.klausurcraft.core.model.GenerateScope;
+import simon.klausurcraft.task.Difficulty;
+import simon.klausurcraft.task.Subtask;
+import simon.klausurcraft.task.Task;
+import simon.klausurcraft.task.GenerateScope;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -16,13 +16,13 @@ import java.util.stream.Collectors;
  *  - Use integer points only.
  *  - Distribution target per category = round(N/3), tolerance ±1 per category.
  */
-public final class PointCombination {
+public final class PointDistributionPlanner {
 
-    private PointCombination() {}
+    private PointDistributionPlanner() {}
 
     /** Return all achievable integer sums for a task respecting eligibility and distribution (non-empty). */
-    public static List<Integer> achievablePointSums(TaskModel task, GenerateScope scope) {
-        List<SubtaskModel> eligible = task.getSubtasks().stream()
+    public static List<Integer> achievablePointSums(Task task, GenerateScope scope) {
+        List<Subtask> eligible = task.getSubtasks().stream()
             .filter(st -> st.isEligibleFor(scope))
             .collect(Collectors.toList());
 
@@ -34,7 +34,7 @@ public final class PointCombination {
         Map<Integer, FeasibleDist> dp = new HashMap<>();
         dp.put(0, new FeasibleDist(0,0,0,0));
 
-        for (SubtaskModel st : eligible) {
+        for (Subtask st : eligible) {
             int pts = st.getPoints().intValue();
             Difficulty d = st.getDifficulty();
             Map<Integer, FeasibleDist> next = new HashMap<>(dp);
@@ -60,17 +60,17 @@ public final class PointCombination {
     }
 
     /** Pick an actual combination hitting the sum with near-1/3 distribution; returns null if impossible. */
-    public static List<SubtaskModel> pickSubtasksWithDistribution(List<SubtaskModel> eligible, int targetSum) {
+    public static List<Subtask> pickSubtasksWithDistribution(List<Subtask> eligible, int targetSum) {
         eligible = new ArrayList<>(eligible);
         eligible.sort(Comparator.comparingInt(st -> -st.getPoints().intValue())); // big first to reduce branching
 
-        List<SubtaskModel> best = new ArrayList<>();
+        List<Subtask> best = new ArrayList<>();
         backtrack(eligible, 0, targetSum, new ArrayList<>(), new int[3], best);
         return best.isEmpty() ? null : best;
     }
 
-    private static void backtrack(List<SubtaskModel> arr, int idx, int remaining,
-                                  List<SubtaskModel> cur, int[] dist, List<SubtaskModel> best) {
+    private static void backtrack(List<Subtask> arr, int idx, int remaining,
+                                  List<Subtask> cur, int[] dist, List<Subtask> best) {
         if (remaining == 0) {
             if (distributionOk(dist)) {
                 if (cur.size() > best.size()) {
@@ -86,7 +86,7 @@ public final class PointCombination {
         for (int i = idx; i < arr.size(); i++) maxPossible += arr.get(i).getPoints().intValue();
         if (maxPossible < remaining) return;
 
-        SubtaskModel st = arr.get(idx);
+        Subtask st = arr.get(idx);
         int dIdx = switch (st.getDifficulty()) {
             case EASY -> 0; case MEDIUM -> 1; case HARD -> 2;
         };

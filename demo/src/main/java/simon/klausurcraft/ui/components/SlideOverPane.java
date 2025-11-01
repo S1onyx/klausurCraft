@@ -1,4 +1,4 @@
-package simon.klausurcraft.ui.common;
+package simon.klausurcraft.ui.components;
 
 import javafx.animation.TranslateTransition;
 import javafx.geometry.Insets;

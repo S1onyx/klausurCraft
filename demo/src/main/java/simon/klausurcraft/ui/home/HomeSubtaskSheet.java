@@ -3,9 +3,9 @@ package simon.klausurcraft.ui.home;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
-import simon.klausurcraft.core.model.*;
-import simon.klausurcraft.infrastructure.xml.TaskXmlRepository;
-import simon.klausurcraft.ui.support.UiUtil;
+import simon.klausurcraft.task.*;
+import simon.klausurcraft.task.io.TaskXmlStore;
+import simon.klausurcraft.ui.UiStyles;
 
 import java.math.BigDecimal;
 
@@ -13,7 +13,7 @@ final class HomeSubtaskSheet {
 
     private HomeSubtaskSheet(){}
 
-    static void open(HomeController root, TaskModel task, SubtaskModel sub) {
+    static void open(HomeController root, Task task, Subtask sub) {
         // Root layout with sticky footer
         BorderPane sheet = new BorderPane();
         sheet.setPadding(new Insets(0));
@@ -24,7 +24,7 @@ final class HomeSubtaskSheet {
         Label title = new Label("Subtask " + task.getId() + "." + sub.getId());
         title.getStyleClass().add("header");
 
-        TaskXmlRepository xmlService = root.getTaskRepository();
+        TaskXmlStore xmlService = root.getTaskRepository();
 
         // Subtask "title" from variants@group
         String currentGroup = xmlService.readSubtaskGroup(sub);
@@ -165,7 +165,7 @@ final class HomeSubtaskSheet {
             a.setHeaderText("Delete this subtask?");
             a.setContentText("This will delete the subtask including all its variants. This action cannot be undone.");
             a.initOwner(root.getWindow());
-            UiUtil.applyCurrentStyles(a);
+            UiStyles.applyCurrentStyles(a);
             a.showAndWait().ifPresent(bt -> {
                 if (bt == ButtonType.OK) {
                     if (root.getTaskRepository().deleteSubtask(task, sub)) {
@@ -184,7 +184,7 @@ final class HomeSubtaskSheet {
         variantsHeader.getChildren().addAll(vTitle, vSpacer, btnAddVariant, btnDeleteSubtask);
         variantsBox.getChildren().add(variantsHeader);
 
-        for (VariantModel v : sub.getVariants()) {
+        for (Variant v : sub.getVariants()) {
             VBox vCard = new VBox(8);
             vCard.getStyleClass().add("card");
             vCard.setPadding(new Insets(12));
@@ -205,7 +205,7 @@ final class HomeSubtaskSheet {
                 a.setHeaderText("Delete this variant?");
                 a.setContentText("This action cannot be undone.");
                 a.initOwner(root.getWindow());
-                UiUtil.applyCurrentStyles(a);
+                UiStyles.applyCurrentStyles(a);
                 a.showAndWait().ifPresent(bt -> {
                     if (bt == ButtonType.OK) {
                         if (root.getTaskRepository().deleteVariant(sub, v)) {

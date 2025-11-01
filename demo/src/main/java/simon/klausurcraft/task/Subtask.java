@@ -1,4 +1,4 @@
-package simon.klausurcraft.core.model;
+package simon.klausurcraft.task;
 
 import org.w3c.dom.Element;
 
@@ -9,19 +9,19 @@ import java.util.List;
 /**
  * Subtask within a task. Holds DOM element for autosave-on-change.
  */
-public class SubtaskModel {
+public class Subtask {
     private final Element dom; // <subtask>
-    private final TaskModel parent;
+    private final Task parent;
 
     private final String id;
     private BigDecimal points;
     private Difficulty difficulty;
     private Eligibility eligibility;
 
-    private final List<VariantModel> variants = new ArrayList<>();
+    private final List<Variant> variants = new ArrayList<>();
 
-    public SubtaskModel(Element dom, TaskModel parent, String id, BigDecimal points,
-                        Difficulty difficulty, Eligibility eligibility) {
+    public Subtask(Element dom, Task parent, String id, BigDecimal points,
+                   Difficulty difficulty, Eligibility eligibility) {
         this.dom = dom;
         this.parent = parent;
         this.id = id;
@@ -31,7 +31,7 @@ public class SubtaskModel {
     }
 
     public Element getDom() { return dom; }
-    public TaskModel getParent() { return parent; }
+    public Task getParent() { return parent; }
 
     public String getId() { return id; }
     public BigDecimal getPoints() { return points; }
@@ -42,7 +42,7 @@ public class SubtaskModel {
     public void setDifficulty(Difficulty d) { this.difficulty = d; }
     public void setEligibility(Eligibility e) { this.eligibility = e; }
 
-    public List<VariantModel> getVariants() { return variants; }
+    public List<Variant> getVariants() { return variants; }
 
     public boolean isEligibleFor(GenerateScope scope) {
         return switch (scope) {

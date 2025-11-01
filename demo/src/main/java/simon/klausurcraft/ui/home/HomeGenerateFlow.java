@@ -11,14 +11,14 @@ import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.*;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import simon.klausurcraft.KlausurCraftApplication;
-import simon.klausurcraft.core.model.GenerateScope;
-import simon.klausurcraft.core.model.SubtaskModel;
-import simon.klausurcraft.core.model.TaskModel;
-import simon.klausurcraft.core.model.VariantModel;
-import simon.klausurcraft.infrastructure.pdf.PdfExporter;
-import simon.klausurcraft.core.selection.PointCombination;
-import simon.klausurcraft.ui.support.ThemeManager;
+import simon.klausurcraft.app.KlausurCraftApp;
+import simon.klausurcraft.task.GenerateScope;
+import simon.klausurcraft.task.Subtask;
+import simon.klausurcraft.task.Task;
+import simon.klausurcraft.task.Variant;
+import simon.klausurcraft.task.export.PdfExportService;
+import simon.klausurcraft.task.planning.PointDistributionPlanner;
+import simon.klausurcraft.ui.ThemeService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -196,15 +196,15 @@ final class HomeGenerateFlow {
         Scene scene = new Scene(pane, 1100, 750);
         // Adopt app styles (dark/light consistent)
         try {
-            scene.getStylesheets().setAll(KlausurCraftApplication.getScene().getStylesheets());
+            scene.getStylesheets().setAll(KlausurCraftApp.getScene().getStylesheets());
         } catch (Exception ignored) { /* best effort */ }
         stage.setScene(scene);
 
         // Theme Toggle & Shortcut (Ctrl+D) in dialog
-        themeToggle.setOnAction(e -> ThemeManager.toggle(scene));
+        themeToggle.setOnAction(e -> ThemeService.toggle(scene));
         scene.getAccelerators().put(
             new KeyCodeCombination(KeyCode.D, KeyCombination.CONTROL_DOWN),
-            () -> ThemeManager.toggle(scene)
+            () -> ThemeService.toggle(scene)
         );
 
         // Actions
@@ -223,20 +223,20 @@ final class HomeGenerateFlow {
 
     static void generateExamNow(HomeController root, List<TaskSelection> selections) {
         try {
-            PdfExporter exporter = new PdfExporter();
+            PdfExportService exporter = new PdfExportService();
 
-            List<PdfExporter.TaskAssembly> assemblies = new ArrayList<>();
+            List<PdfExportService.TaskAssembly> assemblies = new ArrayList<>();
             int taskIndex = 1;
             for (TaskSelection ts : selections) {
                 if (!ts.isEnabled()) continue;
                 int chosenPts = ts.getChosenPoints();
-                TaskModel task = ts.getTask();
+                Task task = ts.getTask();
 
-                List<SubtaskModel> eligible = task.getSubtasks().stream()
+                List<Subtask> eligible = task.getSubtasks().stream()
                         .filter(st -> st.isEligibleFor(root.scope.get()))
                         .collect(Collectors.toList());
 
-                List<SubtaskModel> chosen = PointCombination.pickSubtasksWithDistribution(
+                List<Subtask> chosen = PointDistributionPlanner.pickSubtasksWithDistribution(
                         eligible, chosenPts);
 
                 if (chosen == null) {
@@ -245,16 +245,16 @@ final class HomeGenerateFlow {
                     return;
                 }
 
-                List<PdfExporter.ChosenVariant> chosenVariants = new ArrayList<>();
-                for (SubtaskModel sub : chosen) {
-                    List<VariantModel> variants = sub.getVariants();
-                    VariantModel variant = variants.isEmpty()
+                List<PdfExportService.ChosenVariant> chosenVariants = new ArrayList<>();
+                for (Subtask sub : chosen) {
+                    List<Variant> variants = sub.getVariants();
+                    Variant variant = variants.isEmpty()
                             ? null
                             : variants.get(ThreadLocalRandom.current().nextInt(variants.size()));
-                    chosenVariants.add(new PdfExporter.ChosenVariant(sub, variant));
+                    chosenVariants.add(new PdfExportService.ChosenVariant(sub, variant));
                 }
 
-                assemblies.add(new PdfExporter.TaskAssembly(taskIndex++, task, chosenVariants));
+                assemblies.add(new PdfExportService.TaskAssembly(taskIndex++, task, chosenVariants));
             }
 
             if (assemblies.isEmpty()) {

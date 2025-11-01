@@ -3,9 +3,9 @@ package simon.klausurcraft.ui.home;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.geometry.Insets;
-import simon.klausurcraft.core.model.TaskModel;
+import simon.klausurcraft.task.Task;
 
-import simon.klausurcraft.ui.support.UiUtil;
+import simon.klausurcraft.ui.UiStyles;
 
 import java.util.Optional;
 
@@ -17,7 +17,7 @@ final class HomeTaskSheet {
     private HomeTaskSheet(){}
 
     /** Open slide-over to edit a task's title. */
-    static void openEdit(HomeController root, TaskModel task) {
+    static void openEdit(HomeController root, Task task) {
         BorderPane sheet = new BorderPane();
         sheet.setPadding(new Insets(0));
 
@@ -75,10 +75,10 @@ final class HomeTaskSheet {
     }
 
     /**
-     * Prompt for a new task (title) and create it via TaskXmlRepository.
-     * Returns created TaskModel on success, otherwise shows an English error banner.
+     * Prompt for a new task (title) and create it via TaskXmlStore.
+     * Returns created Task on success, otherwise shows an English error banner.
      */
-    static Optional<TaskModel> promptNewTask(HomeController root) {
+    static Optional<Task> promptNewTask(HomeController root) {
         TextInputDialog dlg = new TextInputDialog();
         dlg.setTitle("+ New task");
         dlg.setHeaderText("Create a new task");
@@ -91,7 +91,7 @@ final class HomeTaskSheet {
 
         dlg.initOwner(root.getWindow());
         // Apply app styles to dialog (dark mode fix)
-        UiUtil.applyCurrentStyles(dlg);
+        UiStyles.applyCurrentStyles(dlg);
 
         Optional<String> res = dlg.showAndWait();
         if (res.isPresent()) {
@@ -99,9 +99,9 @@ final class HomeTaskSheet {
             if (title.isEmpty()) title = "New Task";
 
             // Attempt to create task in the currently loaded XML
-            Optional<TaskModel> created = root.getTaskRepository().addTask(title);
+            Optional<Task> created = root.getTaskRepository().addTask(title);
             if (created.isEmpty()) {
-                // Most likely no XML loaded yet (TaskXmlRepository.doc == null)
+                // Most likely no XML loaded yet (TaskXmlStore.doc == null)
                 HomeNotifications.showError("No XML file is open. Please open an XML file first.");
                 return Optional.empty();
             }

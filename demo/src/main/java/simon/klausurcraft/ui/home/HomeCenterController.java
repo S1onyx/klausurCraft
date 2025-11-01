@@ -6,11 +6,11 @@ import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.input.ContextMenuEvent;
 import javafx.scene.layout.*;
-import simon.klausurcraft.core.model.Difficulty;
-import simon.klausurcraft.core.model.Eligibility;
-import simon.klausurcraft.core.model.SubtaskModel;
-import simon.klausurcraft.core.model.TaskModel;
-import simon.klausurcraft.ui.support.UiUtil;
+import simon.klausurcraft.task.Difficulty;
+import simon.klausurcraft.task.Eligibility;
+import simon.klausurcraft.task.Subtask;
+import simon.klausurcraft.task.Task;
+import simon.klausurcraft.ui.UiStyles;
 
 import java.util.List;
 import java.util.Objects;
@@ -27,11 +27,11 @@ public class HomeCenterController {
         this.root = root;
     }
 
-    public void render(List<TaskModel> tasks, String query, Set<Difficulty> allowed) {
+    public void render(List<Task> tasks, String query, Set<Difficulty> allowed) {
         centerContainer.getChildren().clear();
         String q = query == null ? "" : query;
 
-        for (TaskModel t : tasks) {
+        for (Task t : tasks) {
             boolean taskMatches = matchesTask(t, q);
 
             VBox taskCard = makeCard();
@@ -79,7 +79,7 @@ public class HomeCenterController {
             taskMenu.getItems().addAll(miEdit, miAdd, new SeparatorMenuItem(), miDel);
             taskCard.setOnContextMenuRequested((ContextMenuEvent ev) -> taskMenu.show(taskCard, ev.getScreenX(), ev.getScreenY()));
 
-            for (SubtaskModel st : t.getSubtasks()) {
+            for (Subtask st : t.getSubtasks()) {
                 if (!allowed.contains(st.getDifficulty())) continue;
                 boolean subMatches = taskMatches || matchesSubtask(st, q);
                 if (!subMatches && !q.isEmpty()) continue;
@@ -123,13 +123,13 @@ public class HomeCenterController {
         }
     }
 
-    private void tryDeleteTask(TaskModel t) {
+    private void tryDeleteTask(Task t) {
         Alert a = new Alert(Alert.AlertType.CONFIRMATION);
         a.setTitle("Delete task");
         a.setHeaderText("Delete this task?");
         a.setContentText("This will delete the task and all its subtasks and variants. This action cannot be undone.");
         a.initOwner(root.getWindow());
-        UiUtil.applyCurrentStyles(a);
+        UiStyles.applyCurrentStyles(a);
         a.showAndWait().ifPresent(bt -> {
             if (bt == ButtonType.OK) {
                 if (root.getTaskRepository().deleteTask(t)) {
@@ -141,13 +141,13 @@ public class HomeCenterController {
         });
     }
 
-    private void tryDeleteSubtask(TaskModel task, SubtaskModel st) {
+    private void tryDeleteSubtask(Task task, Subtask st) {
         Alert a = new Alert(Alert.AlertType.CONFIRMATION);
         a.setTitle("Delete subtask");
         a.setHeaderText("Delete this subtask?");
         a.setContentText("This will delete the subtask including all its variants. This action cannot be undone.");
         a.initOwner(root.getWindow());
-        UiUtil.applyCurrentStyles(a);
+        UiStyles.applyCurrentStyles(a);
         a.showAndWait().ifPresent(bt -> {
             if (bt == ButtonType.OK) {
                 if (root.getTaskRepository().deleteSubtask(task, st)) {
@@ -205,15 +205,15 @@ public class HomeCenterController {
         return l;
     }
 
-    private boolean matchesTask(TaskModel t, String q) {
+    private boolean matchesTask(Task t, String q) {
         if (q.isEmpty()) return true;
         if (t.getId().toLowerCase().contains(q)) return true;
         if (t.getTitle().toLowerCase().contains(q)) return true;
-        for (SubtaskModel st : t.getSubtasks()) if (matchesSubtask(st, q)) return true;
+        for (Subtask st : t.getSubtasks()) if (matchesSubtask(st, q)) return true;
         return false;
     }
 
-    private boolean matchesSubtask(SubtaskModel st, String q) {
+    private boolean matchesSubtask(Subtask st, String q) {
         if (q.isEmpty()) return true;
         if (st.getId().toLowerCase().contains(q)) return true;
         return st.getVariants().stream().anyMatch(v ->
@@ -224,7 +224,7 @@ public class HomeCenterController {
         );
     }
 
-    private String formatTaskTitle(TaskModel t) {
+    private String formatTaskTitle(Task t) {
         return String.format("%s — %s", t.getId(), t.getTitle());
     }
 }

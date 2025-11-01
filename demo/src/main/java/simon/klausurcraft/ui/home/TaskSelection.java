@@ -6,24 +6,24 @@ import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import simon.klausurcraft.core.model.GenerateScope;
-import simon.klausurcraft.core.model.TaskModel;
-import simon.klausurcraft.core.selection.PointCombination;
+import simon.klausurcraft.task.GenerateScope;
+import simon.klausurcraft.task.Task;
+import simon.klausurcraft.task.planning.PointDistributionPlanner;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class TaskSelection {
-    private final TaskModel task;
+    private final Task task;
     private final BooleanProperty enabled = new SimpleBooleanProperty(false);
     private final IntegerProperty chosenPoints = new SimpleIntegerProperty(0);
     private final ObservableList<Integer> achievable = FXCollections.observableArrayList();
 
-    public TaskSelection(TaskModel task) {
+    public TaskSelection(Task task) {
         this.task = task;
     }
 
-    public TaskModel getTask() { return task; }
+    public Task getTask() { return task; }
     public boolean isEnabled() { return enabled.get(); }
     public void setEnabled(boolean v) { enabled.set(v); }
     public BooleanProperty enabledProperty() { return enabled; }
@@ -32,7 +32,7 @@ public class TaskSelection {
     public ObservableList<Integer> getAchievable() { return achievable; }
 
     public void recomputeAchievable(GenerateScope scope) {
-        achievable.setAll(PointCombination.achievablePointSums(task, scope));
+        achievable.setAll(PointDistributionPlanner.achievablePointSums(task, scope));
         if (!achievable.contains(chosenPoints.get())) {
             chosenPoints.set(achievable.isEmpty() ? 0 : achievable.get(0));
         }
@@ -41,9 +41,9 @@ public class TaskSelection {
     @Override public String toString() { return task.getTitle(); }
 
     // helpers for list
-    public static ObservableList<TaskSelection> ensureFor(List<TaskModel> tasks) {
+    public static ObservableList<TaskSelection> ensureFor(List<Task> tasks) {
         ObservableList<TaskSelection> list = FXCollections.observableArrayList();
-        for (TaskModel t : tasks) list.add(new TaskSelection(t));
+        for (Task t : tasks) list.add(new TaskSelection(t));
         return list;
     }
 

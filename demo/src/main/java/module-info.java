@@ -10,16 +10,16 @@ module simon.klausurcraft {
     requires java.prefs;
 
     // FXML reflection open only for existing packages
-    opens simon.klausurcraft to javafx.fxml;
     opens simon.klausurcraft.ui.home to javafx.fxml;
-    opens simon.klausurcraft.ui.common to javafx.fxml;
+    opens simon.klausurcraft.ui.components to javafx.fxml;
 
     // export only for public APIs
-    exports simon.klausurcraft;
+    exports simon.klausurcraft.app;
+    exports simon.klausurcraft.task;
+    exports simon.klausurcraft.task.io;
+    exports simon.klausurcraft.task.export;
+    exports simon.klausurcraft.task.planning;
+    exports simon.klausurcraft.ui;
     exports simon.klausurcraft.ui.home;
-    exports simon.klausurcraft.ui.common;
-    exports simon.klausurcraft.core.model;
-    exports simon.klausurcraft.infrastructure.xml;
-    exports simon.klausurcraft.infrastructure.pdf;
-    exports simon.klausurcraft.ui.support;
+    exports simon.klausurcraft.ui.components;
 }

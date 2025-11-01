@@ -3,7 +3,7 @@ package simon.klausurcraft.ui.home;
 import javafx.fxml.FXML;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.TextField;
-import simon.klausurcraft.core.model.Difficulty;
+import simon.klausurcraft.task.Difficulty;
 
 import java.util.EnumSet;
 import java.util.Set;

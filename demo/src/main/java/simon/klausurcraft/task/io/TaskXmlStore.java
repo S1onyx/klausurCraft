@@ -1,10 +1,10 @@
-package simon.klausurcraft.infrastructure.xml;
+package simon.klausurcraft.task.io;
 
 import org.w3c.dom.*;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
-import simon.klausurcraft.core.model.*;
+import simon.klausurcraft.task.*;
 
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
@@ -24,12 +24,12 @@ import java.util.Optional;
 import static javax.xml.transform.OutputKeys.ENCODING;
 import static javax.xml.transform.OutputKeys.INDENT;
 
-public class TaskXmlRepository {
+public class TaskXmlStore {
 
     private Path currentFile;
     private Document doc;
 
-    public record LoadResult(List<TaskModel> tasks) {}
+    public record LoadResult(List<Task> tasks) {}
 
     public LoadResult load(Path xmlFile, Path xsdFile) throws Exception {
         this.currentFile = xmlFile;
@@ -63,7 +63,7 @@ public class TaskXmlRepository {
         doc = db.parse(Files.newInputStream(xmlFile));
         doc.getDocumentElement().normalize();
 
-        List<TaskModel> tasks = parseTasks(doc);
+        List<Task> tasks = parseTasks(doc);
         return new LoadResult(tasks);
     }
 
@@ -91,14 +91,14 @@ public class TaskXmlRepository {
         return load(xmlFile, xsdFile);
     }
 
-    private List<TaskModel> parseTasks(Document d) {
-        List<TaskModel> list = new ArrayList<>();
+    private List<Task> parseTasks(Document d) {
+        List<Task> list = new ArrayList<>();
         NodeList nTasks = d.getElementsByTagName("task");
         for (int i = 0; i < nTasks.getLength(); i++) {
             Element eTask = (Element) nTasks.item(i);
             String id = eTask.getAttribute("id");
             String title = eTask.getAttribute("title");
-            TaskModel t = new TaskModel(eTask, id, title);
+            Task t = new Task(eTask, id, title);
 
             NodeList nSubs = eTask.getElementsByTagName("subtask");
             for (int j = 0; j < nSubs.getLength(); j++) {
@@ -109,7 +109,7 @@ public class TaskXmlRepository {
                 BigDecimal pts = new BigDecimal(eSub.getAttribute("points"));
                 Difficulty diff = Difficulty.from(eSub.getAttribute("difficulty"));
                 Eligibility elig = Eligibility.from(eSub.getAttribute("eligibility"));
-                SubtaskModel st = new SubtaskModel(eSub, t, sid, pts, diff, elig);
+                Subtask st = new Subtask(eSub, t, sid, pts, diff, elig);
 
                 NodeList nVar = eSub.getElementsByTagName("variant");
                 for (int k = 0; k < nVar.getLength(); k++) {
@@ -119,7 +119,7 @@ public class TaskXmlRepository {
                     String vid = eVar.getAttribute("id");
                     String text = eText != null ? getText(eText) : "";
                     String sol = eSol != null ? getText(eSol) : "";
-                    VariantModel vm = new VariantModel(eVar, vid, text, sol);
+                    Variant vm = new Variant(eVar, vid, text, sol);
                     st.getVariants().add(vm);
                 }
 
@@ -138,7 +138,7 @@ public class TaskXmlRepository {
     // ----- Helpers to access variants@group (subtask title) -----
 
     /** Read the variants@group (subtask title) of a subtask. */
-    public String readSubtaskGroup(SubtaskModel st) {
+    public String readSubtaskGroup(Subtask st) {
         Element eSub = st.getDom();
         NodeList vars = eSub.getElementsByTagName("variants");
         if (vars.getLength() > 0) {
@@ -149,7 +149,7 @@ public class TaskXmlRepository {
     }
 
     /** Update the variants@group (subtask title) and autosave. */
-    public void updateSubtaskGroup(SubtaskModel st, String group) {
+    public void updateSubtaskGroup(Subtask st, String group) {
         Element eSub = st.getDom();
         Element eVars;
         NodeList vars = eSub.getElementsByTagName("variants");
@@ -166,19 +166,19 @@ public class TaskXmlRepository {
 
     // --- Autosave updates for other fields ---
 
-    public void updateTaskTitle(TaskModel t) {
+    public void updateTaskTitle(Task t) {
         t.getDom().setAttribute("title", t.getTitle());
         save();
     }
 
-    public void updateSubtaskMeta(SubtaskModel st) {
+    public void updateSubtaskMeta(Subtask st) {
         st.getDom().setAttribute("points", st.getPoints().stripTrailingZeros().toPlainString());
         st.getDom().setAttribute("difficulty", st.getDifficulty().toString());
         st.getDom().setAttribute("eligibility", st.getEligibility().toString());
         save();
     }
 
-    public void updateVariant(VariantModel v) {
+    public void updateVariant(Variant v) {
         Element e = v.getDom();
         NodeList nText = e.getElementsByTagName("text");
         Element eText = (Element) (nText.getLength() == 0 ? e.appendChild(e.getOwnerDocument().createElement("text")) : nText.item(0));
@@ -193,8 +193,8 @@ public class TaskXmlRepository {
 
     // ====== NEW: create/delete APIs for tasks, subtasks, variants ======
 
-    /** Create a new task with a 4-digit id and empty body. Returns the created TaskModel. */
-    public Optional<TaskModel> addTask(String title) {
+    /** Create a new task with a 4-digit id and empty body. Returns the created Task. */
+    public Optional<Task> addTask(String title) {
         if (doc == null) return Optional.empty();
         Element root = doc.getDocumentElement(); // <tasks>
         String nextId = nextId4(root, "task");
@@ -203,13 +203,13 @@ public class TaskXmlRepository {
         eTask.setAttribute("title", title == null ? "" : title);
         root.appendChild(eTask);
 
-        TaskModel tm = new TaskModel(eTask, nextId, title);
+        Task tm = new Task(eTask, nextId, title);
         save();
         return Optional.of(tm);
     }
 
     /** Delete a task including all its subtasks. */
-    public boolean deleteTask(TaskModel t) {
+    public boolean deleteTask(Task t) {
         try {
             Element eTask = t.getDom();
             eTask.getParentNode().removeChild(eTask);
@@ -222,7 +222,7 @@ public class TaskXmlRepository {
     }
 
     /** Create a subtask under given task with default meta and one empty variant. */
-    public Optional<SubtaskModel> addSubtask(TaskModel task) {
+    public Optional<Subtask> addSubtask(Task task) {
         try {
             Element eTask = task.getDom();
             Document d = eTask.getOwnerDocument();
@@ -250,8 +250,8 @@ public class TaskXmlRepository {
 
             eTask.appendChild(eSub);
 
-            SubtaskModel st = new SubtaskModel(eSub, task, sid, new BigDecimal("1"), Difficulty.EASY, Eligibility.BOTH);
-            VariantModel vm = new VariantModel(eVar, vid, "", "");
+            Subtask st = new Subtask(eSub, task, sid, new BigDecimal("1"), Difficulty.EASY, Eligibility.BOTH);
+            Variant vm = new Variant(eVar, vid, "", "");
             st.getVariants().add(vm);
             task.getSubtasks().add(st);
 
@@ -264,7 +264,7 @@ public class TaskXmlRepository {
     }
 
     /** Delete a subtask node. */
-    public boolean deleteSubtask(TaskModel task, SubtaskModel st) {
+    public boolean deleteSubtask(Task task, Subtask st) {
         try {
             Element eSub = st.getDom();
             eSub.getParentNode().removeChild(eSub);
@@ -277,7 +277,7 @@ public class TaskXmlRepository {
     }
 
     /** Create a new variant under given subtask. */
-    public Optional<VariantModel> addVariant(SubtaskModel sub) {
+    public Optional<Variant> addVariant(Subtask sub) {
         try {
             Element eSub = sub.getDom();
             Document d = eSub.getOwnerDocument();
@@ -296,7 +296,7 @@ public class TaskXmlRepository {
 
             eVars.appendChild(eVar);
 
-            VariantModel vm = new VariantModel(eVar, vid, "", "");
+            Variant vm = new Variant(eVar, vid, "", "");
             sub.getVariants().add(vm);
 
             save();
@@ -308,7 +308,7 @@ public class TaskXmlRepository {
     }
 
     /** Delete a variant node. */
-    public boolean deleteVariant(SubtaskModel sub, VariantModel v) {
+    public boolean deleteVariant(Subtask sub, Variant v) {
         try {
             Element eVar = v.getDom();
             eVar.getParentNode().removeChild(eVar);

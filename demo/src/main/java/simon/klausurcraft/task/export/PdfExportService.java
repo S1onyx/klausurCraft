@@ -1,4 +1,4 @@
-package simon.klausurcraft.infrastructure.pdf;
+package simon.klausurcraft.task.export;
 
 import com.lowagie.text.*;
 import com.lowagie.text.pdf.PdfPCell;
@@ -6,9 +6,9 @@ import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Window;
-import simon.klausurcraft.core.model.SubtaskModel;
-import simon.klausurcraft.core.model.TaskModel;
-import simon.klausurcraft.core.model.VariantModel;
+import simon.klausurcraft.task.Subtask;
+import simon.klausurcraft.task.Task;
+import simon.klausurcraft.task.Variant;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -25,14 +25,14 @@ import java.util.prefs.Preferences;
  * - Answer boxes proportional to points (min height)
  * - Solutions inline in solution PDF
  */
-public class PdfExporter {
+public class PdfExportService {
 
     private static final String PREFS_NODE = "simon.klausurcraft";
     private static final String PREF_LAST_EXPORT_DIR = "lastExportDir";
 
-    public record ChosenVariant(SubtaskModel subtask, VariantModel variant) {}
+    public record ChosenVariant(Subtask subtask, Variant variant) {}
 
-    public record TaskAssembly(int number, TaskModel task, List<ChosenVariant> chosenSubtasks) {}
+    public record TaskAssembly(int number, Task task, List<ChosenVariant> chosenSubtasks) {}
 
     public void export(Window owner, String title, LocalDate date,
                        List<TaskAssembly> tasks, boolean withSolution) throws Exception {
@@ -94,8 +94,8 @@ public class PdfExporter {
 
             AtomicInteger subIndex = new AtomicInteger(0);
             for (ChosenVariant entry : ta.chosenSubtasks) {
-                SubtaskModel st = entry.subtask();
-                VariantModel variant = entry.variant();
+                Subtask st = entry.subtask();
+                Variant variant = entry.variant();
                 char letter = (char) ('a' + subIndex.getAndIncrement());
 
                 String text = (variant != null ? variant.getText() : "").trim();
@@ -136,7 +136,7 @@ public class PdfExporter {
         doc.close();
     }
 
-    private float answerBoxHeight(SubtaskModel st) {
+    private float answerBoxHeight(Subtask st) {
         // Minimum ~3 lines at 11pt -> ~48pt, add per point ~11pt
         int pts = st.getPoints().intValue();
         float base = 48f;

@@ -4,9 +4,9 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import simon.klausurcraft.core.model.SubtaskModel;
-import simon.klausurcraft.core.model.TaskModel;
-import simon.klausurcraft.ui.support.UiUtil;
+import simon.klausurcraft.task.Subtask;
+import simon.klausurcraft.task.Task;
+import simon.klausurcraft.ui.UiStyles;
 
 import java.util.List;
 import java.util.Optional;
@@ -56,13 +56,13 @@ public class HomeSidebarController {
         });
     }
 
-    public void rebuildToc(List<TaskModel> tasks) {
+    public void rebuildToc(List<Task> tasks) {
         TreeItem<TocNode> rootItem = new TreeItem<>(new TocNode(TocNode.Type.ROOT, null, null, "Contents"));
         rootItem.setExpanded(true);
 
-        for (TaskModel t : tasks) {
+        for (Task t : tasks) {
             TreeItem<TocNode> taskNode = new TreeItem<>(TocNode.forTask(t));
-            for (SubtaskModel st : t.getSubtasks()) {
+            for (Subtask st : t.getSubtasks()) {
                 String name = root.getTaskRepository().readSubtaskGroup(st);
                 if (name == null || name.isBlank()) {
                     name = "Subtask " + t.getId() + "." + st.getId();
@@ -127,13 +127,13 @@ public class HomeSidebarController {
         }
     }
 
-    private void confirmDeleteTask(TaskModel t) {
+    private void confirmDeleteTask(Task t) {
         Alert a = new Alert(Alert.AlertType.CONFIRMATION);
         a.setTitle("Delete task");
         a.setHeaderText("Delete this task?");
         a.setContentText("This will delete the task and all its subtasks and variants. This action cannot be undone.");
         a.initOwner(root.getWindow());
-        UiUtil.applyCurrentStyles(a);
+        UiStyles.applyCurrentStyles(a);
         Optional<ButtonType> res = a.showAndWait();
         if (res.isPresent() && res.get() == ButtonType.OK) {
             if (root.getTaskRepository().deleteTask(t)) {
@@ -144,13 +144,13 @@ public class HomeSidebarController {
         }
     }
 
-    private void confirmDeleteSubtask(TaskModel task, SubtaskModel st) {
+    private void confirmDeleteSubtask(Task task, Subtask st) {
         Alert a = new Alert(Alert.AlertType.CONFIRMATION);
         a.setTitle("Delete subtask");
         a.setHeaderText("Delete this subtask?");
         a.setContentText("This will delete the subtask including all its variants. This action cannot be undone.");
         a.initOwner(root.getWindow());
-        UiUtil.applyCurrentStyles(a);
+        UiStyles.applyCurrentStyles(a);
         Optional<ButtonType> res = a.showAndWait();
         if (res.isPresent() && res.get() == ButtonType.OK) {
             if (root.getTaskRepository().deleteSubtask(task, st)) {
@@ -167,19 +167,19 @@ public class HomeSidebarController {
     public static final class TocNode {
         enum Type { ROOT, TASK, SUBTASK }
         private final Type type;
-        private final TaskModel task;
-        private final SubtaskModel subtask;
+        private final Task task;
+        private final Subtask subtask;
         private final String label;
 
-        private TocNode(Type type, TaskModel task, SubtaskModel subtask, String label) {
+        private TocNode(Type type, Task task, Subtask subtask, String label) {
             this.type = type; this.task = task; this.subtask = subtask; this.label = label;
         }
-        static TocNode forTask(TaskModel t) { return new TocNode(Type.TASK, t, null, String.format("%s — %s", t.getId(), t.getTitle())); }
-        static TocNode forSubtask(TaskModel t, SubtaskModel st, String label) { return new TocNode(Type.SUBTASK, t, st, "• " + label); }
+        static TocNode forTask(Task t) { return new TocNode(Type.TASK, t, null, String.format("%s — %s", t.getId(), t.getTitle())); }
+        static TocNode forSubtask(Task t, Subtask st, String label) { return new TocNode(Type.SUBTASK, t, st, "• " + label); }
 
         public Type type() { return type; }
-        public TaskModel task() { return task; }
-        public SubtaskModel subtask() { return subtask; }
+        public Task task() { return task; }
+        public Subtask subtask() { return subtask; }
         public String label() { return label; }
     }
 }

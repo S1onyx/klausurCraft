@@ -1,11 +1,11 @@
-package simon.klausurcraft.ui.support;
+package simon.klausurcraft.ui;
 
 import javafx.scene.Scene;
-import simon.klausurcraft.KlausurCraftApplication;
+import simon.klausurcraft.app.KlausurCraftApp;
 
 import java.util.Objects;
 
-public final class ThemeManager {
+public final class ThemeService {
 
     public enum Theme {
         LIGHT("light.css"),
@@ -16,13 +16,13 @@ public final class ThemeManager {
         public String cssName() { return cssName; }
     }
 
-    private ThemeManager() {}
+    private ThemeService() {}
 
     public static void apply(Scene scene, Theme theme) {
         Objects.requireNonNull(scene, "scene must not be null");
         scene.getStylesheets().removeIf(s -> s.endsWith("/light.css") || s.endsWith("/dark.css"));
         String css = Objects.requireNonNull(
-                KlausurCraftApplication.class.getResource(theme.cssName()),
+                KlausurCraftApp.class.getResource("/simon/klausurcraft/" + theme.cssName()),
                 () -> "CSS not found: " + theme.cssName()
         ).toExternalForm();
         scene.getStylesheets().add(css);

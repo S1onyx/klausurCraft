@@ -6,7 +6,7 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
-import simon.klausurcraft.KlausurCraftApplication;
+import simon.klausurcraft.app.KlausurCraftApp;
 
 final class HomeNotifications {
     private HomeNotifications(){}
@@ -19,7 +19,7 @@ final class HomeNotifications {
         l.getStyleClass().add(error ? "banner-error" : "banner-info");
         VBox banner = new VBox(l);
         banner.getStyleClass().add("banner");
-        StackPane root = (StackPane) KlausurCraftApplication.getScene().getRoot();
+        StackPane root = (StackPane) KlausurCraftApp.getScene().getRoot();
         root.getChildren().add(banner);
         StackPane.setAlignment(banner, Pos.TOP_CENTER);
 

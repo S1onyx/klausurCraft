@@ -1,4 +1,4 @@
-package simon.klausurcraft;
+package simon.klausurcraft.app;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -8,7 +8,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.stage.Stage;
-import simon.klausurcraft.ui.support.ThemeManager;
+import simon.klausurcraft.ui.ThemeService;
 
 import java.io.IOException;
 import java.util.Locale;
@@ -16,7 +16,7 @@ import java.util.Locale;
 /**
  * JavaFX entry point for KlausurCraft.
  */
-public class KlausurCraftApplication extends Application {
+public class KlausurCraftApp extends Application {
 
     private static Scene scene;
 
@@ -25,12 +25,12 @@ public class KlausurCraftApplication extends Application {
         scene = new Scene(loadFXML("home"), 1200, 800);
 
         // Apply default theme (LIGHT by default)
-        ThemeManager.apply(scene, ThemeManager.Theme.LIGHT);
+        ThemeService.apply(scene, ThemeService.Theme.LIGHT);
 
         // Keyboard toggle: Ctrl + D switches theme
         scene.getAccelerators().put(
             new KeyCodeCombination(KeyCode.D, KeyCombination.CONTROL_DOWN),
-            () -> ThemeManager.toggle(scene)
+            () -> ThemeService.toggle(scene)
         );
 
         stage.setTitle("klausurCraft");
@@ -47,7 +47,7 @@ public class KlausurCraftApplication extends Application {
     }
 
     private static Parent loadFXML(String name) throws IOException {
-        FXMLLoader fxmlLoader = new FXMLLoader(KlausurCraftApplication.class.getResource(name + ".fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(KlausurCraftApp.class.getResource("/simon/klausurcraft/" + name + ".fxml"));
         return fxmlLoader.load();
     }
 
