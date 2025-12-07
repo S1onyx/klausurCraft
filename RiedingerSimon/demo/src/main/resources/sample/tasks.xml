@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<tasks>
+  <task id="0001" title="asfd">
+    <subtask difficulty="easy" eligibility="both" id="0001" points="1">
+      <variants group="asdf">
+        <variant id="0001">
+          <text>asdf</text>
+          <solution>asdf</solution>
+        </variant>
+      </variants>
+    </subtask>
+    <subtask difficulty="easy" eligibility="both" id="0002" points="1">
+      <variants group="asdfasdf">
+        <variant id="0001">
+          <text/>
+          <solution/>
+        </variant>
+      </variants>
+    </subtask>
+    <subtask difficulty="easy" eligibility="both" id="0003" points="1">
+      <variants>
+        <variant id="0001">
+          <text/>
+          <solution/>
+        </variant>
+      </variants>
+    </subtask>
+    <subtask difficulty="easy" eligibility="both" id="0004" points="1">
+      <variants>
+        <variant id="0001">
+          <text/>
+          <solution/>
+        </variant>
+      </variants>
+    </subtask>
+  </task>
+</tasks>

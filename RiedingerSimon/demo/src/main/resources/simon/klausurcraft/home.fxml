@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
+
+<StackPane xmlns="http://javafx.com/javafx"
+           xmlns:fx="http://javafx.com/fxml"
+           fx:controller="simon.klausurcraft.ui.home.HomeController">
+
+    <children>
+        <BorderPane>
+            <top>
+                <fx:include source="HomeTopbar.fxml" fx:id="topbar"/>
+            </top>
+
+            <left>
+                <fx:include source="HomeSidebar.fxml" fx:id="sidebar"/>
+            </left>
+
+            <center>
+                <fx:include source="HomeCenter.fxml" fx:id="center"/>
+            </center>
+
+            <bottom>
+                <!-- Status bar -->
+                <HBox spacing="12" styleClass="status-bar">
+                    <!-- Right padding removed so the rightmost button is flush to the edge -->
+                    <padding><Insets top="10" right="0" bottom="10" left="10"/></padding>
+                    <children>
+                        <!-- Light/Dark toggle: icon-only, subtle, far left -->
+                        <Button fx:id="themeToggle" text="◐" pickOnBounds="true">
+                            <tooltip>
+                                <Tooltip text="Toggle theme (Ctrl+D)"/>
+                            </tooltip>
+                        </Button>
+
+                        <Label fx:id="fileLabel" text="No file loaded" />
+                        <Label text="•"/>
+                        <Label fx:id="countsLabel" text="0 / 0" styleClass="muted"/>
+
+                        <Region HBox.hgrow="ALWAYS"/>
+
+                        <!-- Right side: +Task left of Generate Exam, Generate Exam is flush right -->
+                        <Button fx:id="btnAddTask" text="+ Task"/>
+                        <Button fx:id="btnGenerateBottom" text="Generate Exam" styleClass="primary"/>
+
+                        <!-- Hidden switch-file control should NOT reserve space -->
+                        <Button text="Switch file…" onAction="#onSwitchFile" visible="false" managed="false"/>
+                    </children>
+                </HBox>
+            </bottom>
+        </BorderPane>
+
+        <!-- Slide-over injected at runtime -->
+        <StackPane fx:id="rootStack"/>
+    </children>
+</StackPane>
