@@ -1,5 +1,6 @@
 package simon.klausurcraft.ui.home;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
@@ -54,6 +55,21 @@ public class HomeSidebarController {
                 }
             }
         });
+
+        // Single click selection should jump to the corresponding position on the right.
+        tocTree.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
+            if (newSel == null || newSel.getValue() == null) return;
+            navigateToNode(newSel.getValue());
+        });
+
+        // Also react on plain single-clicks so repeated clicks on the same selected item still jump.
+        tocTree.setOnMouseClicked(ev -> {
+            if (ev.getClickCount() != 1) return;
+            TreeItem<TocNode> sel = tocTree.getSelectionModel().getSelectedItem();
+            if (sel != null && sel.getValue() != null) {
+                navigateToNode(sel.getValue());
+            }
+        });
     }
 
     public void rebuildToc(List<Task> tasks) {
@@ -75,15 +91,6 @@ public class HomeSidebarController {
 
         tocTree.setRoot(rootItem);
         tocTree.setShowRoot(false);
-
-        tocTree.setOnMouseClicked(ev -> {
-            if (ev.getClickCount() == 2) {
-                TreeItem<TocNode> sel = tocTree.getSelectionModel().getSelectedItem();
-                if (sel != null) {
-                    root.centerController.scrollToLabel(sel.getValue().label());
-                }
-            }
-        });
     }
 
     private ContextMenu buildContextMenu(TocNode node) {
@@ -91,7 +98,7 @@ public class HomeSidebarController {
         switch (node.type()) {
             case TASK -> {
                 MenuItem open = new MenuItem("Scroll to task");
-                open.setOnAction(e -> root.centerController.scrollToLabel(node.label()));
+                open.setOnAction(e -> root.centerController.scrollToTask(node.task()));
                 MenuItem addSub = new MenuItem("Add subtask");
                 addSub.setOnAction(e -> {
                     // Create and immediately open the subtask editor (slide-over) with title focused
@@ -125,6 +132,17 @@ public class HomeSidebarController {
             case SUBTASK -> confirmDeleteSubtask(node.task(), node.subtask());
             default -> {}
         }
+    }
+
+    private void navigateToNode(TocNode node) {
+        if (node == null) return;
+        Platform.runLater(() -> {
+            switch (node.type()) {
+                case TASK -> root.centerController.scrollToTask(node.task());
+                case SUBTASK -> root.centerController.scrollToSubtask(node.task(), node.subtask());
+                default -> { }
+            }
+        });
     }
 
     private void confirmDeleteTask(Task t) {

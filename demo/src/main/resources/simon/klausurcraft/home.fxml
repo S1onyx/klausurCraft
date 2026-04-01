@@ -24,20 +24,25 @@
 
             <bottom>
                 <!-- Status bar -->
-                <HBox spacing="12" styleClass="status-bar">
+                <HBox spacing="12" alignment="CENTER_LEFT" styleClass="status-bar">
                     <!-- Right padding removed so the rightmost button is flush to the edge -->
                     <padding><Insets top="10" right="0" bottom="10" left="10"/></padding>
                     <children>
                         <!-- Light/Dark toggle: icon-only, subtle, far left -->
-                        <Button fx:id="themeToggle" text="◐" pickOnBounds="true">
+                        <Button fx:id="themeToggle" text="◐" styleClass="icon-button" pickOnBounds="true">
                             <tooltip>
                                 <Tooltip text="Toggle theme (Ctrl+D)"/>
+                            </tooltip>
+                        </Button>
+                        <Button fx:id="btnInfo" text="ℹ" styleClass="icon-button info-button" pickOnBounds="true">
+                            <tooltip>
+                                <Tooltip text="Info &amp; shortcuts (F1)"/>
                             </tooltip>
                         </Button>
 
                         <Label fx:id="fileLabel" text="No file loaded" />
                         <Label text="•"/>
-                        <Label fx:id="countsLabel" text="0 / 0" styleClass="muted"/>
+                        <Label fx:id="countsLabel" text="0 / 0" styleClass="muted counts-hover-hint"/>
 
                         <Region HBox.hgrow="ALWAYS"/>
 

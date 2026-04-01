@@ -65,6 +65,7 @@ public final class HomeFileController {
     public static void loadXmlFile(HomeController root, File f) throws Exception {
         Path xsd = Path.of(HomeController.class.getResource("/simon/klausurcraft/exam-tasks.xsd").toURI());
         TaskXmlStore.LoadResult result = root.getTaskRepository().load(f.toPath(), xsd);
+        root.centerController.resetExpansionState();
         root.getTasks().setAll(result.tasks());
         root.loadedFileNameProperty().set(f.getName());
         HomeNotifications.showInfo("Loaded " + f.getName());
@@ -108,6 +109,7 @@ public final class HomeFileController {
         try {
             Path xsd = Path.of(HomeController.class.getResource("/simon/klausurcraft/exam-tasks.xsd").toURI());
             TaskXmlStore.LoadResult result = root.getTaskRepository().createNew(f.toPath(), xsd);
+            root.centerController.resetExpansionState();
             root.getTasks().setAll(result.tasks());
             root.loadedFileNameProperty().set(f.getName());
             HomeNotifications.showInfo("Created " + f.getName());

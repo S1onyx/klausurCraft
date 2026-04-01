@@ -15,8 +15,8 @@
         <Label text="Contents" />
         <TreeView fx:id="tocTree" prefWidth="280" prefHeight="400"/>
         <HBox spacing="8">
-            <Button fx:id="btnLoad" text="Load XML…"/>
-            <Button fx:id="btnNewXml" text="New XML" styleClass="chip"/>
+            <Button fx:id="btnNewXml" text="New XML" styleClass="chip" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS"/>
+            <Button fx:id="btnLoad" text="Load XML…" styleClass="chip" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS"/>
         </HBox>
     </children>
 </VBox>

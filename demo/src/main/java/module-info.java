@@ -8,6 +8,7 @@ module simon.klausurcraft {
     // XML parsing/validation & preferences
     requires java.xml;
     requires java.prefs;
+    requires java.desktop;
 
     // FXML reflection open only for existing packages
     opens simon.klausurcraft.ui.home to javafx.fxml;

@@ -160,7 +160,7 @@ final class HomeSubtaskSheet {
         });
 
         Button btnDeleteSubtask = new Button("Delete subtask");
-        btnDeleteSubtask.getStyleClass().add("chip");
+        btnDeleteSubtask.getStyleClass().addAll("chip", "danger");
         btnDeleteSubtask.setOnAction(e -> {
             Alert a = new Alert(Alert.AlertType.CONFIRMATION);
             a.setTitle("Delete subtask");
@@ -196,7 +196,8 @@ final class HomeSubtaskSheet {
             vHeaderLbl.getStyleClass().add("header");
             Region spacer = new Region(); HBox.setHgrow(spacer, Priority.ALWAYS);
             Button btnDelVar = new Button("Delete");
-            btnDelVar.getStyleClass().add("chip");
+            btnDelVar.getStyleClass().addAll("chip", "danger");
+            btnDelVar.setDisable(sub.getVariants().size() <= 1);
             btnDelVar.setOnAction(e -> {
                 if (sub.getVariants().size() <= 1) {
                     HomeNotifications.showError("Cannot delete the last variant of a subtask.");

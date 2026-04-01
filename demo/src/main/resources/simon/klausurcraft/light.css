@@ -42,6 +42,16 @@
 
 .label { -fx-text-fill: -color-text; }
 .label.muted { -fx-text-fill: -color-muted; }
+.label.counts-hover-hint {
+  -fx-cursor: hand;
+  -fx-border-color: transparent transparent rgba(90,100,114,0.45) transparent;
+  -fx-border-width: 0 0 1 0;
+  -fx-padding: 0 0 1 0;
+}
+.label.counts-hover-hint:hover {
+  -fx-text-fill: #3b5f91;
+  -fx-border-color: transparent transparent rgba(59,95,145,0.65) transparent;
+}
 
 /* Buttons */
 .button { -fx-background-color: -color-surface; -fx-text-fill: -color-text; -fx-background-radius: 8; -fx-padding: 8 14 8 14; -fx-border-color: -color-border; -fx-border-radius: 8; -fx-cursor: hand; }
@@ -50,6 +60,27 @@
 .button.primary { -fx-background-color: -color-accent; -fx-text-fill: -color-accent-contrast; -fx-border-color: transparent; }
 .button.primary:hover { -fx-background-color: #2563eb; }
 .button.primary:pressed { -fx-background-color: #1d4ed8; }
+.button.danger { -fx-background-color: #fee2e2; -fx-border-color: #fca5a5; -fx-text-fill: #991b1b; }
+.button.danger:hover { -fx-background-color: #fecaca; }
+.button.danger:pressed { -fx-background-color: #fca5a5; }
+.button.task-toggle { -fx-padding: 2 8; -fx-min-width: 28; }
+.button.icon-button {
+  -fx-padding: 0;
+  -fx-min-width: 30;
+  -fx-min-height: 30;
+  -fx-pref-width: 30;
+  -fx-pref-height: 30;
+  -fx-background-radius: 999;
+  -fx-border-radius: 999;
+  -fx-font-weight: bold;
+}
+.button.info-button {
+  -fx-background-color: #eef4ff;
+  -fx-border-color: #c9dcff;
+  -fx-text-fill: #1d4ed8;
+}
+.button.info-button:hover { -fx-background-color: #e3eeff; }
+.button.info-button:pressed { -fx-background-color: #d6e6ff; }
 
 /* Inputs */
 .text-field, .password-field, .text-area, .combo-box-base {
@@ -76,6 +107,22 @@
 .combo-elig-exam     { -fx-background-color: #ece4ff; -fx-border-color: #d6c7ff; -fx-text-fill: #4c1d95; }
 .combo-elig-practice { -fx-background-color: #ffe4fa; -fx-border-color: #ffc7f2; -fx-text-fill: #9d174d; }
 .combo-elig-both     { -fx-background-color: #e8ecff; -fx-border-color: #cad4ff; -fx-text-fill: #3730a3; }
+.combo-diff-easy, .combo-diff-medium, .combo-diff-hard,
+.combo-elig-exam, .combo-elig-practice, .combo-elig-both { -fx-cursor: hand; }
+.combo-box-base.combo-diff-easy > .list-cell, .combo-box-base.combo-diff-medium > .list-cell, .combo-box-base.combo-diff-hard > .list-cell,
+.combo-box-base.combo-elig-exam > .list-cell, .combo-box-base.combo-elig-practice > .list-cell, .combo-box-base.combo-elig-both > .list-cell {
+  -fx-background-color: transparent;
+  -fx-background-insets: 0;
+}
+.combo-box-base.combo-diff-easy > .arrow-button, .combo-box-base.combo-diff-medium > .arrow-button, .combo-box-base.combo-diff-hard > .arrow-button,
+.combo-box-base.combo-elig-exam > .arrow-button, .combo-box-base.combo-elig-practice > .arrow-button, .combo-box-base.combo-elig-both > .arrow-button {
+  -fx-background-color: rgba(0,0,0,0.06);
+  -fx-background-radius: 0 8 8 0;
+}
+.combo-box-base.combo-diff-easy > .arrow-button > .arrow, .combo-box-base.combo-diff-medium > .arrow-button > .arrow, .combo-box-base.combo-diff-hard > .arrow-button > .arrow,
+.combo-box-base.combo-elig-exam > .arrow-button > .arrow, .combo-box-base.combo-elig-practice > .arrow-button > .arrow, .combo-box-base.combo-elig-both > .arrow-button > .arrow {
+  -fx-background-color: -color-text;
+}
 
 .combo-box-base.combo-diff-easy  .arrow,
 .combo-box-base.combo-diff-medium .arrow,
@@ -112,14 +159,22 @@
 .scroll-bar .thumb:hover { -fx-background-color: #c7ccd5; }
 
 /* Status bar, sheet, headers, chips */
-.status-bar { -fx-background-color: -color-surface; -fx-border-color: -color-border; -fx-border-width: 1 0 0 0; -fx-padding: 8 12; -fx-background-radius: 10; }
+.status-bar { -fx-background-color: -color-surface; -fx-border-color: -color-border; -fx-border-width: 1 0 0 0; -fx-padding: 8 12; -fx-background-radius: 10; -fx-alignment: center-left; }
 .sheet { -fx-background-color: -color-surface; -fx-border-color: -color-border; -fx-border-width: 0 0 0 1; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 14, 0.15, -4, 0); -fx-background-radius: 0; }
 .header { -fx-font-size: 14px; -fx-font-weight: bold; }
 .chip { -fx-background-radius: 999; -fx-padding: 4 10; }
 
 /* Footer (Step 2) readable */
-.sheet-footer { -fx-background-color: #f2f3f6; -fx-border-color: -color-border; -fx-border-width: 1 0 0 0; -fx-padding: 8 12; }
+.sheet-footer { -fx-background-color: #f2f3f6; -fx-border-color: -color-border; -fx-border-width: 1 0 0 0; -fx-padding: 8 12; -fx-alignment: center-left; }
 .sheet-footer .label, .sheet-footer .check-box > .label { -fx-text-fill: -color-text; }
+
+.subtask-row-clickable {
+  -fx-cursor: hand;
+  -fx-background-radius: 8;
+}
+.subtask-row-clickable:hover {
+  -fx-background-color: rgba(59,130,246,0.08);
+}
 
 /* Base badge */
 .badge { -fx-padding: 2 8; -fx-background-radius: 999; -fx-border-radius: 999; -fx-font-size: 11px; }
@@ -201,3 +256,18 @@
 .dialog-pane .button-bar .button:hover { -fx-background-color: #fafbfc; }
 .dialog-pane .button-bar .button:default { -fx-background-color: -color-accent; -fx-text-fill: -color-accent-contrast; -fx-border-color: transparent; }
 .dialog-pane .button-bar .button:default:hover { -fx-background-color: #2563eb; }
+
+/* Info dialog */
+.info-dialog-root { -fx-padding: 6 2 2 2; }
+.info-dialog-title { -fx-font-size: 28px; -fx-font-weight: 800; }
+.info-dialog-section-title { -fx-font-size: 15px; -fx-font-weight: 700; }
+.info-dialog-meta { -fx-padding: 2 0 4 0; }
+.info-dialog-value { -fx-text-fill: -color-text; }
+.kbd-chip {
+  -fx-background-color: #edf3ff;
+  -fx-border-color: #c8d8ff;
+  -fx-text-fill: #1d4ed8;
+  -fx-font-family: "SF Mono", "Menlo", "Consolas", monospace;
+  -fx-font-size: 11px;
+  -fx-padding: 2 8;
+}

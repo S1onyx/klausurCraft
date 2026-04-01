@@ -59,4 +59,10 @@ public class HomeTopbarController {
         if (s.isEmpty()) return EnumSet.allOf(Difficulty.class);
         return s;
     }
+
+    void focusSearch() {
+        if (searchField == null) return;
+        searchField.requestFocus();
+        searchField.selectAll();
+    }
 }

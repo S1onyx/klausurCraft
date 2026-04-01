@@ -69,6 +69,16 @@ public class SlideOverPane {
 
     public boolean isShown() { return shown; }
 
+    /** Returns whether a target node is inside the sheet content area. */
+    public boolean isInSheet(Node node) {
+        Node cur = node;
+        while (cur != null) {
+            if (cur == sheet) return true;
+            cur = cur.getParent();
+        }
+        return false;
+    }
+
     private void animateTo(double x) {
         TranslateTransition tt = new TranslateTransition(Duration.millis(220), sheet);
         tt.setToX(x);

@@ -30,6 +30,15 @@ final class HomeTaskSheet {
         TextField tfTitle = new TextField(task.getTitle());
         tfTitle.setPromptText("Task title");
         tfTitle.setMaxWidth(Double.MAX_VALUE);
+        tfTitle.textProperty().addListener((o, ov, nv) -> {
+            String newTitle = nv == null ? "" : nv.trim();
+            if (newTitle.isEmpty()) newTitle = "New Task";
+            if (newTitle.equals(task.getTitle())) return;
+            task.setTitle(newTitle);
+            root.getTaskRepository().updateTaskTitle(task);
+            root.centerController.render(root.getTasks(), root.currentQuery(), root.allowedDifficulties());
+            root.rebuildToc();
+        });
 
         content.getChildren().addAll(header, new Label("Title"), tfTitle);
 
@@ -41,29 +50,15 @@ final class HomeTaskSheet {
         HBox actions = new HBox(8);
         actions.getStyleClass().add("sheet-footer");
         Region spacer = new Region(); HBox.setHgrow(spacer, Priority.ALWAYS);
-        Button btnCancel = new Button("Cancel");
-        btnCancel.getStyleClass().add("chip");
-        btnCancel.setCancelButton(true);
-        btnCancel.setOnAction(e -> {
+        Button btnClose = new Button("Close");
+        btnClose.getStyleClass().add("chip");
+        btnClose.setCancelButton(true);
+        btnClose.setOnAction(e -> {
             root.getSlideOver().hide();
             root.rootStack.setMouseTransparent(true);
         });
 
-        Button btnSave = new Button("Save");
-        btnSave.getStyleClass().add("primary");
-        btnSave.setDefaultButton(true);
-        btnSave.setOnAction(e -> {
-            String newTitle = tfTitle.getText() == null ? "" : tfTitle.getText().trim();
-            if (newTitle.isEmpty()) newTitle = "New Task";
-            task.setTitle(newTitle);
-            root.getTaskRepository().updateTaskTitle(task);
-            root.centerController.render(root.getTasks(), root.currentQuery(), root.allowedDifficulties());
-            root.rebuildToc();
-            root.getSlideOver().hide();
-            root.rootStack.setMouseTransparent(true);
-        });
-
-        actions.getChildren().addAll(spacer, btnCancel, btnSave);
+        actions.getChildren().addAll(spacer, btnClose);
         sheet.setBottom(actions);
 
         root.getSlideOver().setContent(sheet);

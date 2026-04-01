@@ -1,10 +1,15 @@
 package simon.klausurcraft.ui.home;
 
+import javafx.application.Platform;
 import javafx.geometry.Insets;
+import javafx.geometry.Bounds;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.input.ContextMenuEvent;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import simon.klausurcraft.task.Difficulty;
 import simon.klausurcraft.task.Eligibility;
@@ -17,10 +22,17 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class HomeCenterController {
 
     private HomeController root;
+    private final Map<String, VBox> taskCardByTaskId = new HashMap<>();
+    private final Map<String, VBox> subtaskContainerByTaskId = new HashMap<>();
+    private final Map<String, Button> toggleButtonByTaskId = new HashMap<>();
+    private final Map<String, HBox> subtaskRowById = new HashMap<>();
+    private final Map<String, Boolean> taskExpandedById = new HashMap<>();
 
     @FXML private ScrollPane centerScroll;
     @FXML private VBox centerContainer;
@@ -29,12 +41,33 @@ public class HomeCenterController {
         this.root = root;
     }
 
+    /** Reset to default expansion behavior (all tasks expanded) e.g. when loading a new file. */
+    public void resetExpansionState() {
+        taskExpandedById.clear();
+    }
+
     public void render(List<Task> tasks, String query, Set<Difficulty> allowed) {
+        root.updateCounts();
         centerContainer.getChildren().clear();
+        taskCardByTaskId.clear();
+        subtaskContainerByTaskId.clear();
+        toggleButtonByTaskId.clear();
+        subtaskRowById.clear();
         String q = query == null ? "" : query;
+        boolean hasQuery = !q.isEmpty();
+
+        HBox taskControls = new HBox(8);
+        taskControls.setPadding(new Insets(0, 0, 4, 0));
+        Button btnExpandAll = new Button("Expand all");
+        btnExpandAll.getStyleClass().add("chip");
+        btnExpandAll.setOnAction(e -> expandAllTasks(tasks));
+        Button btnCollapseAll = new Button("Collapse all");
+        btnCollapseAll.getStyleClass().add("chip");
+        btnCollapseAll.setOnAction(e -> collapseAllTasks(tasks));
+        taskControls.getChildren().addAll(btnExpandAll, btnCollapseAll);
+        centerContainer.getChildren().add(taskControls);
 
         for (Task t : tasks) {
-            boolean hasQuery = !q.isEmpty();
             boolean taskHeaderMatches = matchesTaskHeader(t, q);
             List<Subtask> visibleSubtasks = new ArrayList<>();
             List<Subtask> highlightedSubtasks = new ArrayList<>();
@@ -59,9 +92,15 @@ public class HomeCenterController {
 
             VBox taskCard = makeCard();
             taskCard.setUserData(formatTaskTitle(t));
+            taskCardByTaskId.put(taskKey(t), taskCard);
 
             // Header row with title + actions
             HBox headerRow = new HBox(8);
+            boolean expanded = isTaskExpanded(t);
+            Button btnToggle = new Button(expanded ? "▾" : "▸");
+            btnToggle.getStyleClass().addAll("chip", "task-toggle");
+            btnToggle.setOnAction(e -> setTaskExpanded(t, !isTaskExpanded(t)));
+
             Label header = new Label("Task " + t.getId() + " — " + t.getTitle());
             header.getStyleClass().add("header");
             if (hasQuery && taskHeaderMatches) {
@@ -85,11 +124,21 @@ public class HomeCenterController {
             });
 
             Button btnDeleteTask = new Button("Delete");
-            btnDeleteTask.getStyleClass().add("chip");
+            btnDeleteTask.getStyleClass().addAll("chip", "danger");
             btnDeleteTask.setOnAction(e -> tryDeleteTask(t));
 
-            headerRow.getChildren().addAll(header, spacer, btnAddSub, btnEdit, btnDeleteTask);
+            headerRow.getChildren().addAll(btnToggle, header, spacer, btnAddSub, btnEdit, btnDeleteTask);
             taskCard.getChildren().add(headerRow);
+            toggleButtonByTaskId.put(taskKey(t), btnToggle);
+
+            headerRow.addEventHandler(MouseEvent.MOUSE_CLICKED, ev -> {
+                if (ev.getButton() != MouseButton.PRIMARY || ev.getClickCount() != 1) return;
+                if (isDescendantOf(ev.getPickResult().getIntersectedNode(), btnToggle)) return;
+                if (isDescendantOf(ev.getPickResult().getIntersectedNode(), btnAddSub)) return;
+                if (isDescendantOf(ev.getPickResult().getIntersectedNode(), btnEdit)) return;
+                if (isDescendantOf(ev.getPickResult().getIntersectedNode(), btnDeleteTask)) return;
+                setTaskExpanded(t, !isTaskExpanded(t));
+            });
 
             // Context menu on task card (right-click)
             ContextMenu taskMenu = new ContextMenu();
@@ -105,6 +154,11 @@ public class HomeCenterController {
             taskMenu.getItems().addAll(miEdit, miAdd, new SeparatorMenuItem(), miDel);
             taskCard.setOnContextMenuRequested((ContextMenuEvent ev) -> taskMenu.show(taskCard, ev.getScreenX(), ev.getScreenY()));
 
+            VBox subtaskRowsBox = new VBox(0);
+            subtaskContainerByTaskId.put(taskKey(t), subtaskRowsBox);
+            subtaskRowsBox.setManaged(expanded);
+            subtaskRowsBox.setVisible(expanded);
+
             for (Subtask st : visibleSubtasks) {
                 String subName = root.getTaskRepository().readSubtaskGroup(st);
                 if (subName == null || subName.isBlank()) {
@@ -113,7 +167,10 @@ public class HomeCenterController {
                 boolean isHighlightedSubtask = hasQuery && highlightedSubtasks.contains(st);
 
                 HBox row = new HBox(10);
+                subtaskRowById.put(subtaskKey(t, st), row);
+                row.setUserData(subtaskKey(t, st));
                 row.setPadding(new Insets(6, 0, 6, 0));
+                row.getStyleClass().add("subtask-row-clickable");
                 if (isHighlightedSubtask) {
                     row.getStyleClass().add("search-hit-subtask-row");
                 }
@@ -140,6 +197,12 @@ public class HomeCenterController {
                 btnOpen.getStyleClass().add("chip");
                 btnOpen.setOnAction(e -> HomeSubtaskSheet.open(root, t, st));
 
+                row.addEventHandler(MouseEvent.MOUSE_CLICKED, ev -> {
+                    if (ev.getButton() != MouseButton.PRIMARY || ev.getClickCount() != 1) return;
+                    if (isDescendantOf(ev.getPickResult().getIntersectedNode(), btnOpen)) return;
+                    HomeSubtaskSheet.open(root, t, st);
+                });
+
                 // Context menu on subtask row
                 ContextMenu subMenu = new ContextMenu();
                 MenuItem miOpen = new MenuItem("Open details");
@@ -154,8 +217,9 @@ public class HomeCenterController {
                 } else {
                     row.getChildren().addAll(lblTitle, bPts, bDiff, bElig, spacer2, btnOpen);
                 }
-                taskCard.getChildren().add(row);
+                subtaskRowsBox.getChildren().add(row);
             }
+            taskCard.getChildren().add(subtaskRowsBox);
 
             if (!hasQuery || taskHeaderMatches || !visibleSubtasks.isEmpty()) {
                 centerContainer.getChildren().add(taskCard);
@@ -200,12 +264,68 @@ public class HomeCenterController {
         });
     }
 
+    public void scrollToTask(Task task) {
+        if (task == null) return;
+        setTaskExpanded(task, true);
+        Node card = taskCardByTaskId.get(taskKey(task));
+        if (card != null) {
+            scrollNodeIntoView(card);
+            Platform.runLater(() -> scrollNodeIntoView(card));
+        }
+    }
+
+    public void scrollToSubtask(Task task, Subtask subtask) {
+        if (task == null || subtask == null) return;
+        setTaskExpanded(task, true);
+        String key = subtaskKey(task, subtask);
+        Node row = subtaskRowById.get(key);
+        if (row == null) {
+            row = findNodeByUserData(centerContainer, key);
+        }
+        if (row == null) {
+            // In case maps are stale after intermediate UI updates, rebuild once and retry.
+            render(root.getTasks(), root.currentQuery(), root.allowedDifficulties());
+            setTaskExpanded(task, true);
+            row = subtaskRowById.get(key);
+            if (row == null) {
+                row = findNodeByUserData(centerContainer, key);
+            }
+        }
+        if (row == null) {
+            // Last fallback: render unfiltered so the clicked tree target is guaranteed visible.
+            render(root.getTasks(), "", java.util.EnumSet.allOf(Difficulty.class));
+            setTaskExpanded(task, true);
+            row = subtaskRowById.get(key);
+            if (row == null) {
+                row = findNodeByUserData(centerContainer, key);
+            }
+        }
+        if (row != null) {
+            scrollNodeIntoView(row);
+            Node rowFinal = row;
+            Platform.runLater(() -> scrollNodeIntoView(rowFinal));
+        } else {
+            scrollToTask(task);
+        }
+    }
+
     public void scrollToLabel(String label) {
-        for (Node n : centerContainer.getChildren()) {
-            if (Objects.equals(n.getUserData(), label) || (n.getUserData() instanceof String s && label.contains(s))) {
-                n.requestFocus();
-                centerScroll.setVvalue(n.getLayoutY() / Math.max(1, centerContainer.getHeight()));
-                break;
+        for (Task task : root.getTasks()) {
+            String taskTitle = formatTaskTitle(task);
+            if (Objects.equals(label, taskTitle) || (label != null && label.contains(taskTitle))) {
+                scrollToTask(task);
+                return;
+            }
+            for (Subtask st : task.getSubtasks()) {
+                String subName = root.getTaskRepository().readSubtaskGroup(st);
+                if (subName == null || subName.isBlank()) {
+                    subName = "Subtask " + task.getId() + "." + st.getId();
+                }
+                String treeLabel = "• " + subName;
+                if (Objects.equals(label, treeLabel) || (label != null && label.contains(subName))) {
+                    scrollToSubtask(task, st);
+                    return;
+                }
             }
         }
     }
@@ -263,5 +383,87 @@ public class HomeCenterController {
 
     private String formatTaskTitle(Task t) {
         return String.format("%s — %s", t.getId(), t.getTitle());
+    }
+
+    private boolean isTaskExpanded(Task task) {
+        return taskExpandedById.getOrDefault(taskKey(task), true);
+    }
+
+    private void setTaskExpanded(Task task, boolean expanded) {
+        String taskKey = taskKey(task);
+        taskExpandedById.put(taskKey, expanded);
+        VBox box = subtaskContainerByTaskId.get(taskKey);
+        if (box != null) {
+            box.setManaged(expanded);
+            box.setVisible(expanded);
+        }
+        Button toggle = toggleButtonByTaskId.get(taskKey);
+        if (toggle != null) {
+            toggle.setText(expanded ? "▾" : "▸");
+        }
+    }
+
+    private void expandAllTasks(List<Task> tasks) {
+        for (Task t : tasks) setTaskExpanded(t, true);
+    }
+
+    private void collapseAllTasks(List<Task> tasks) {
+        for (Task t : tasks) setTaskExpanded(t, false);
+    }
+
+    private void scrollNodeIntoView(Node node) {
+        if (node == null) return;
+        centerContainer.applyCss();
+        centerContainer.layout();
+
+        Bounds viewport = centerScroll.getViewportBounds();
+        Bounds content = centerContainer.getLayoutBounds();
+        Bounds bounds = centerContainer.sceneToLocal(node.localToScene(node.getBoundsInLocal()));
+
+        double viewportHeight = viewport.getHeight();
+        double contentHeight = content.getHeight();
+        if (contentHeight <= viewportHeight + 0.5) {
+            centerScroll.setVvalue(0);
+            return;
+        }
+
+        double targetTop = bounds.getMinY();
+        double targetCenter = targetTop + bounds.getHeight() / 2.0;
+        double raw = (targetCenter - viewportHeight / 2.0) / (contentHeight - viewportHeight);
+        centerScroll.setVvalue(clamp(raw, 0, 1));
+        node.requestFocus();
+    }
+
+    private static double clamp(double value, double min, double max) {
+        return Math.max(min, Math.min(max, value));
+    }
+
+    private static boolean isDescendantOf(Node node, Node ancestor) {
+        Node cur = node;
+        while (cur != null) {
+            if (cur == ancestor) return true;
+            cur = cur.getParent();
+        }
+        return false;
+    }
+
+    private static Node findNodeByUserData(Node node, Object userData) {
+        if (node == null) return null;
+        if (Objects.equals(node.getUserData(), userData)) return node;
+        if (node instanceof Parent p) {
+            for (Node child : p.getChildrenUnmodifiable()) {
+                Node found = findNodeByUserData(child, userData);
+                if (found != null) return found;
+            }
+        }
+        return null;
+    }
+
+    private static String taskKey(Task task) {
+        return task.getId();
+    }
+
+    private static String subtaskKey(Task task, Subtask subtask) {
+        return task.getId() + ":" + subtask.getId();
     }
 }

@@ -5,6 +5,7 @@ import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
@@ -24,7 +25,6 @@ import simon.klausurcraft.task.planning.PointDistributionPlanner;
 import simon.klausurcraft.ui.ThemeService;
 
 import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -75,23 +75,26 @@ final class HomeGenerateFlow {
         DatePicker dp = new DatePicker(root.examDate.get());
         dp.valueProperty().addListener((o, ov, nv) -> root.examDate.set(nv));
 
-        TextField tfSeed = new TextField(root.exportSeed.get());
-        tfSeed.setPromptText("Optional seed (leave empty for random variants)");
-        tfSeed.textProperty().addListener((o, ov, nv) -> root.exportSeed.set(nv == null ? "" : nv.trim()));
-
-        Button btnGenerateSeed = new Button("Generate");
-        btnGenerateSeed.getStyleClass().add("chip");
-        btnGenerateSeed.setOnAction(e -> {
-            String generated = newSeed();
-            root.exportSeed.set(generated);
-            tfSeed.setText(generated);
+        TextField tfDuration = new TextField(Integer.toString(Math.max(1, root.examDurationMinutes.get())));
+        tfDuration.setPromptText("e.g., 90");
+        tfDuration.textProperty().addListener((o, ov, nv) -> {
+            if (nv == null || nv.isBlank()) return;
+            if (nv.matches("\\d+")) {
+                try {
+                    int minutes = Integer.parseInt(nv);
+                    if (minutes > 0) {
+                        root.examDurationMinutes.set(minutes);
+                    }
+                } catch (NumberFormatException ignored) {
+                    // keep previous valid value
+                }
+            }
         });
-
-        HBox seedRow = new HBox(8, tfSeed, btnGenerateSeed);
-        HBox.setHgrow(tfSeed, Priority.ALWAYS);
-
-        Label lblSeedHint = new Label("Optional: leave empty for random variants. Same seed + same selection => same variant picks.");
-        lblSeedHint.getStyleClass().add("muted");
+        tfDuration.focusedProperty().addListener((o, ov, focused) -> {
+            if (!focused) {
+                tfDuration.setText(Integer.toString(Math.max(1, root.examDurationMinutes.get())));
+            }
+        });
 
         // NOTE: Sample solution checkbox intentionally removed from step 1
 
@@ -99,7 +102,7 @@ final class HomeGenerateFlow {
                 new Label("Scope"), scopeRow,
                 new Label("Title"), tfTitle,
                 new Label("Date"), dp,
-                new Label("Export seed (optional)"), seedRow, lblSeedHint);
+                new Label("Duration (minutes)"), tfDuration);
 
         ScrollPane sp = new ScrollPane(content);
         sp.setFitToWidth(true);
@@ -185,9 +188,11 @@ final class HomeGenerateFlow {
         // Footer: left theme toggle, right sample+total+generate
         HBox actions = new HBox(8);
         actions.getStyleClass().add("sheet-footer");
+        actions.setAlignment(Pos.CENTER_LEFT);
 
         // Theme Toggle (left)
         Button themeToggle = new Button("◐");
+        themeToggle.getStyleClass().add("icon-button");
         themeToggle.setPickOnBounds(true);
         themeToggle.setFocusTraversable(false);
         Tooltip.install(themeToggle, new Tooltip("Toggle theme (Ctrl+D)"));
@@ -199,19 +204,6 @@ final class HomeGenerateFlow {
         CheckBox cbSample = new CheckBox("Sample Solution");
         cbSample.selectedProperty().bindBidirectional(root.withSampleSolution);
 
-        TextField tfSeed = new TextField(root.exportSeed.get());
-        tfSeed.setPromptText("optional");
-        tfSeed.setPrefWidth(220);
-        tfSeed.textProperty().addListener((o, ov, nv) -> root.exportSeed.set(nv == null ? "" : nv.trim()));
-
-        Button btnGenerateSeed = new Button("Generate");
-        btnGenerateSeed.getStyleClass().add("chip");
-        btnGenerateSeed.setOnAction(e -> {
-            String generated = newSeed();
-            root.exportSeed.set(generated);
-            tfSeed.setText(generated);
-        });
-
         Label total = new Label();
         total.textProperty().bind(TaskSelection.totalPointsBinding(selected));
 
@@ -220,7 +212,7 @@ final class HomeGenerateFlow {
         btnGenerateExam.setDefaultButton(true);
         btnGenerateExam.disableProperty().bind(Bindings.isEmpty(selected));
 
-        actions.getChildren().addAll(themeToggle, back, spacer, new Label("Seed (optional):"), tfSeed, btnGenerateSeed, cbSample, total, btnGenerateExam);
+        actions.getChildren().addAll(themeToggle, back, spacer, cbSample, total, btnGenerateExam);
         pane.setBottom(actions);
 
         // ----- Modal window -----
@@ -253,8 +245,10 @@ final class HomeGenerateFlow {
         });
 
         btnGenerateExam.setOnAction(e -> {
-            generateExamNow(root, selected);
-            stage.close();
+            boolean ok = generateExamNow(root, selected);
+            if (ok) {
+                stage.close();
+            }
         });
 
         Platform.runLater(() -> {
@@ -265,12 +259,11 @@ final class HomeGenerateFlow {
         stage.showAndWait();
     }
 
-    static void generateExamNow(HomeController root, List<TaskSelection> selections) {
+    static boolean generateExamNow(HomeController root, List<TaskSelection> selections) {
         try {
             PdfExportService exporter = new PdfExportService();
 
             List<PdfExportService.TaskAssembly> assemblies = new ArrayList<>();
-            String seed = root.exportSeed.get() == null ? "" : root.exportSeed.get().trim();
             int taskIndex = 1;
             for (TaskSelection ts : selections) {
                 if (!ts.isEnabled()) continue;
@@ -288,13 +281,13 @@ final class HomeGenerateFlow {
                     HomeNotifications.showError("Task " + task.getId() + ": no feasible combination for "
                             + Points.toDisplayString(chosenPts)
                             + " points with near 1/3 difficulty. Add more subtasks of different difficulties.");
-                    return;
+                    return false;
                 }
 
                 List<PdfExportService.ChosenVariant> chosenVariants = new ArrayList<>();
                 for (Subtask sub : chosen) {
                     List<Variant> variants = sub.getVariants();
-                    Variant variant = pickVariant(variants, seed, task, sub);
+                    Variant variant = pickVariant(variants);
                     chosenVariants.add(new PdfExportService.ChosenVariant(sub, variant));
                 }
 
@@ -303,43 +296,34 @@ final class HomeGenerateFlow {
 
             if (assemblies.isEmpty()) {
                 HomeNotifications.showError("No tasks selected.");
-                return;
+                return false;
             }
 
-            exporter.export(root.getWindow(), root.examTitle.get(), root.examDate.get(), assemblies, root.withSampleSolution.get());
+            boolean exported = exporter.export(
+                    root.getWindow(),
+                    root.examTitle.get(),
+                    root.examDate.get(),
+                    assemblies,
+                    root.examDurationMinutes.get(),
+                    root.withSampleSolution.get()
+            );
+            if (!exported) {
+                // User canceled the save dialog -> keep current generate screen open.
+                return false;
+            }
 
             // Banner & Cleanup (SlideOver is closed here anyway)
             HomeNotifications.showInfo("PDF(s) generated.");
+            return true;
         } catch (Exception ex) {
             HomeNotifications.showError("Generation failed: " + ex.getMessage());
+            return false;
         }
     }
 
-    private static Variant pickVariant(List<Variant> variants, String seed, Task task, Subtask subtask) {
+    private static Variant pickVariant(List<Variant> variants) {
         if (variants == null || variants.isEmpty()) return null;
-        if (seed == null || seed.isBlank()) {
-            return variants.get(ThreadLocalRandom.current().nextInt(variants.size()));
-        }
-
-        long h = fnv1a64(seed + "|" + task.getId() + "." + subtask.getId());
-        int idx = (int) Math.floorMod(h, variants.size());
-        return variants.get(idx);
-    }
-
-    private static long fnv1a64(String value) {
-        long h = 0xcbf29ce484222325L;
-        for (byte b : value.getBytes(StandardCharsets.UTF_8)) {
-            h ^= (b & 0xff);
-            h *= 0x100000001b3L;
-        }
-        return h;
-    }
-
-    private static String newSeed() {
-        String a = Long.toUnsignedString(ThreadLocalRandom.current().nextLong(), 36);
-        String b = Long.toUnsignedString(ThreadLocalRandom.current().nextLong(), 36);
-        String raw = (a + b).toLowerCase();
-        return raw.length() > 12 ? raw.substring(0, 12) : raw;
+        return variants.get(ThreadLocalRandom.current().nextInt(variants.size()));
     }
 
     private static void installKeyboardTransfer(ListView<TaskSelection> lvSelected,
