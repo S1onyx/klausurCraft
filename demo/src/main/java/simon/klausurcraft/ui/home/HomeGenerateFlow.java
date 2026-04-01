@@ -1,7 +1,9 @@
 package simon.klausurcraft.ui.home;
 
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -13,6 +15,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import simon.klausurcraft.app.KlausurCraftApp;
 import simon.klausurcraft.task.GenerateScope;
+import simon.klausurcraft.task.Points;
 import simon.klausurcraft.task.Subtask;
 import simon.klausurcraft.task.Task;
 import simon.klausurcraft.task.Variant;
@@ -20,6 +23,8 @@ import simon.klausurcraft.task.export.PdfExportService;
 import simon.klausurcraft.task.planning.PointDistributionPlanner;
 import simon.klausurcraft.ui.ThemeService;
 
+import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -70,12 +75,31 @@ final class HomeGenerateFlow {
         DatePicker dp = new DatePicker(root.examDate.get());
         dp.valueProperty().addListener((o, ov, nv) -> root.examDate.set(nv));
 
+        TextField tfSeed = new TextField(root.exportSeed.get());
+        tfSeed.setPromptText("Optional seed (leave empty for random variants)");
+        tfSeed.textProperty().addListener((o, ov, nv) -> root.exportSeed.set(nv == null ? "" : nv.trim()));
+
+        Button btnGenerateSeed = new Button("Generate");
+        btnGenerateSeed.getStyleClass().add("chip");
+        btnGenerateSeed.setOnAction(e -> {
+            String generated = newSeed();
+            root.exportSeed.set(generated);
+            tfSeed.setText(generated);
+        });
+
+        HBox seedRow = new HBox(8, tfSeed, btnGenerateSeed);
+        HBox.setHgrow(tfSeed, Priority.ALWAYS);
+
+        Label lblSeedHint = new Label("Optional: leave empty for random variants. Same seed + same selection => same variant picks.");
+        lblSeedHint.getStyleClass().add("muted");
+
         // NOTE: Sample solution checkbox intentionally removed from step 1
 
         content.getChildren().addAll(header,
                 new Label("Scope"), scopeRow,
                 new Label("Title"), tfTitle,
-                new Label("Date"), dp);
+                new Label("Date"), dp,
+                new Label("Export seed (optional)"), seedRow, lblSeedHint);
 
         ScrollPane sp = new ScrollPane(content);
         sp.setFitToWidth(true);
@@ -141,13 +165,15 @@ final class HomeGenerateFlow {
         Label lblSelected = new Label("Selected tasks");
         ListView<TaskSelection> lvSelected = new ListView<>(selected);
         lvSelected.setCellFactory(v -> new SelectedTaskCell(root, selected, pool));
-        lvSelected.setFocusTraversable(false);
+        lvSelected.setFocusTraversable(true);
 
         // --- Pool (bottom)
         Label lblPool = new Label("Task pool");
         ListView<TaskSelection> lvPool = new ListView<>(pool);
         lvPool.setCellFactory(v -> new PoolTaskCell(root, selected, pool));
-        lvPool.setFocusTraversable(false);
+        lvPool.setFocusTraversable(true);
+
+        installKeyboardTransfer(lvSelected, lvPool, selected, pool);
 
         content.getChildren().addAll(header, lblSelected, lvSelected, new Separator(), lblPool, lvPool);
 
@@ -173,6 +199,19 @@ final class HomeGenerateFlow {
         CheckBox cbSample = new CheckBox("Sample Solution");
         cbSample.selectedProperty().bindBidirectional(root.withSampleSolution);
 
+        TextField tfSeed = new TextField(root.exportSeed.get());
+        tfSeed.setPromptText("optional");
+        tfSeed.setPrefWidth(220);
+        tfSeed.textProperty().addListener((o, ov, nv) -> root.exportSeed.set(nv == null ? "" : nv.trim()));
+
+        Button btnGenerateSeed = new Button("Generate");
+        btnGenerateSeed.getStyleClass().add("chip");
+        btnGenerateSeed.setOnAction(e -> {
+            String generated = newSeed();
+            root.exportSeed.set(generated);
+            tfSeed.setText(generated);
+        });
+
         Label total = new Label();
         total.textProperty().bind(TaskSelection.totalPointsBinding(selected));
 
@@ -181,7 +220,7 @@ final class HomeGenerateFlow {
         btnGenerateExam.setDefaultButton(true);
         btnGenerateExam.disableProperty().bind(Bindings.isEmpty(selected));
 
-        actions.getChildren().addAll(themeToggle, back, spacer, cbSample, total, btnGenerateExam);
+        actions.getChildren().addAll(themeToggle, back, spacer, new Label("Seed (optional):"), tfSeed, btnGenerateSeed, cbSample, total, btnGenerateExam);
         pane.setBottom(actions);
 
         // ----- Modal window -----
@@ -218,6 +257,11 @@ final class HomeGenerateFlow {
             stage.close();
         });
 
+        Platform.runLater(() -> {
+            if (!pool.isEmpty()) lvPool.getSelectionModel().select(0);
+            lvPool.requestFocus();
+        });
+
         stage.showAndWait();
     }
 
@@ -226,10 +270,11 @@ final class HomeGenerateFlow {
             PdfExportService exporter = new PdfExportService();
 
             List<PdfExportService.TaskAssembly> assemblies = new ArrayList<>();
+            String seed = root.exportSeed.get() == null ? "" : root.exportSeed.get().trim();
             int taskIndex = 1;
             for (TaskSelection ts : selections) {
                 if (!ts.isEnabled()) continue;
-                int chosenPts = ts.getChosenPoints();
+                BigDecimal chosenPts = ts.getChosenPoints();
                 Task task = ts.getTask();
 
                 List<Subtask> eligible = task.getSubtasks().stream()
@@ -240,7 +285,8 @@ final class HomeGenerateFlow {
                         eligible, chosenPts);
 
                 if (chosen == null) {
-                    HomeNotifications.showError("Task " + task.getId() + ": no feasible combination for " + chosenPts
+                    HomeNotifications.showError("Task " + task.getId() + ": no feasible combination for "
+                            + Points.toDisplayString(chosenPts)
                             + " points with near 1/3 difficulty. Add more subtasks of different difficulties.");
                     return;
                 }
@@ -248,9 +294,7 @@ final class HomeGenerateFlow {
                 List<PdfExportService.ChosenVariant> chosenVariants = new ArrayList<>();
                 for (Subtask sub : chosen) {
                     List<Variant> variants = sub.getVariants();
-                    Variant variant = variants.isEmpty()
-                            ? null
-                            : variants.get(ThreadLocalRandom.current().nextInt(variants.size()));
+                    Variant variant = pickVariant(variants, seed, task, sub);
                     chosenVariants.add(new PdfExportService.ChosenVariant(sub, variant));
                 }
 
@@ -268,6 +312,83 @@ final class HomeGenerateFlow {
             HomeNotifications.showInfo("PDF(s) generated.");
         } catch (Exception ex) {
             HomeNotifications.showError("Generation failed: " + ex.getMessage());
+        }
+    }
+
+    private static Variant pickVariant(List<Variant> variants, String seed, Task task, Subtask subtask) {
+        if (variants == null || variants.isEmpty()) return null;
+        if (seed == null || seed.isBlank()) {
+            return variants.get(ThreadLocalRandom.current().nextInt(variants.size()));
+        }
+
+        long h = fnv1a64(seed + "|" + task.getId() + "." + subtask.getId());
+        int idx = (int) Math.floorMod(h, variants.size());
+        return variants.get(idx);
+    }
+
+    private static long fnv1a64(String value) {
+        long h = 0xcbf29ce484222325L;
+        for (byte b : value.getBytes(StandardCharsets.UTF_8)) {
+            h ^= (b & 0xff);
+            h *= 0x100000001b3L;
+        }
+        return h;
+    }
+
+    private static String newSeed() {
+        String a = Long.toUnsignedString(ThreadLocalRandom.current().nextLong(), 36);
+        String b = Long.toUnsignedString(ThreadLocalRandom.current().nextLong(), 36);
+        String raw = (a + b).toLowerCase();
+        return raw.length() > 12 ? raw.substring(0, 12) : raw;
+    }
+
+    private static void installKeyboardTransfer(ListView<TaskSelection> lvSelected,
+                                                ListView<TaskSelection> lvPool,
+                                                ObservableList<TaskSelection> selected,
+                                                ObservableList<TaskSelection> pool) {
+        lvPool.setOnKeyPressed(e -> {
+            if (e.getCode() != KeyCode.SPACE) return;
+            TaskSelection item = lvPool.getSelectionModel().getSelectedItem();
+            if (item == null) return;
+
+            moveToSelected(item, pool, selected);
+            int next = Math.min(pool.size() - 1, Math.max(0, lvPool.getSelectionModel().getSelectedIndex()));
+            if (!pool.isEmpty()) lvPool.getSelectionModel().select(next);
+            e.consume();
+        });
+
+        lvSelected.setOnKeyPressed(e -> {
+            if (e.getCode() != KeyCode.SPACE) return;
+            TaskSelection item = lvSelected.getSelectionModel().getSelectedItem();
+            if (item == null) return;
+
+            moveToPool(item, selected, pool);
+            int next = Math.min(selected.size() - 1, Math.max(0, lvSelected.getSelectionModel().getSelectedIndex()));
+            if (!selected.isEmpty()) lvSelected.getSelectionModel().select(next);
+            e.consume();
+        });
+    }
+
+    private static void moveToSelected(TaskSelection item,
+                                       ObservableList<TaskSelection> pool,
+                                       ObservableList<TaskSelection> selected) {
+        item.setEnabled(true);
+        pool.remove(item);
+        if (!selected.contains(item)) {
+            if (item.getChosenPoints().compareTo(Points.ZERO) == 0 && !item.getAchievable().isEmpty()) {
+                item.chosenPointsProperty().set(item.getAchievable().get(0));
+            }
+            selected.add(item);
+        }
+    }
+
+    private static void moveToPool(TaskSelection item,
+                                   ObservableList<TaskSelection> selected,
+                                   ObservableList<TaskSelection> pool) {
+        item.setEnabled(false);
+        selected.remove(item);
+        if (!pool.contains(item)) {
+            pool.add(item);
         }
     }
 }

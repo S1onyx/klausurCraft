@@ -1,10 +1,12 @@
 package simon.klausurcraft.task.planning;
 
 import simon.klausurcraft.task.Difficulty;
+import simon.klausurcraft.task.Points;
 import simon.klausurcraft.task.Subtask;
 import simon.klausurcraft.task.Task;
 import simon.klausurcraft.task.GenerateScope;
 
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -13,29 +15,28 @@ import java.util.stream.Collectors;
  * that (approximately) respect the 1/3 difficulty distribution rule.
  *
  * Rule:
- *  - Use integer points only.
+ *  - Use points in half-step units (0.5).
  *  - Distribution target per category = round(N/3), tolerance ±1 per category.
  */
 public final class PointDistributionPlanner {
 
     private PointDistributionPlanner() {}
 
-    /** Return all achievable integer sums for a task respecting eligibility and distribution (non-empty). */
-    public static List<Integer> achievablePointSums(Task task, GenerateScope scope) {
+    /** Return all achievable sums for a task respecting eligibility and distribution (non-empty). */
+    public static List<BigDecimal> achievablePointSums(Task task, GenerateScope scope) {
         List<Subtask> eligible = task.getSubtasks().stream()
             .filter(st -> st.isEligibleFor(scope))
             .collect(Collectors.toList());
 
         if (eligible.isEmpty()) return List.of();
 
-        int max = eligible.stream().mapToInt(st -> st.getPoints().intValue()).sum();
         Set<Integer> sums = new TreeSet<>();
 
         Map<Integer, FeasibleDist> dp = new HashMap<>();
         dp.put(0, new FeasibleDist(0,0,0,0));
 
         for (Subtask st : eligible) {
-            int pts = st.getPoints().intValue();
+            int pts = Points.toHalfSteps(st.getPoints());
             Difficulty d = st.getDifficulty();
             Map<Integer, FeasibleDist> next = new HashMap<>(dp);
             for (Map.Entry<Integer, FeasibleDist> e : dp.entrySet()) {
@@ -56,16 +57,20 @@ public final class PointDistributionPlanner {
             }
         }
 
-        return new ArrayList<>(sums);
+        return sums.stream()
+            .map(Points::fromHalfSteps)
+            .collect(Collectors.toCollection(ArrayList::new));
     }
 
     /** Pick an actual combination hitting the sum with near-1/3 distribution; returns null if impossible. */
-    public static List<Subtask> pickSubtasksWithDistribution(List<Subtask> eligible, int targetSum) {
+    public static List<Subtask> pickSubtasksWithDistribution(List<Subtask> eligible, BigDecimal targetSum) {
         eligible = new ArrayList<>(eligible);
-        eligible.sort(Comparator.comparingInt(st -> -st.getPoints().intValue())); // big first to reduce branching
+        eligible.sort(Comparator.comparingInt(st -> -Points.toHalfSteps(st.getPoints()))); // big first to reduce branching
+
+        int targetHalfSteps = Points.toHalfSteps(targetSum);
 
         List<Subtask> best = new ArrayList<>();
-        backtrack(eligible, 0, targetSum, new ArrayList<>(), new int[3], best);
+        backtrack(eligible, 0, targetHalfSteps, new ArrayList<>(), new int[3], best);
         return best.isEmpty() ? null : best;
     }
 
@@ -83,7 +88,7 @@ public final class PointDistributionPlanner {
         if (remaining < 0 || idx >= arr.size()) return;
 
         int maxPossible = 0;
-        for (int i = idx; i < arr.size(); i++) maxPossible += arr.get(i).getPoints().intValue();
+        for (int i = idx; i < arr.size(); i++) maxPossible += Points.toHalfSteps(arr.get(i).getPoints());
         if (maxPossible < remaining) return;
 
         Subtask st = arr.get(idx);
@@ -92,11 +97,47 @@ public final class PointDistributionPlanner {
         };
         cur.add(st);
         dist[dIdx]++;
-        backtrack(arr, idx + 1, remaining - st.getPoints().intValue(), cur, dist, best);
+        backtrack(arr, idx + 1, remaining - Points.toHalfSteps(st.getPoints()), cur, dist, best);
         cur.remove(cur.size() - 1);
         dist[dIdx]--;
 
         backtrack(arr, idx + 1, remaining, cur, dist, best);
+    }
+
+    /**
+     * Suggests the best point sum for a task in the given scope.
+     * Ranking:
+     *  1) minimal distribution deviation to exact 1/3 split
+     *  2) higher total points
+     */
+    public static Optional<BigDecimal> suggestBestPointSum(Task task, GenerateScope scope) {
+        List<Subtask> eligible = task.getSubtasks().stream()
+                .filter(st -> st.isEligibleFor(scope))
+                .collect(Collectors.toList());
+        if (eligible.isEmpty()) return Optional.empty();
+
+        List<BigDecimal> sums = achievablePointSums(task, scope);
+        if (sums.isEmpty()) return Optional.empty();
+
+        BigDecimal bestSum = null;
+        double bestDeviation = Double.POSITIVE_INFINITY;
+        int bestHalfSteps = -1;
+
+        for (BigDecimal sum : sums) {
+            List<Subtask> chosen = pickSubtasksWithDistribution(eligible, sum);
+            if (chosen == null || chosen.isEmpty()) continue;
+
+            double deviation = distributionDeviation(chosen);
+            int halfSteps = Points.toHalfSteps(sum);
+
+            if (deviation < bestDeviation || (Double.compare(deviation, bestDeviation) == 0 && halfSteps > bestHalfSteps)) {
+                bestDeviation = deviation;
+                bestHalfSteps = halfSteps;
+                bestSum = sum;
+            }
+        }
+
+        return Optional.ofNullable(bestSum);
     }
 
     private static boolean distributionOk(int[] dist) {
@@ -106,6 +147,25 @@ public final class PointDistributionPlanner {
         return Math.abs(dist[0] - target) <= 1 &&
                Math.abs(dist[1] - target) <= 1 &&
                Math.abs(dist[2] - target) <= 1;
+    }
+
+    private static double distributionDeviation(List<Subtask> subtasks) {
+        int easy = 0;
+        int med = 0;
+        int hard = 0;
+        for (Subtask st : subtasks) {
+            switch (st.getDifficulty()) {
+                case EASY -> easy++;
+                case MEDIUM -> med++;
+                case HARD -> hard++;
+            }
+        }
+
+        int n = easy + med + hard;
+        if (n == 0) return Double.POSITIVE_INFINITY;
+
+        double target = n / 3.0;
+        return Math.abs(easy - target) + Math.abs(med - target) + Math.abs(hard - target);
     }
 
     private record FeasibleDist(int easy, int med, int hard, int count) {

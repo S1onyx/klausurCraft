@@ -1,5 +1,8 @@
 package simon.klausurcraft.app;
 
+import java.io.IOException;
+import java.util.Locale;
+
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -9,9 +12,6 @@ import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.stage.Stage;
 import simon.klausurcraft.ui.ThemeService;
-
-import java.io.IOException;
-import java.util.Locale;
 
 /**
  * JavaFX entry point for KlausurCraft.

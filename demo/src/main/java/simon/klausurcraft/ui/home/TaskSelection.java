@@ -7,17 +7,19 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import simon.klausurcraft.task.GenerateScope;
+import simon.klausurcraft.task.Points;
 import simon.klausurcraft.task.Task;
 import simon.klausurcraft.task.planning.PointDistributionPlanner;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
 public class TaskSelection {
     private final Task task;
     private final BooleanProperty enabled = new SimpleBooleanProperty(false);
-    private final IntegerProperty chosenPoints = new SimpleIntegerProperty(0);
-    private final ObservableList<Integer> achievable = FXCollections.observableArrayList();
+    private final ObjectProperty<BigDecimal> chosenPoints = new SimpleObjectProperty<>(Points.ZERO);
+    private final ObservableList<BigDecimal> achievable = FXCollections.observableArrayList();
 
     public TaskSelection(Task task) {
         this.task = task;
@@ -27,14 +29,14 @@ public class TaskSelection {
     public boolean isEnabled() { return enabled.get(); }
     public void setEnabled(boolean v) { enabled.set(v); }
     public BooleanProperty enabledProperty() { return enabled; }
-    public int getChosenPoints() { return chosenPoints.get(); }
-    public IntegerProperty chosenPointsProperty() { return chosenPoints; }
-    public ObservableList<Integer> getAchievable() { return achievable; }
+    public BigDecimal getChosenPoints() { return chosenPoints.get(); }
+    public ObjectProperty<BigDecimal> chosenPointsProperty() { return chosenPoints; }
+    public ObservableList<BigDecimal> getAchievable() { return achievable; }
 
     public void recomputeAchievable(GenerateScope scope) {
         achievable.setAll(PointDistributionPlanner.achievablePointSums(task, scope));
         if (!achievable.contains(chosenPoints.get())) {
-            chosenPoints.set(achievable.isEmpty() ? 0 : achievable.get(0));
+            chosenPoints.set(achievable.isEmpty() ? Points.ZERO : achievable.get(0));
         }
     }
 
@@ -81,12 +83,11 @@ public class TaskSelection {
 
             @Override
             protected String computeValue() {
-                int sum = items.stream()
+                BigDecimal sum = items.stream()
                         .filter(TaskSelection::isEnabled)
                         .map(TaskSelection::getChosenPoints)
-                        .mapToInt(Integer::intValue)
-                        .sum();
-                return "Total points: " + sum;
+                        .reduce(Points.ZERO, BigDecimal::add);
+                return "Total points: " + Points.toDisplayString(sum);
             }
         }
         return new TotalBinding();

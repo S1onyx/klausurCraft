@@ -1,5 +1,6 @@
 package simon.klausurcraft.ui.home;
 
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.Dragboard;
@@ -7,7 +8,10 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
+import simon.klausurcraft.task.Points;
+import simon.klausurcraft.task.planning.PointDistributionPlanner;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -18,13 +22,15 @@ import java.util.List;
  */
 class SelectedTaskCell extends ListCell<TaskSelection> {
 
+    private final HomeController root;
     private final List<TaskSelection> selected;
     private final List<TaskSelection> pool;
 
     private final CheckBox cbSelected = new CheckBox();
     private final Label title = new Label();
     private final Label lblPoints = new Label("Points:");
-    private final ComboBox<Integer> cbPoints = new ComboBox<>();
+    private final ComboBox<BigDecimal> cbPoints = new ComboBox<>();
+    private final Button btnSuggest = new Button("Suggest");
     private final Button btnUp = new Button("↑");
     private final Button btnDown = new Button("↓");
 
@@ -33,6 +39,7 @@ class SelectedTaskCell extends ListCell<TaskSelection> {
     SelectedTaskCell(HomeController root,
                      List<TaskSelection> selected,
                      List<TaskSelection> pool) {
+        this.root = root;
         this.selected = selected;
         this.pool = pool;
 
@@ -44,6 +51,34 @@ class SelectedTaskCell extends ListCell<TaskSelection> {
 
         cbPoints.setPrefWidth(90);
         cbPoints.setVisibleRowCount(10);
+        cbPoints.setButtonCell(new ListCell<>() {
+            @Override protected void updateItem(BigDecimal item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? "" : Points.toDisplayString(item));
+                setAlignment(Pos.CENTER_LEFT);
+            }
+        });
+        cbPoints.setCellFactory(listView -> new ListCell<>() {
+            @Override protected void updateItem(BigDecimal item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? "" : Points.toDisplayString(item));
+                setAlignment(Pos.CENTER_LEFT);
+            }
+        });
+
+        btnSuggest.getStyleClass().add("chip");
+        btnSuggest.setOnAction(e -> {
+            TaskSelection ts = getItem();
+            if (ts == null) return;
+
+            ts.recomputeAchievable(root.scope.get());
+            PointDistributionPlanner.suggestBestPointSum(ts.getTask(), root.scope.get())
+                    .ifPresentOrElse(best -> {
+                        ts.chosenPointsProperty().set(best);
+                        cbPoints.getSelectionModel().select(best);
+                    }, () -> HomeNotifications.showError(
+                            "No point suggestion available for this task in current scope."));
+        });
 
         btnUp.getStyleClass().add("chip");
         btnDown.getStyleClass().add("chip");
@@ -51,7 +86,7 @@ class SelectedTaskCell extends ListCell<TaskSelection> {
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        box = new HBox(8, cbSelected, title, spacer, lblPoints, cbPoints, btnUp, btnDown);
+        box = new HBox(8, cbSelected, title, spacer, lblPoints, cbPoints, btnSuggest, btnUp, btnDown);
         box.setFillHeight(true);
 
         setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
@@ -142,11 +177,12 @@ class SelectedTaskCell extends ListCell<TaskSelection> {
 
         // ensure achievable is up to date (scope fixed in step 2)
         cbPoints.setItems(item.getAchievable());
+        btnSuggest.setDisable(item.getAchievable().isEmpty());
         if (!item.getAchievable().isEmpty()) {
             if (!item.getAchievable().contains(item.getChosenPoints())) {
                 cbPoints.getSelectionModel().select(item.getAchievable().get(0));
             } else {
-                cbPoints.getSelectionModel().select(Integer.valueOf(item.getChosenPoints()));
+                cbPoints.getSelectionModel().select(item.getChosenPoints());
             }
         } else {
             cbPoints.getSelectionModel().clearSelection();

@@ -8,6 +8,7 @@ import javafx.scene.input.ContextMenuEvent;
 import javafx.scene.layout.*;
 import simon.klausurcraft.task.Difficulty;
 import simon.klausurcraft.task.Eligibility;
+import simon.klausurcraft.task.Points;
 import simon.klausurcraft.task.Subtask;
 import simon.klausurcraft.task.Task;
 import simon.klausurcraft.ui.UiStyles;
@@ -15,6 +16,7 @@ import simon.klausurcraft.ui.UiStyles;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.ArrayList;
 
 public class HomeCenterController {
 
@@ -32,7 +34,28 @@ public class HomeCenterController {
         String q = query == null ? "" : query;
 
         for (Task t : tasks) {
-            boolean taskMatches = matchesTask(t, q);
+            boolean hasQuery = !q.isEmpty();
+            boolean taskHeaderMatches = matchesTaskHeader(t, q);
+            List<Subtask> visibleSubtasks = new ArrayList<>();
+            List<Subtask> highlightedSubtasks = new ArrayList<>();
+
+            for (Subtask st : t.getSubtasks()) {
+                if (!allowed.contains(st.getDifficulty())) continue;
+
+                String subGroup = root.getTaskRepository().readSubtaskGroup(st);
+                boolean subtaskMatches = matchesSubtask(st, subGroup, q);
+
+                if (!hasQuery || taskHeaderMatches || subtaskMatches) {
+                    visibleSubtasks.add(st);
+                }
+                if (hasQuery && subtaskMatches) {
+                    highlightedSubtasks.add(st);
+                }
+            }
+
+            if (hasQuery && !taskHeaderMatches && visibleSubtasks.isEmpty()) {
+                continue;
+            }
 
             VBox taskCard = makeCard();
             taskCard.setUserData(formatTaskTitle(t));
@@ -41,6 +64,9 @@ public class HomeCenterController {
             HBox headerRow = new HBox(8);
             Label header = new Label("Task " + t.getId() + " — " + t.getTitle());
             header.getStyleClass().add("header");
+            if (hasQuery && taskHeaderMatches) {
+                header.getStyleClass().add("search-hit-task-title");
+            }
 
             Region spacer = new Region();
             HBox.setHgrow(spacer, Priority.ALWAYS);
@@ -79,25 +105,33 @@ public class HomeCenterController {
             taskMenu.getItems().addAll(miEdit, miAdd, new SeparatorMenuItem(), miDel);
             taskCard.setOnContextMenuRequested((ContextMenuEvent ev) -> taskMenu.show(taskCard, ev.getScreenX(), ev.getScreenY()));
 
-            for (Subtask st : t.getSubtasks()) {
-                if (!allowed.contains(st.getDifficulty())) continue;
-                boolean subMatches = taskMatches || matchesSubtask(st, q);
-                if (!subMatches && !q.isEmpty()) continue;
-
+            for (Subtask st : visibleSubtasks) {
                 String subName = root.getTaskRepository().readSubtaskGroup(st);
                 if (subName == null || subName.isBlank()) {
                     subName = "Subtask " + t.getId() + "." + st.getId();
                 }
+                boolean isHighlightedSubtask = hasQuery && highlightedSubtasks.contains(st);
 
                 HBox row = new HBox(10);
                 row.setPadding(new Insets(6, 0, 6, 0));
+                if (isHighlightedSubtask) {
+                    row.getStyleClass().add("search-hit-subtask-row");
+                }
 
                 Label lblTitle = new Label(subName);
                 lblTitle.getStyleClass().add("muted");
+                if (isHighlightedSubtask) {
+                    lblTitle.getStyleClass().add("search-hit-subtask-title");
+                }
 
-                Label bPts  = badge(st.getPoints().stripTrailingZeros().toPlainString() + " pts");
+                Label bPts  = badge(Points.toDisplayString(st.getPoints()) + " pts");
                 Label bDiff = badgeForDifficulty(st.getDifficulty());
                 Label bElig = badgeForEligibility(st.getEligibility());
+                Label bHit = null;
+                if (isHighlightedSubtask) {
+                    bHit = badge("match");
+                    bHit.getStyleClass().add("badge-search-hit");
+                }
 
                 Region spacer2 = new Region();
                 HBox.setHgrow(spacer2, Priority.ALWAYS);
@@ -115,11 +149,17 @@ public class HomeCenterController {
                 subMenu.getItems().addAll(miOpen, new SeparatorMenuItem(), miDelete);
                 row.setOnContextMenuRequested(ev -> subMenu.show(row, ev.getScreenX(), ev.getScreenY()));
 
-                row.getChildren().addAll(lblTitle, bPts, bDiff, bElig, spacer2, btnOpen);
+                if (bHit != null) {
+                    row.getChildren().addAll(lblTitle, bHit, bPts, bDiff, bElig, spacer2, btnOpen);
+                } else {
+                    row.getChildren().addAll(lblTitle, bPts, bDiff, bElig, spacer2, btnOpen);
+                }
                 taskCard.getChildren().add(row);
             }
 
-            centerContainer.getChildren().add(taskCard);
+            if (!hasQuery || taskHeaderMatches || !visibleSubtasks.isEmpty()) {
+                centerContainer.getChildren().add(taskCard);
+            }
         }
     }
 
@@ -205,22 +245,19 @@ public class HomeCenterController {
         return l;
     }
 
-    private boolean matchesTask(Task t, String q) {
+    private boolean matchesTaskHeader(Task t, String q) {
         if (q.isEmpty()) return true;
         if (t.getId().toLowerCase().contains(q)) return true;
-        if (t.getTitle().toLowerCase().contains(q)) return true;
-        for (Subtask st : t.getSubtasks()) if (matchesSubtask(st, q)) return true;
-        return false;
+        return t.getTitle().toLowerCase().contains(q);
     }
 
-    private boolean matchesSubtask(Subtask st, String q) {
+    private boolean matchesSubtask(Subtask st, String subtaskGroup, String q) {
         if (q.isEmpty()) return true;
         if (st.getId().toLowerCase().contains(q)) return true;
         return st.getVariants().stream().anyMatch(v ->
             (v.getText() != null && v.getText().toLowerCase().contains(q)) ||
             (v.getSolution() != null && v.getSolution().toLowerCase().contains(q)) ||
-            (root.getTaskRepository().readSubtaskGroup(st) != null &&
-             root.getTaskRepository().readSubtaskGroup(st).toLowerCase().contains(q))
+            (subtaskGroup != null && subtaskGroup.toLowerCase().contains(q))
         );
     }
 

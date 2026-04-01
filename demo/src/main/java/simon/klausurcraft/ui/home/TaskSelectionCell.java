@@ -8,6 +8,9 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
+import simon.klausurcraft.task.Points;
+
+import java.math.BigDecimal;
 
 /**
  * ListCell for TaskSelection rows in Step 2 (Generate flow).
@@ -21,7 +24,7 @@ public class TaskSelectionCell extends ListCell<TaskSelection> {
 
     private final CheckBox cbEnable = new CheckBox();
     private final Label title = new Label();
-    private final ComboBox<Integer> cbPoints = new ComboBox<>();
+    private final ComboBox<BigDecimal> cbPoints = new ComboBox<>();
     private final Button btnUp = new Button("↑");
     private final Button btnDown = new Button("↓");
 
@@ -43,16 +46,16 @@ public class TaskSelectionCell extends ListCell<TaskSelection> {
 
         // Ensure value rendering is readable in dark & light themes
         cbPoints.setButtonCell(new ListCell<>() {
-            @Override protected void updateItem(Integer item, boolean empty) {
+            @Override protected void updateItem(BigDecimal item, boolean empty) {
                 super.updateItem(item, empty);
-                setText(empty || item == null ? "" : String.valueOf(item));
+                setText(empty || item == null ? "" : Points.toDisplayString(item));
                 setAlignment(Pos.CENTER_LEFT);
             }
         });
         cbPoints.setCellFactory(listView -> new ListCell<>() {
-            @Override protected void updateItem(Integer item, boolean empty) {
+            @Override protected void updateItem(BigDecimal item, boolean empty) {
                 super.updateItem(item, empty);
-                setText(empty || item == null ? "" : String.valueOf(item));
+                setText(empty || item == null ? "" : Points.toDisplayString(item));
                 setAlignment(Pos.CENTER_LEFT);
             }
         });
@@ -176,7 +179,7 @@ public class TaskSelectionCell extends ListCell<TaskSelection> {
             if (!item.getAchievable().contains(item.getChosenPoints())) {
                 cbPoints.getSelectionModel().select(item.getAchievable().get(0));
             } else {
-                cbPoints.getSelectionModel().select(Integer.valueOf(item.getChosenPoints()));
+                cbPoints.getSelectionModel().select(item.getChosenPoints());
             }
         } else {
             cbPoints.getSelectionModel().clearSelection();

@@ -106,7 +106,7 @@ public class TaskXmlStore {
                 if (!eSub.getParentNode().isSameNode(eTask)) continue;
 
                 String sid = eSub.getAttribute("id");
-                BigDecimal pts = new BigDecimal(eSub.getAttribute("points"));
+                BigDecimal pts = Points.parseStorageValue(eSub.getAttribute("points"));
                 Difficulty diff = Difficulty.from(eSub.getAttribute("difficulty"));
                 Eligibility elig = Eligibility.from(eSub.getAttribute("eligibility"));
                 Subtask st = new Subtask(eSub, t, sid, pts, diff, elig);
@@ -172,7 +172,7 @@ public class TaskXmlStore {
     }
 
     public void updateSubtaskMeta(Subtask st) {
-        st.getDom().setAttribute("points", st.getPoints().stripTrailingZeros().toPlainString());
+        st.getDom().setAttribute("points", Points.toStorageString(st.getPoints()));
         st.getDom().setAttribute("difficulty", st.getDifficulty().toString());
         st.getDom().setAttribute("eligibility", st.getEligibility().toString());
         save();

@@ -198,6 +198,22 @@
 .context-menu { -fx-background-color: #1b2128; -fx-text-fill: -color-text; -fx-border-color: -color-border; }
 .menu-item:focused { -fx-background-color: rgba(96,165,250,0.20); }
 
+/* Search highlights */
+.search-hit-task-title { -fx-text-fill: #93c5fd; }
+.search-hit-subtask-title { -fx-text-fill: #bfdbfe; -fx-font-weight: bold; }
+.search-hit-subtask-row {
+  -fx-background-color: rgba(96,165,250,0.14);
+  -fx-border-color: rgba(96,165,250,0.40);
+  -fx-border-radius: 8;
+  -fx-background-radius: 8;
+  -fx-padding: 6 8 6 8;
+}
+.badge-search-hit {
+  -fx-background-color: rgba(96,165,250,0.25);
+  -fx-border-color: rgba(96,165,250,0.55);
+  -fx-text-fill: #dbeafe;
+}
+
 /* Dialogs (Alerts, TextInputDialog) – Dark Mode */
 .dialog-pane {
   -fx-background-color: -color-surface;

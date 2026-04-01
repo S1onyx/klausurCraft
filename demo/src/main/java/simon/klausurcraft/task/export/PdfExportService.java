@@ -6,6 +6,7 @@ import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Window;
+import simon.klausurcraft.task.Points;
 import simon.klausurcraft.task.Subtask;
 import simon.klausurcraft.task.Task;
 import simon.klausurcraft.task.Variant;
@@ -104,7 +105,7 @@ public class PdfExportService {
 
                 Paragraph subHeader = new Paragraph(
                         String.format("%d.%c  (%s pts)",
-                                ta.number, letter, st.getPoints().stripTrailingZeros().toPlainString()),
+                                ta.number, letter, Points.toDisplayString(st.getPoints())),
                         new Font(Font.HELVETICA, 11, Font.BOLD));
                 subHeader.setSpacingBefore(4);
                 subHeader.setSpacingAfter(3);
@@ -138,10 +139,10 @@ public class PdfExportService {
 
     private float answerBoxHeight(Subtask st) {
         // Minimum ~3 lines at 11pt -> ~48pt, add per point ~11pt
-        int pts = st.getPoints().intValue();
+        double pts = st.getPoints().doubleValue();
         float base = 48f;
         float perPoint = 11f;
-        float h = base + Math.max(0, pts - 3) * perPoint;
+        float h = base + Math.max(0f, (float) (pts - 3d)) * perPoint;
         return Math.max(h, base);
     }
 }

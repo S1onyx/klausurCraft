@@ -50,42 +50,44 @@ final class HomeSubtaskSheet {
         // Points
         VBox ptsBox = new VBox(4);
         Label lblPts = new Label("Points");
-        TextField tfPoints = new TextField(sub.getPoints().stripTrailingZeros().toPlainString());
-        tfPoints.setPromptText("Integer (≥ 0)");
+        TextField tfPoints = new TextField(Points.toDisplayString(sub.getPoints()));
+        tfPoints.setPromptText("Number (>= 0, steps of 0,5)");
+        Label lblPtsHint = new Label("Allowed: 0, 0,5, 1, 1,5, ...");
+        lblPtsHint.getStyleClass().add("muted");
         Label lblPtsError = new Label();
         lblPtsError.getStyleClass().add("field-error"); // styled via existing CSS theme
         lblPtsError.setManaged(false);
         lblPtsError.setVisible(false);
 
+        Runnable clearPointsError = () -> {
+            lblPtsError.setManaged(false);
+            lblPtsError.setVisible(false);
+            tfPoints.getStyleClass().remove("field-error-border");
+        };
+        java.util.function.Consumer<String> showPointsError = msg -> {
+            lblPtsError.setText(msg);
+            lblPtsError.setManaged(true);
+            lblPtsError.setVisible(true);
+            if (!tfPoints.getStyleClass().contains("field-error-border")) {
+                tfPoints.getStyleClass().add("field-error-border");
+            }
+        };
+
         tfPoints.textProperty().addListener((o, ov, nv) -> {
             String s = nv == null ? "" : nv.trim();
-            boolean ok = s.matches("\\d+");
-            if (ok) {
-                try {
-                    sub.setPoints(new BigDecimal(s));
-                    xmlService.updateSubtaskMeta(sub);
-                    root.centerController.render(root.getTasks(), root.currentQuery(), root.allowedDifficulties());
-                    lblPtsError.setManaged(false);
-                    lblPtsError.setVisible(false);
-                    tfPoints.getStyleClass().remove("field-error-border");
-                } catch (Exception ex) {
-                    lblPtsError.setText("Failed to save points: " + ex.getMessage());
-                    lblPtsError.setManaged(true);
-                    lblPtsError.setVisible(true);
-                    if (!tfPoints.getStyleClass().contains("field-error-border")) {
-                        tfPoints.getStyleClass().add("field-error-border");
-                    }
-                }
-            } else {
-                lblPtsError.setText("Please enter a non-negative integer.");
-                lblPtsError.setManaged(true);
-                lblPtsError.setVisible(true);
-                if (!tfPoints.getStyleClass().contains("field-error-border")) {
-                    tfPoints.getStyleClass().add("field-error-border");
-                }
+            try {
+                BigDecimal parsedPoints = Points.parseInput(s);
+                sub.setPoints(parsedPoints);
+                xmlService.updateSubtaskMeta(sub);
+                root.centerController.render(root.getTasks(), root.currentQuery(), root.allowedDifficulties());
+                clearPointsError.run();
+            } catch (IllegalArgumentException ex) {
+                showPointsError.accept(ex.getMessage());
+            } catch (Exception ex) {
+                showPointsError.accept("Failed to save points: " + ex.getMessage());
             }
         });
-        ptsBox.getChildren().addAll(lblPts, tfPoints, lblPtsError);
+        ptsBox.getChildren().addAll(lblPts, tfPoints, lblPtsHint, lblPtsError);
 
         // Difficulty
         VBox diffBox = new VBox(4);

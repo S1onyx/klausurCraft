@@ -4,6 +4,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
+import simon.klausurcraft.task.Points;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -51,7 +52,7 @@ class PoolTaskCell extends ListCell<TaskSelection> {
                 ts.setEnabled(true);
                 pool.remove(ts);
                 if (!selected.contains(ts)) {
-                    if (ts.getChosenPoints() == 0 && !ts.getAchievable().isEmpty()) {
+                    if (ts.getChosenPoints().compareTo(Points.ZERO) == 0 && !ts.getAchievable().isEmpty()) {
                         ts.chosenPointsProperty().set(ts.getAchievable().get(0));
                     }
                     selected.add(ts);
@@ -80,7 +81,7 @@ class PoolTaskCell extends ListCell<TaskSelection> {
             lblPossible.setText("(no possible points)");
         } else {
             String poss = item.getAchievable().stream()
-                    .map(Object::toString)
+                    .map(Points::toDisplayString)
                     .collect(Collectors.joining(", "));
             lblPossible.setText("Possible: " + poss);
             Tooltip.uninstall(cbPick, null);

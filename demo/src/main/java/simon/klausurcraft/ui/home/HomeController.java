@@ -55,6 +55,7 @@ public class HomeController {
     final StringProperty examTitle = new SimpleStringProperty("Exam");
     final ObjectProperty<LocalDate> examDate = new SimpleObjectProperty<>(LocalDate.now());
     final BooleanProperty withSampleSolution = new SimpleBooleanProperty(false);
+    final StringProperty exportSeed = new SimpleStringProperty("");
 
     public TaskXmlStore getTaskRepository() { return taskRepository; }
     public ObservableList<Task> getTasks() { return tasks; }
