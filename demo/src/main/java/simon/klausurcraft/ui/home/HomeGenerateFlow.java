@@ -50,6 +50,9 @@ final class HomeGenerateFlow {
         RadioButton rbPractice = new RadioButton("practice");
         RadioButton rbBoth = new RadioButton("both");
         rbExam.setToggleGroup(tg); rbPractice.setToggleGroup(tg); rbBoth.setToggleGroup(tg);
+        rbExam.setTooltip(new Tooltip("Generate only exam-eligible subtasks."));
+        rbPractice.setTooltip(new Tooltip("Generate only practice-eligible subtasks."));
+        rbBoth.setTooltip(new Tooltip("Generate from all eligible subtasks."));
 
         // add pill styles (CSS provides colors per scope)
         rbExam.getStyleClass().addAll("scope-chip", "scope-exam");
@@ -70,13 +73,16 @@ final class HomeGenerateFlow {
 
         TextField tfTitle = new TextField(root.examTitle.get());
         tfTitle.setPromptText("Title (e.g., Databases – Exam)");
+        tfTitle.setTooltip(new Tooltip("Title shown in the exported exam PDF."));
         tfTitle.textProperty().addListener((o, ov, nv) -> root.examTitle.set(nv));
 
         DatePicker dp = new DatePicker(root.examDate.get());
+        dp.setTooltip(new Tooltip("Exam date printed in the export."));
         dp.valueProperty().addListener((o, ov, nv) -> root.examDate.set(nv));
 
         TextField tfDuration = new TextField(Integer.toString(Math.max(1, root.examDurationMinutes.get())));
         tfDuration.setPromptText("e.g., 90");
+        tfDuration.setTooltip(new Tooltip("Duration in minutes, used in the exam header."));
         tfDuration.textProperty().addListener((o, ov, nv) -> {
             if (nv == null || nv.isBlank()) return;
             if (nv.matches("\\d+")) {
@@ -115,6 +121,7 @@ final class HomeGenerateFlow {
 
         Button cancel = new Button("Cancel");
         cancel.setCancelButton(true);
+        cancel.setTooltip(new Tooltip("Close the wizard without generating."));
         cancel.setOnAction(e -> {
             root.getSlideOver().hide();
             root.rootStack.setMouseTransparent(true);
@@ -123,6 +130,7 @@ final class HomeGenerateFlow {
         Button next = new Button("Next");
         next.getStyleClass().add("primary");
         next.setDefaultButton(true);
+        next.setTooltip(new Tooltip("Continue to task selection and point setup."));
         next.setOnAction(e -> openStep2(root)); // opens modal window
 
         actions.getChildren().addAll(filler, cancel, next);
@@ -169,12 +177,14 @@ final class HomeGenerateFlow {
         ListView<TaskSelection> lvSelected = new ListView<>(selected);
         lvSelected.setCellFactory(v -> new SelectedTaskCell(root, selected, pool));
         lvSelected.setFocusTraversable(true);
+        lvSelected.setTooltip(new Tooltip("Tasks included in the generated exam."));
 
         // --- Pool (bottom)
         Label lblPool = new Label("Task pool");
         ListView<TaskSelection> lvPool = new ListView<>(pool);
         lvPool.setCellFactory(v -> new PoolTaskCell(root, selected, pool));
         lvPool.setFocusTraversable(true);
+        lvPool.setTooltip(new Tooltip("Available tasks. Tick a row to include it."));
 
         installKeyboardTransfer(lvSelected, lvPool, selected, pool);
 
@@ -198,19 +208,23 @@ final class HomeGenerateFlow {
         Tooltip.install(themeToggle, new Tooltip("Toggle theme (Ctrl+D)"));
 
         Button back = new Button("Back");
+        back.setTooltip(new Tooltip("Return to step 1 and keep your settings."));
 
         Region spacer = new Region(); HBox.setHgrow(spacer, Priority.ALWAYS);
 
         CheckBox cbSample = new CheckBox("Sample Solution");
         cbSample.selectedProperty().bindBidirectional(root.withSampleSolution);
+        cbSample.setTooltip(new Tooltip("Include a sample-solution PDF in the export."));
 
         Label total = new Label();
         total.textProperty().bind(TaskSelection.totalPointsBinding(selected));
+        total.setTooltip(new Tooltip("Current total points from selected tasks."));
 
         Button btnGenerateExam = new Button("Generate Exam");
         btnGenerateExam.getStyleClass().add("primary");
         btnGenerateExam.setDefaultButton(true);
         btnGenerateExam.disableProperty().bind(Bindings.isEmpty(selected));
+        btnGenerateExam.setTooltip(new Tooltip("Generate PDF(s) with the selected tasks."));
 
         actions.getChildren().addAll(themeToggle, back, spacer, cbSample, total, btnGenerateExam);
         pane.setBottom(actions);

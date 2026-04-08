@@ -32,6 +32,7 @@ public class TaskSelectionCell extends ListCell<TaskSelection> {
 
     public TaskSelectionCell(HomeController root) {
         this.root = root;
+        cbEnable.setTooltip(new Tooltip("Include or exclude this task."));
 
         // Title should take remaining width and elide; keeps row compact on small widths.
         title.setMaxWidth(Double.MAX_VALUE);
@@ -43,6 +44,7 @@ public class TaskSelectionCell extends ListCell<TaskSelection> {
         cbPoints.setMaxWidth(110);
         cbPoints.setMinWidth(68);
         cbPoints.setVisibleRowCount(10);
+        cbPoints.setTooltip(new Tooltip("Choose target points for this task."));
 
         // Ensure value rendering is readable in dark & light themes
         cbPoints.setButtonCell(new ListCell<>() {
@@ -62,6 +64,8 @@ public class TaskSelectionCell extends ListCell<TaskSelection> {
 
         btnUp.getStyleClass().add("chip");
         btnDown.getStyleClass().add("chip");
+        btnUp.setTooltip(new Tooltip("Move task one row up."));
+        btnDown.setTooltip(new Tooltip("Move task one row down."));
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);

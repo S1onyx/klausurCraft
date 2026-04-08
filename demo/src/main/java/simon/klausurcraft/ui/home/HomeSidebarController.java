@@ -26,9 +26,12 @@ public class HomeSidebarController {
     public void init(HomeController root) {
         this.root = root;
         btnLoad.setOnAction(e -> HomeFileController.chooseAndLoadXml(root));
+        btnLoad.setTooltip(new Tooltip("Open an existing XML task file."));
         if (btnNewXml != null) {
             btnNewXml.setOnAction(e -> HomeFileController.createNewXml(root));
+            btnNewXml.setTooltip(new Tooltip("Create a new empty XML task file."));
         }
+        tocTree.setTooltip(new Tooltip("Contents tree. Click to jump to task/subtask."));
 
         // Render cell text
         tocTree.setCellFactory(tv -> new TreeCell<>() {

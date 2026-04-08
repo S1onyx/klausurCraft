@@ -30,6 +30,7 @@ class PoolTaskCell extends ListCell<TaskSelection> {
                  List<TaskSelection> pool) {
         this.selected = selected;
         this.pool = pool;
+        cbPick.setTooltip(new Tooltip("Check to move this task into selected tasks."));
 
         title.setMaxWidth(Double.MAX_VALUE);
         title.setWrapText(false);
@@ -76,15 +77,14 @@ class PoolTaskCell extends ListCell<TaskSelection> {
         cbPick.setDisable(!hasOptions);
 
         if (!hasOptions) {
-            Tooltip tip = new Tooltip("No achievable point sum for current scope. Add subtasks with diverse difficulties.");
-            Tooltip.install(cbPick, tip);
+            cbPick.setTooltip(new Tooltip("No achievable points in current scope. Add subtasks with valid combinations."));
             lblPossible.setText("(no possible points)");
         } else {
             String poss = item.getAchievable().stream()
                     .map(Points::toDisplayString)
                     .collect(Collectors.joining(", "));
             lblPossible.setText("Possible: " + poss);
-            Tooltip.uninstall(cbPick, null);
+            cbPick.setTooltip(new Tooltip("Check to move this task into selected tasks."));
         }
 
         title.setText("Task " + item.getTask().getId() + " — " + item.getTask().getTitle());

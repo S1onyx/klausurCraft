@@ -74,7 +74,7 @@ public class HomeController {
     final StringProperty examTitle = new SimpleStringProperty("Exam");
     final ObjectProperty<LocalDate> examDate = new SimpleObjectProperty<>(LocalDate.now());
     final IntegerProperty examDurationMinutes = new SimpleIntegerProperty(90);
-    final BooleanProperty withSampleSolution = new SimpleBooleanProperty(false);
+    final BooleanProperty withSampleSolution = new SimpleBooleanProperty(true);
 
     public TaskXmlStore getTaskRepository() { return taskRepository; }
     public ObservableList<Task> getTasks() { return tasks; }
@@ -115,11 +115,13 @@ public class HomeController {
 
         // Generate
         if (btnGenerateBottom != null) {
+            btnGenerateBottom.setTooltip(new Tooltip("Open exam generation wizard."));
             btnGenerateBottom.setOnAction(e -> HomeGenerateFlow.openStep1(this));
         }
 
         // + Task button -> prompt & create + open edit
         if (btnAddTask != null) {
+            btnAddTask.setTooltip(new Tooltip("Create a new task and open its editor."));
             btnAddTask.setOnAction(e -> HomeTaskSheet.promptNewTask(this).ifPresent(newTask -> {
                 tasks.add(newTask);
                 // open slide-over to edit right away

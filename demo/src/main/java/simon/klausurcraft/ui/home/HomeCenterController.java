@@ -60,9 +60,11 @@ public class HomeCenterController {
         taskControls.setPadding(new Insets(0, 0, 4, 0));
         Button btnExpandAll = new Button("Expand all");
         btnExpandAll.getStyleClass().add("chip");
+        btnExpandAll.setTooltip(new Tooltip("Expand all task cards."));
         btnExpandAll.setOnAction(e -> expandAllTasks(tasks));
         Button btnCollapseAll = new Button("Collapse all");
         btnCollapseAll.getStyleClass().add("chip");
+        btnCollapseAll.setTooltip(new Tooltip("Collapse all task cards."));
         btnCollapseAll.setOnAction(e -> collapseAllTasks(tasks));
         taskControls.getChildren().addAll(btnExpandAll, btnCollapseAll);
         centerContainer.getChildren().add(taskControls);
@@ -99,6 +101,7 @@ public class HomeCenterController {
             boolean expanded = isTaskExpanded(t);
             Button btnToggle = new Button(expanded ? "▾" : "▸");
             btnToggle.getStyleClass().addAll("chip", "task-toggle");
+            btnToggle.setTooltip(new Tooltip("Expand or collapse this task."));
             btnToggle.setOnAction(e -> setTaskExpanded(t, !isTaskExpanded(t)));
 
             Label header = new Label("Task " + t.getId() + " — " + t.getTitle());
@@ -112,10 +115,12 @@ public class HomeCenterController {
 
             Button btnEdit = new Button("Edit");
             btnEdit.getStyleClass().add("chip");
+            btnEdit.setTooltip(new Tooltip("Edit task title."));
             btnEdit.setOnAction(e -> HomeTaskSheet.openEdit(root, t));
 
             Button btnAddSub = new Button("+Subtask");
             btnAddSub.getStyleClass().add("chip");
+            btnAddSub.setTooltip(new Tooltip("Add a new subtask to this task."));
             btnAddSub.setOnAction(e -> {
                 root.getTaskRepository().addSubtask(t).ifPresent(newSub -> {
                     root.centerController.render(root.getTasks(), root.currentQuery(), root.allowedDifficulties());
@@ -125,6 +130,7 @@ public class HomeCenterController {
 
             Button btnDeleteTask = new Button("Delete");
             btnDeleteTask.getStyleClass().addAll("chip", "danger");
+            btnDeleteTask.setTooltip(new Tooltip("Delete this task with all subtasks and variants."));
             btnDeleteTask.setOnAction(e -> tryDeleteTask(t));
 
             headerRow.getChildren().addAll(btnToggle, header, spacer, btnAddSub, btnEdit, btnDeleteTask);
@@ -195,6 +201,7 @@ public class HomeCenterController {
 
                 Button btnOpen = new Button("Details");
                 btnOpen.getStyleClass().add("chip");
+                btnOpen.setTooltip(new Tooltip("Open subtask details and variants."));
                 btnOpen.setOnAction(e -> HomeSubtaskSheet.open(root, t, st));
 
                 row.addEventHandler(MouseEvent.MOUSE_CLICKED, ev -> {

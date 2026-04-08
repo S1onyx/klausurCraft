@@ -3,6 +3,7 @@ package simon.klausurcraft.ui.home;
 import javafx.fxml.FXML;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import simon.klausurcraft.task.Difficulty;
 
 import java.util.EnumSet;
@@ -19,6 +20,11 @@ public class HomeTopbarController {
 
     public void init(HomeController root) {
         this.root = root;
+
+        searchField.setTooltip(new Tooltip("Filter tasks by id, title, text, or solution."));
+        fltEasy.setTooltip(new Tooltip("Show only subtasks with difficulty easy."));
+        fltMedium.setTooltip(new Tooltip("Show only subtasks with difficulty medium."));
+        fltHard.setTooltip(new Tooltip("Show only subtasks with difficulty hard."));
 
         // Attach semantic style classes so CSS can color them (IDs are not CSS ids).
         // This fixes the "grey checkboxes" issue.

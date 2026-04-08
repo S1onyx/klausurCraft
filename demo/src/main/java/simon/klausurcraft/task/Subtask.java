@@ -45,10 +45,14 @@ public class Subtask {
     public List<Variant> getVariants() { return variants; }
 
     public boolean isEligibleFor(GenerateScope scope) {
-        return switch (scope) {
-            case EXAM -> eligibility == Eligibility.EXAM || eligibility == Eligibility.BOTH;
-            case PRACTICE -> eligibility == Eligibility.PRACTICE || eligibility == Eligibility.BOTH;
-            case BOTH -> true;
-        };
+        if (scope == null || eligibility == null) return false;
+        if (scope == GenerateScope.BOTH) return true;
+        if (scope == GenerateScope.EXAM) {
+            return eligibility == Eligibility.EXAM || eligibility == Eligibility.BOTH;
+        }
+        if (scope == GenerateScope.PRACTICE) {
+            return eligibility == Eligibility.PRACTICE || eligibility == Eligibility.BOTH;
+        }
+        return false;
     }
 }

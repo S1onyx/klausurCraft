@@ -1,5 +1,6 @@
 package simon.klausurcraft.ui.home;
 
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
@@ -31,6 +32,7 @@ final class HomeSubtaskSheet {
         TextField tfSubtaskTitle = new TextField(currentGroup);
         tfSubtaskTitle.setPromptText("Subtask title (variants@group)");
         tfSubtaskTitle.setMaxWidth(Double.MAX_VALUE);
+        tfSubtaskTitle.setTooltip(new Tooltip("Shared subtask title stored in variants@group."));
         tfSubtaskTitle.textProperty().addListener((o, ov, nv) -> {
             xmlService.updateSubtaskGroup(sub, nv == null ? "" : nv);
             // live refresh center + tree
@@ -52,6 +54,7 @@ final class HomeSubtaskSheet {
         Label lblPts = new Label("Points");
         TextField tfPoints = new TextField(Points.toDisplayString(sub.getPoints()));
         tfPoints.setPromptText("Number (>= 0, steps of 0,5)");
+        tfPoints.setTooltip(new Tooltip("Points for this subtask (0.5 steps allowed)."));
         Label lblPtsHint = new Label("Allowed: 0, 0,5, 1, 1,5, ...");
         lblPtsHint.getStyleClass().add("muted");
         Label lblPtsError = new Label();
@@ -96,6 +99,7 @@ final class HomeSubtaskSheet {
         cbDiff.getItems().setAll(Difficulty.values());
         cbDiff.getSelectionModel().select(sub.getDifficulty());
         cbDiff.setMaxWidth(Double.MAX_VALUE);
+        cbDiff.setTooltip(new Tooltip("Difficulty label for filtering and generation."));
         Runnable paintDiff = () -> {
             cbDiff.getStyleClass().removeAll("combo-diff-easy","combo-diff-medium","combo-diff-hard");
             Difficulty d = cbDiff.getValue();
@@ -121,6 +125,7 @@ final class HomeSubtaskSheet {
         cbElig.getItems().setAll(Eligibility.values());
         cbElig.getSelectionModel().select(sub.getEligibility());
         cbElig.setMaxWidth(Double.MAX_VALUE);
+        cbElig.setTooltip(new Tooltip("Where this subtask may appear: exam, practice, or both."));
         Runnable paintElig = () -> {
             cbElig.getStyleClass().removeAll("combo-elig-exam","combo-elig-practice","combo-elig-both");
             Eligibility e = cbElig.getValue();
@@ -152,6 +157,7 @@ final class HomeSubtaskSheet {
         Region vSpacer = new Region(); HBox.setHgrow(vSpacer, Priority.ALWAYS);
         Button btnAddVariant = new Button("+ Variant");
         btnAddVariant.getStyleClass().add("chip");
+        btnAddVariant.setTooltip(new Tooltip("Add a new variant to this subtask."));
         btnAddVariant.setOnAction(e -> {
             xmlService.addVariant(sub).ifPresent(v -> {
                 open(root, task, sub); // refresh
@@ -161,6 +167,7 @@ final class HomeSubtaskSheet {
 
         Button btnDeleteSubtask = new Button("Delete subtask");
         btnDeleteSubtask.getStyleClass().addAll("chip", "danger");
+        btnDeleteSubtask.setTooltip(new Tooltip("Delete this subtask and all of its variants."));
         btnDeleteSubtask.setOnAction(e -> {
             Alert a = new Alert(Alert.AlertType.CONFIRMATION);
             a.setTitle("Delete subtask");
@@ -197,6 +204,7 @@ final class HomeSubtaskSheet {
             Region spacer = new Region(); HBox.setHgrow(spacer, Priority.ALWAYS);
             Button btnDelVar = new Button("Delete");
             btnDelVar.getStyleClass().addAll("chip", "danger");
+            btnDelVar.setTooltip(new Tooltip("Delete this variant."));
             btnDelVar.setDisable(sub.getVariants().size() <= 1);
             btnDelVar.setOnAction(e -> {
                 if (sub.getVariants().size() <= 1) {
@@ -227,6 +235,7 @@ final class HomeSubtaskSheet {
             TextArea taText = new TextArea(v.getText());
             taText.setPromptText("Variant text");
             taText.setPrefRowCount(3);
+            taText.setTooltip(new Tooltip("Task text shown to students."));
             taText.textProperty().addListener((o, ov, nv) -> {
                 v.setText(nv);
                 xmlService.updateVariant(v);
@@ -235,6 +244,7 @@ final class HomeSubtaskSheet {
             TextArea taSol = new TextArea(v.getSolution());
             taSol.setPromptText("Solution (leave empty if none)");
             taSol.setPrefRowCount(3);
+            taSol.setTooltip(new Tooltip("Sample solution text for this variant."));
             taSol.textProperty().addListener((o, ov, nv) -> {
                 v.setSolution(nv);
                 xmlService.updateVariant(v);
@@ -256,6 +266,7 @@ final class HomeSubtaskSheet {
         Button btnClose = new Button("Close");
         btnClose.getStyleClass().add("chip");
         btnClose.setCancelButton(true);
+        btnClose.setTooltip(new Tooltip("Close this editor."));
         btnClose.setOnAction(e -> {
             root.getSlideOver().hide();
             rootStackMouseTransparent(root, true);
@@ -277,8 +288,11 @@ final class HomeSubtaskSheet {
         root.getSlideOver().show();
         rootStackMouseTransparent(root, false);
 
-        // Autofocus subtask title
-        tfSubtaskTitle.requestFocus();
+        // Ensure focus lands on the active editor field after opening.
+        Platform.runLater(() -> {
+            tfSubtaskTitle.requestFocus();
+            tfSubtaskTitle.selectAll();
+        });
     }
 
     private static void rootStackMouseTransparent(HomeController root, boolean v) {

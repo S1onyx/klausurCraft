@@ -1,5 +1,6 @@
 package simon.klausurcraft.ui.home;
 
+import javafx.application.Platform;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.geometry.Insets;
@@ -30,6 +31,7 @@ final class HomeTaskSheet {
         TextField tfTitle = new TextField(task.getTitle());
         tfTitle.setPromptText("Task title");
         tfTitle.setMaxWidth(Double.MAX_VALUE);
+        tfTitle.setTooltip(new Tooltip("Task title shown in list, tree and export."));
         tfTitle.textProperty().addListener((o, ov, nv) -> {
             String newTitle = nv == null ? "" : nv.trim();
             if (newTitle.isEmpty()) newTitle = "New Task";
@@ -53,6 +55,7 @@ final class HomeTaskSheet {
         Button btnClose = new Button("Close");
         btnClose.getStyleClass().add("chip");
         btnClose.setCancelButton(true);
+        btnClose.setTooltip(new Tooltip("Close this editor."));
         btnClose.setOnAction(e -> {
             root.getSlideOver().hide();
             root.rootStack.setMouseTransparent(true);
@@ -65,8 +68,11 @@ final class HomeTaskSheet {
         root.getSlideOver().show();
         root.rootStack.setMouseTransparent(false);
 
-        // Autofocus title
-        tfTitle.requestFocus();
+        // Ensure focus lands on the editor field, not on background controls.
+        Platform.runLater(() -> {
+            tfTitle.requestFocus();
+            tfTitle.selectAll();
+        });
     }
 
     /**

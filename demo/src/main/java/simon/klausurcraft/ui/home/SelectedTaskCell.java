@@ -44,6 +44,7 @@ class SelectedTaskCell extends ListCell<TaskSelection> {
         this.pool = pool;
 
         cbSelected.setSelected(true); // in this list, items are selected
+        cbSelected.setTooltip(new Tooltip("Uncheck to move this task back to the pool."));
 
         title.setMaxWidth(Double.MAX_VALUE);
         // Keep full title visible if possible (no ellipsis)
@@ -51,6 +52,7 @@ class SelectedTaskCell extends ListCell<TaskSelection> {
 
         cbPoints.setPrefWidth(90);
         cbPoints.setVisibleRowCount(10);
+        cbPoints.setTooltip(new Tooltip("Choose target points for this task."));
         cbPoints.setButtonCell(new ListCell<>() {
             @Override protected void updateItem(BigDecimal item, boolean empty) {
                 super.updateItem(item, empty);
@@ -67,6 +69,7 @@ class SelectedTaskCell extends ListCell<TaskSelection> {
         });
 
         btnSuggest.getStyleClass().add("chip");
+        btnSuggest.setTooltip(new Tooltip("Auto-select the best reachable points for current scope."));
         btnSuggest.setOnAction(e -> {
             TaskSelection ts = getItem();
             if (ts == null) return;
@@ -82,6 +85,8 @@ class SelectedTaskCell extends ListCell<TaskSelection> {
 
         btnUp.getStyleClass().add("chip");
         btnDown.getStyleClass().add("chip");
+        btnUp.setTooltip(new Tooltip("Move task one row up."));
+        btnDown.setTooltip(new Tooltip("Move task one row down."));
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
