@@ -1,5 +1,8 @@
 package simon.klausurcraft.ui.home;
 
+import javafx.animation.ScaleTransition;
+import javafx.beans.value.ChangeListener;
+import javafx.collections.ListChangeListener;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.input.ClipboardContent;
@@ -8,11 +11,13 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
+import javafx.util.Duration;
 import simon.klausurcraft.task.Points;
 import simon.klausurcraft.task.planning.PointDistributionPlanner;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * Cell for the SELECTED list (top).
@@ -25,6 +30,7 @@ class SelectedTaskCell extends ListCell<TaskSelection> {
     private final HomeController root;
     private final List<TaskSelection> selected;
     private final List<TaskSelection> pool;
+    private final Consumer<TaskSelection> onMoveToPool;
 
     private final CheckBox cbSelected = new CheckBox();
     private final Label title = new Label();
@@ -35,13 +41,18 @@ class SelectedTaskCell extends ListCell<TaskSelection> {
     private final Button btnDown = new Button("↓");
 
     private final HBox box;
+    private TaskSelection boundTaskSelection;
+    private final ChangeListener<BigDecimal> chosenPointsListener = (obs, oldVal, newVal) -> refreshSuggestState(getItem());
+    private final ListChangeListener<BigDecimal> achievableListener = c -> refreshSuggestState(getItem());
 
     SelectedTaskCell(HomeController root,
                      List<TaskSelection> selected,
-                     List<TaskSelection> pool) {
+                     List<TaskSelection> pool,
+                     Consumer<TaskSelection> onMoveToPool) {
         this.root = root;
         this.selected = selected;
         this.pool = pool;
+        this.onMoveToPool = onMoveToPool;
 
         cbSelected.setSelected(true); // in this list, items are selected
         cbSelected.setTooltip(new Tooltip("Uncheck to move this task back to the pool."));
@@ -50,7 +61,10 @@ class SelectedTaskCell extends ListCell<TaskSelection> {
         // Keep full title visible if possible (no ellipsis)
         HBox.setHgrow(title, Priority.ALWAYS);
 
-        cbPoints.setPrefWidth(90);
+        cbPoints.getStyleClass().add("points-combo");
+        cbPoints.setMinWidth(120);
+        cbPoints.setPrefWidth(140);
+        cbPoints.setMaxWidth(180);
         cbPoints.setVisibleRowCount(10);
         cbPoints.setTooltip(new Tooltip("Choose target points for this task."));
         cbPoints.setButtonCell(new ListCell<>() {
@@ -79,6 +93,8 @@ class SelectedTaskCell extends ListCell<TaskSelection> {
                     .ifPresentOrElse(best -> {
                         ts.chosenPointsProperty().set(best);
                         cbPoints.getSelectionModel().select(best);
+                        playSuggestFeedback();
+                        refreshSuggestState(ts);
                     }, () -> HomeNotifications.showError(
                             "No point suggestion available for this task in current scope."));
         });
@@ -102,16 +118,22 @@ class SelectedTaskCell extends ListCell<TaskSelection> {
             TaskSelection ts = getItem();
             if (ts == null) return;
             if (!nv) {
-                // move to pool
-                ts.setEnabled(false);
-                selected.remove(ts);
-                if (!pool.contains(ts)) pool.add(ts);
+                if (onMoveToPool != null) {
+                    onMoveToPool.accept(ts);
+                }
             }
         });
 
-        cbPoints.valueProperty().addListener((o, ov, nv) -> {
-            TaskSelection ts = getItem();
-            if (ts != null && nv != null) ts.chosenPointsProperty().set(nv);
+        itemProperty().addListener((obs, oldItem, newItem) -> {
+            if (oldItem != null) {
+                oldItem.chosenPointsProperty().removeListener(chosenPointsListener);
+                oldItem.getAchievable().removeListener(achievableListener);
+            }
+            if (newItem != null) {
+                newItem.chosenPointsProperty().addListener(chosenPointsListener);
+                newItem.getAchievable().addListener(achievableListener);
+            }
+            refreshSuggestState(newItem);
         });
 
         btnUp.setOnAction(e -> moveItem(-1));
@@ -164,13 +186,21 @@ class SelectedTaskCell extends ListCell<TaskSelection> {
         items.add(to, ts);
         lv.getSelectionModel().clearAndSelect(to);
         lv.scrollTo(Math.max(0, to - 1));
+        lv.refresh();
     }
 
     @Override
     protected void updateItem(TaskSelection item, boolean empty) {
         super.updateItem(item, empty);
 
+        if (boundTaskSelection != null) {
+            cbPoints.valueProperty().unbindBidirectional(boundTaskSelection.chosenPointsProperty());
+            boundTaskSelection = null;
+        }
+
         if (empty || item == null) {
+            cbPoints.setItems(javafx.collections.FXCollections.emptyObservableList());
+            cbPoints.getSelectionModel().clearSelection();
             setGraphic(null);
             setText(null);
             return;
@@ -182,7 +212,6 @@ class SelectedTaskCell extends ListCell<TaskSelection> {
 
         // ensure achievable is up to date (scope fixed in step 2)
         cbPoints.setItems(item.getAchievable());
-        btnSuggest.setDisable(item.getAchievable().isEmpty());
         if (!item.getAchievable().isEmpty()) {
             if (!item.getAchievable().contains(item.getChosenPoints())) {
                 cbPoints.getSelectionModel().select(item.getAchievable().get(0));
@@ -192,7 +221,40 @@ class SelectedTaskCell extends ListCell<TaskSelection> {
         } else {
             cbPoints.getSelectionModel().clearSelection();
         }
+        boundTaskSelection = item;
+        cbPoints.valueProperty().bindBidirectional(item.chosenPointsProperty());
+        refreshSuggestState(item);
 
         setGraphic(box);
+    }
+
+    private void refreshSuggestState(TaskSelection ts) {
+        if (ts == null || ts.getAchievable().isEmpty()) {
+            btnSuggest.setDisable(true);
+            btnSuggest.setTooltip(new Tooltip("No suggestion available for this task in current scope."));
+            return;
+        }
+        BigDecimal fallback = ts.getAchievable().get(0);
+        BigDecimal suggested = PointDistributionPlanner
+                .suggestBestPointSum(ts.getTask(), root.scope.get())
+                .orElse(fallback);
+        boolean alreadySuggested = suggested.equals(ts.getChosenPoints());
+        btnSuggest.setDisable(alreadySuggested);
+        if (alreadySuggested) {
+            btnSuggest.setTooltip(new Tooltip("Suggested points are already selected."));
+        } else {
+            btnSuggest.setTooltip(new Tooltip("Auto-select the best reachable points for current scope."));
+        }
+    }
+
+    private void playSuggestFeedback() {
+        ScaleTransition pulse = new ScaleTransition(Duration.millis(180), cbPoints);
+        pulse.setFromX(1.0);
+        pulse.setFromY(1.0);
+        pulse.setToX(1.03);
+        pulse.setToY(1.03);
+        pulse.setAutoReverse(true);
+        pulse.setCycleCount(2);
+        pulse.play();
     }
 }

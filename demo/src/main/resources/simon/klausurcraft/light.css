@@ -168,6 +168,88 @@
 .sheet-footer { -fx-background-color: #f2f3f6; -fx-border-color: -color-border; -fx-border-width: 1 0 0 0; -fx-padding: 8 12; -fx-alignment: center-left; }
 .sheet-footer .label, .sheet-footer .check-box > .label { -fx-text-fill: -color-text; }
 
+.generate-progress {
+  -fx-padding: 2 0 4 0;
+  -fx-alignment: center-left;
+}
+.generate-progress-step {
+  -fx-padding: 2 10;
+  -fx-background-radius: 999;
+  -fx-border-radius: 999;
+  -fx-background-color: #eef2f7;
+  -fx-border-color: #dbe2ea;
+  -fx-text-fill: #475569;
+  -fx-font-size: 11px;
+}
+.generate-progress-step-done {
+  -fx-background-color: #e8f8ee;
+  -fx-border-color: #b7ebcd;
+  -fx-text-fill: #166534;
+}
+.generate-progress-step-active {
+  -fx-background-color: rgba(59,130,246,0.16);
+  -fx-border-color: rgba(59,130,246,0.42);
+  -fx-text-fill: #1d4ed8;
+}
+.generate-summary {
+  -fx-text-fill: #334155;
+  -fx-font-weight: 600;
+}
+.generate-table-header {
+  -fx-padding: 4 10;
+  -fx-background-color: #f3f6fb;
+  -fx-border-color: -color-border;
+  -fx-border-width: 1 1 1 1;
+  -fx-background-radius: 8;
+  -fx-border-radius: 8;
+  -fx-alignment: center-left;
+}
+.generate-col-task,
+.generate-col-possible {
+  -fx-font-weight: 700;
+  -fx-text-fill: #334155;
+}
+.pool-possible-column { -fx-alignment: center-left; }
+.pool-possible-cell {
+  -fx-alignment: center-left;
+  -fx-text-fill: #475569;
+}
+.points-combo { -fx-font-size: 13px; }
+
+.generate-export-overlay {
+  -fx-background-color: rgba(241,245,249,0.72);
+}
+.generate-export-card {
+  -fx-background-color: #ffffff;
+  -fx-border-color: #dbe2ea;
+  -fx-border-radius: 14;
+  -fx-background-radius: 14;
+  -fx-padding: 18 20;
+  -fx-alignment: center;
+  -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.16), 20, 0.2, 0, 6);
+}
+.generate-export-title {
+  -fx-font-size: 16px;
+  -fx-font-weight: 700;
+  -fx-text-fill: #1e293b;
+}
+.generate-export-subtitle {
+  -fx-font-size: 12px;
+  -fx-text-fill: #475569;
+  -fx-text-alignment: center;
+}
+
+.pool-fly-chip {
+  -fx-padding: 4 10;
+  -fx-background-color: rgba(59,130,246,0.12);
+  -fx-border-color: rgba(59,130,246,0.40);
+  -fx-background-radius: 999;
+  -fx-border-radius: 999;
+  -fx-font-size: 11px;
+  -fx-font-weight: 700;
+  -fx-text-fill: #1d4ed8;
+}
+
 .subtask-row-clickable {
   -fx-cursor: hand;
   -fx-background-radius: 8;

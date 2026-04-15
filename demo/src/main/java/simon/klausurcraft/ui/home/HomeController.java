@@ -1,5 +1,6 @@
 package simon.klausurcraft.ui.home;
 
+import javafx.animation.ScaleTransition;
 import javafx.application.Platform;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
@@ -22,6 +23,7 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Window;
+import javafx.util.Duration;
 import simon.klausurcraft.app.KlausurCraftApp;
 import simon.klausurcraft.ui.components.SlideOverPane;
 import simon.klausurcraft.task.Difficulty;
@@ -165,9 +167,13 @@ public class HomeController {
 
     void updateCounts() {
         StatusStats stats = computeStatusStats();
+        boolean changed = stats.tasks != taskCount.get() || stats.subtasks != subtaskCount.get();
         taskCount.set(stats.tasks);
         subtaskCount.set(stats.subtasks);
         countsTooltip.setText(buildStatusTooltip(stats));
+        if (changed) {
+            playCountsFeedback();
+        }
     }
 
     // Exposed for sub-controllers
@@ -239,6 +245,18 @@ public class HomeController {
                 + "practice: " + s.practice + "\n"
                 + "both: " + s.both
                 + (s.withoutEligibility > 0 ? "\nohne Eignung: " + s.withoutEligibility : "");
+    }
+
+    private void playCountsFeedback() {
+        if (countsLabel == null) return;
+        ScaleTransition pulse = new ScaleTransition(Duration.millis(150), countsLabel);
+        pulse.setFromX(1.0);
+        pulse.setFromY(1.0);
+        pulse.setToX(1.06);
+        pulse.setToY(1.06);
+        pulse.setAutoReverse(true);
+        pulse.setCycleCount(2);
+        pulse.play();
     }
 
     private static final class StatusStats {

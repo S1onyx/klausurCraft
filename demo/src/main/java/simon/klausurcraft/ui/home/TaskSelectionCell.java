@@ -40,9 +40,10 @@ public class TaskSelectionCell extends ListCell<TaskSelection> {
         HBox.setHgrow(title, Priority.ALWAYS);
 
         // Keep the points combo reasonably small to avoid horizontal overflow.
-        cbPoints.setPrefWidth(80);
-        cbPoints.setMaxWidth(110);
-        cbPoints.setMinWidth(68);
+        cbPoints.getStyleClass().add("points-combo");
+        cbPoints.setPrefWidth(130);
+        cbPoints.setMaxWidth(180);
+        cbPoints.setMinWidth(120);
         cbPoints.setVisibleRowCount(10);
         cbPoints.setTooltip(new Tooltip("Choose target points for this task."));
 

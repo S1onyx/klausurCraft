@@ -1,11 +1,24 @@
 package simon.klausurcraft.ui.home;
 
+import javafx.animation.FadeTransition;
+import javafx.animation.PathTransition;
+import javafx.animation.ParallelTransition;
+import javafx.animation.PauseTransition;
+import javafx.animation.ScaleTransition;
+import javafx.animation.TranslateTransition;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.StringBinding;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.shape.CubicCurveTo;
+import javafx.scene.shape.MoveTo;
+import javafx.scene.shape.Path;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
@@ -14,6 +27,7 @@ import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.*;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import simon.klausurcraft.app.KlausurCraftApp;
 import simon.klausurcraft.task.GenerateScope;
 import simon.klausurcraft.task.Points;
@@ -27,8 +41,8 @@ import simon.klausurcraft.ui.ThemeService;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 
 final class HomeGenerateFlow {
 
@@ -155,6 +169,7 @@ final class HomeGenerateFlow {
         // ----- Content (new layout) -----
         BorderPane pane = new BorderPane();
         pane.setPadding(new Insets(0));
+        StackPane stageRoot = new StackPane(pane);
 
         VBox content = new VBox(16);
         content.setPadding(new Insets(16));
@@ -168,27 +183,84 @@ final class HomeGenerateFlow {
         var pool = FXCollections.<TaskSelection>observableArrayList();
 
         // recompute achievable upfront based on fixed scope
-        all.forEach(ts -> ts.recomputeAchievable(root.scope.get()));
+        all.forEach(ts -> {
+            ts.recomputeAchievable(root.scope.get());
+            suggestPointForTaskSelection(root, ts);
+        });
         // initial: none selected
         pool.setAll(all);
-
-        // --- Selected (top)
-        Label lblSelected = new Label("Selected tasks");
-        ListView<TaskSelection> lvSelected = new ListView<>(selected);
-        lvSelected.setCellFactory(v -> new SelectedTaskCell(root, selected, pool));
-        lvSelected.setFocusTraversable(true);
-        lvSelected.setTooltip(new Tooltip("Tasks included in the generated exam."));
 
         // --- Pool (bottom)
         Label lblPool = new Label("Task pool");
         ListView<TaskSelection> lvPool = new ListView<>(pool);
-        lvPool.setCellFactory(v -> new PoolTaskCell(root, selected, pool));
         lvPool.setFocusTraversable(true);
         lvPool.setTooltip(new Tooltip("Available tasks. Tick a row to include it."));
 
-        installKeyboardTransfer(lvSelected, lvPool, selected, pool);
+        // --- Selected (top)
+        Label lblSelected = new Label("Selected tasks");
+        Button btnSuggestForAll = new Button("Suggest for all");
+        btnSuggestForAll.getStyleClass().add("chip");
+        btnSuggestForAll.disableProperty().bind(Bindings.isEmpty(selected));
+        btnSuggestForAll.setTooltip(new Tooltip("Apply suggested target points for all selected tasks."));
+        HBox selectedHeader = new HBox(8, lblSelected, btnSuggestForAll);
+        selectedHeader.setAlignment(Pos.CENTER_LEFT);
+        ListView<TaskSelection> lvSelected = new ListView<>(selected);
+        lvSelected.setCellFactory(v -> new SelectedTaskCell(root, selected, pool, ts -> {
+            playSelectedToPoolAnimation(stageRoot, lvSelected, lvPool, ts);
+            moveToPool(ts, selected, pool);
+        }));
+        lvSelected.setFocusTraversable(true);
+        lvSelected.setTooltip(new Tooltip("Tasks included in the generated exam."));
 
-        content.getChildren().addAll(header, lblSelected, lvSelected, new Separator(), lblPool, lvPool);
+        lvPool.setCellFactory(v -> new PoolTaskCell(root, ts -> {
+            playPoolToSelectedAnimation(stageRoot, lvPool, selectedHeader, ts);
+            moveToSelected(ts, pool, selected, root);
+        }));
+
+        installKeyboardTransfer(lvSelected, lvPool, root, selected, pool, stageRoot, selectedHeader);
+        
+        //UI/UX-Rule "Guidance"
+        HBox progressStrip = new HBox(8);
+        progressStrip.getStyleClass().add("generate-progress");
+        Label step1 = buildProgressStep("1 Select tasks");
+        Label step2 = buildProgressStep("2 Set points");
+        Label step3 = buildProgressStep("3 Generate PDF");
+        Label summary = new Label();
+        summary.getStyleClass().add("generate-summary");
+        summary.setMaxWidth(Double.MAX_VALUE);
+        summary.setAlignment(Pos.CENTER_RIGHT);
+        HBox.setHgrow(summary, Priority.ALWAYS);
+        StringBinding totalBinding = TaskSelection.totalPointsBinding(selected);
+        summary.textProperty().bind(Bindings.createStringBinding(
+                () -> "Selected: " + selected.size() + " / " + all.size() + "  |  " + totalBinding.get(),
+                selected, totalBinding
+        ));
+        progressStrip.getChildren().addAll(step1, step2, step3, summary);
+        refreshProgressStepState(selected, step1, step2, step3);
+        selected.addListener((ListChangeListener<? super TaskSelection>) c -> refreshProgressStepState(selected, step1, step2, step3));
+        btnSuggestForAll.setOnAction(e -> {
+            int count = suggestPointsForAll(root, selected);
+            if (count > 0) {
+                HomeNotifications.showInfo("Applied suggestions for " + count + " task(s).");
+                playSubtlePulse(progressStrip);
+            }
+        });
+
+        // Table-like header for pool rows, including fixed second column for possible points.
+        HBox poolHeader = new HBox(12);
+        poolHeader.getStyleClass().add("generate-table-header");
+        Label colTask = new Label("Task");
+        colTask.getStyleClass().add("generate-col-task");
+        HBox.setHgrow(colTask, Priority.ALWAYS);
+        Label colPossible = new Label("Possible points");
+        colPossible.getStyleClass().add("generate-col-possible");
+        HBox colPossibleWrap = new HBox(colPossible);
+        colPossibleWrap.getStyleClass().add("pool-possible-column");
+        colPossibleWrap.setMinWidth(260);
+        colPossibleWrap.setPrefWidth(360);
+        poolHeader.getChildren().addAll(colTask, colPossibleWrap);
+
+        content.getChildren().addAll(header, progressStrip, selectedHeader, lvSelected, new Separator(), lblPool, poolHeader, lvPool);
 
         ScrollPane sp = new ScrollPane(content);
         sp.setFitToWidth(true);
@@ -210,6 +282,12 @@ final class HomeGenerateFlow {
         Button back = new Button("Back");
         back.setTooltip(new Tooltip("Return to step 1 and keep your settings."));
 
+        //UI/UX-Rule "Novelty"
+        Button btnSmartFill = new Button("Smart Fill");
+        btnSmartFill.getStyleClass().add("chip");
+        btnSmartFill.setTooltip(new Tooltip("Auto-pick a strong starter selection with sensible point defaults."));
+        btnSmartFill.disableProperty().bind(Bindings.isEmpty(pool));
+
         Region spacer = new Region(); HBox.setHgrow(spacer, Priority.ALWAYS);
 
         CheckBox cbSample = new CheckBox("Sample Solution");
@@ -219,6 +297,11 @@ final class HomeGenerateFlow {
         Label total = new Label();
         total.textProperty().bind(TaskSelection.totalPointsBinding(selected));
         total.setTooltip(new Tooltip("Current total points from selected tasks."));
+        btnSmartFill.setOnAction(e -> {
+            applySmartFill(root, selected, pool);
+            playSubtlePulse(progressStrip);
+            playSubtlePulse(total);
+        });
 
         Button btnGenerateExam = new Button("Generate Exam");
         btnGenerateExam.getStyleClass().add("primary");
@@ -226,7 +309,7 @@ final class HomeGenerateFlow {
         btnGenerateExam.disableProperty().bind(Bindings.isEmpty(selected));
         btnGenerateExam.setTooltip(new Tooltip("Generate PDF(s) with the selected tasks."));
 
-        actions.getChildren().addAll(themeToggle, back, spacer, cbSample, total, btnGenerateExam);
+        actions.getChildren().addAll(themeToggle, back, btnSmartFill, spacer, cbSample, total, btnGenerateExam);
         pane.setBottom(actions);
 
         // ----- Modal window -----
@@ -238,7 +321,7 @@ final class HomeGenerateFlow {
         stage.setMinHeight(700);
         stage.setResizable(true);
 
-        Scene scene = new Scene(pane, 1100, 750);
+        Scene scene = new Scene(stageRoot, 1100, 750);
         // Adopt app styles (dark/light consistent)
         try {
             scene.getStylesheets().setAll(KlausurCraftApp.getScene().getStylesheets());
@@ -259,13 +342,17 @@ final class HomeGenerateFlow {
         });
 
         btnGenerateExam.setOnAction(e -> {
-            boolean ok = generateExamNow(root, selected);
-            if (ok) {
-                stage.close();
-            }
+            playGeneratePrepAnimation(stageRoot, () -> {
+                boolean ok = generateExamNow(root, selected);
+                if (ok) {
+                    stage.close();
+                }
+            });
         });
 
         Platform.runLater(() -> {
+            // Animate only guidance to keep all tasks immediately visible.
+            playEntranceAnimation(progressStrip);
             if (!pool.isEmpty()) lvPool.getSelectionModel().select(0);
             lvPool.requestFocus();
         });
@@ -342,14 +429,23 @@ final class HomeGenerateFlow {
 
     private static void installKeyboardTransfer(ListView<TaskSelection> lvSelected,
                                                 ListView<TaskSelection> lvPool,
+                                                HomeController root,
                                                 ObservableList<TaskSelection> selected,
-                                                ObservableList<TaskSelection> pool) {
+                                                ObservableList<TaskSelection> pool,
+                                                StackPane stageRoot,
+                                                Node selectedHeader) {
         lvPool.setOnKeyPressed(e -> {
             if (e.getCode() != KeyCode.SPACE) return;
             TaskSelection item = lvPool.getSelectionModel().getSelectedItem();
             if (item == null) return;
+            if (item.getAchievable().isEmpty()) {
+                HomeNotifications.showError("This task has no possible points in the current scope.");
+                e.consume();
+                return;
+            }
 
-            moveToSelected(item, pool, selected);
+            playPoolToSelectedAnimation(stageRoot, lvPool, selectedHeader, item);
+            moveToSelected(item, pool, selected, root);
             int next = Math.min(pool.size() - 1, Math.max(0, lvPool.getSelectionModel().getSelectedIndex()));
             if (!pool.isEmpty()) lvPool.getSelectionModel().select(next);
             e.consume();
@@ -360,6 +456,7 @@ final class HomeGenerateFlow {
             TaskSelection item = lvSelected.getSelectionModel().getSelectedItem();
             if (item == null) return;
 
+            playSelectedToPoolAnimation(stageRoot, lvSelected, lvPool, item);
             moveToPool(item, selected, pool);
             int next = Math.min(selected.size() - 1, Math.max(0, lvSelected.getSelectionModel().getSelectedIndex()));
             if (!selected.isEmpty()) lvSelected.getSelectionModel().select(next);
@@ -369,13 +466,13 @@ final class HomeGenerateFlow {
 
     private static void moveToSelected(TaskSelection item,
                                        ObservableList<TaskSelection> pool,
-                                       ObservableList<TaskSelection> selected) {
+                                       ObservableList<TaskSelection> selected,
+                                       HomeController root) {
+        if (item == null || item.getAchievable().isEmpty()) return;
         item.setEnabled(true);
+        suggestPointForTaskSelection(root, item);
         pool.remove(item);
         if (!selected.contains(item)) {
-            if (item.getChosenPoints().compareTo(Points.ZERO) == 0 && !item.getAchievable().isEmpty()) {
-                item.chosenPointsProperty().set(item.getAchievable().get(0));
-            }
             selected.add(item);
         }
     }
@@ -388,5 +485,256 @@ final class HomeGenerateFlow {
         if (!pool.contains(item)) {
             pool.add(item);
         }
+    }
+
+    private static Label buildProgressStep(String text) {
+        Label step = new Label(text);
+        step.getStyleClass().add("generate-progress-step");
+        return step;
+    }
+
+    private static void refreshProgressStepState(ObservableList<TaskSelection> selected,
+                                                 Label step1,
+                                                 Label step2,
+                                                 Label step3) {
+        boolean hasSelection = !selected.isEmpty();
+        setProgressState(step1, hasSelection, !hasSelection);
+        setProgressState(step2, hasSelection, hasSelection);
+        setProgressState(step3, false, hasSelection);
+    }
+
+    private static void setProgressState(Label label, boolean done, boolean active) {
+        label.getStyleClass().removeAll("generate-progress-step-done", "generate-progress-step-active");
+        if (done) {
+            label.getStyleClass().add("generate-progress-step-done");
+        } else if (active) {
+            label.getStyleClass().add("generate-progress-step-active");
+        }
+    }
+
+    private static void applySmartFill(HomeController root,
+                                       ObservableList<TaskSelection> selected,
+                                       ObservableList<TaskSelection> pool) {
+        List<TaskSelection> candidates = pool.stream()
+                .filter(ts -> !ts.getAchievable().isEmpty())
+                .sorted((a, b) -> Integer.compare(b.getAchievable().size(), a.getAchievable().size()))
+                .collect(Collectors.toList());
+
+        if (candidates.isEmpty()) {
+            HomeNotifications.showError("Smart Fill could not find tasks with achievable points.");
+            return;
+        }
+
+        int desired = Math.min(4, Math.max(1, selected.size() + candidates.size()));
+        int missing = Math.max(0, desired - selected.size());
+
+        for (TaskSelection candidate : candidates) {
+            if (missing <= 0) break;
+            if (!pool.contains(candidate)) continue;
+            moveToSelected(candidate, pool, selected, root);
+            missing--;
+        }
+
+        int tuned = 0;
+        for (TaskSelection ts : selected) {
+            ts.recomputeAchievable(root.scope.get());
+            if (ts.getAchievable().isEmpty()) continue;
+
+            BigDecimal fallback = ts.getAchievable().get(0);
+            BigDecimal target = PointDistributionPlanner
+                    .suggestBestPointSum(ts.getTask(), root.scope.get())
+                    .orElse(fallback);
+            ts.chosenPointsProperty().set(target);
+            tuned++;
+        }
+
+        HomeNotifications.showInfo("Smart Fill prepared " + tuned + " task(s).");
+    }
+
+    private static void suggestPointForTaskSelection(HomeController root, TaskSelection ts) {
+        if (ts == null) return;
+        ts.recomputeAchievable(root.scope.get());
+        if (ts.getAchievable().isEmpty()) {
+            ts.chosenPointsProperty().set(Points.ZERO);
+            return;
+        }
+        BigDecimal fallback = ts.getAchievable().get(0);
+        BigDecimal suggested = PointDistributionPlanner
+                .suggestBestPointSum(ts.getTask(), root.scope.get())
+                .orElse(fallback);
+        ts.chosenPointsProperty().set(suggested);
+    }
+
+    private static int suggestPointsForAll(HomeController root, ObservableList<TaskSelection> selected) {
+        int count = 0;
+        for (TaskSelection ts : selected) {
+            BigDecimal before = ts.getChosenPoints();
+            suggestPointForTaskSelection(root, ts);
+            if (!ts.getChosenPoints().equals(before)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private static void playGeneratePrepAnimation(StackPane stageRoot, Runnable after) {
+        StackPane scrim = new StackPane();
+        scrim.getStyleClass().add("generate-export-overlay");
+        scrim.setPickOnBounds(true);
+
+        VBox card = new VBox(10);
+        card.getStyleClass().add("generate-export-card");
+        ProgressIndicator spinner = new ProgressIndicator();
+        spinner.setPrefSize(52, 52);
+        Label title = new Label("Preparing export");
+        title.getStyleClass().add("generate-export-title");
+        Label subtitle = new Label("Checking task combinations and opening save dialog...");
+        subtitle.getStyleClass().add("generate-export-subtitle");
+        subtitle.setWrapText(true);
+        subtitle.setMaxWidth(320);
+        card.getChildren().addAll(spinner, title, subtitle);
+        card.setOpacity(0);
+        card.setScaleX(0.96);
+        card.setScaleY(0.96);
+        card.setAlignment(Pos.CENTER);
+
+        scrim.getChildren().add(card);
+        stageRoot.getChildren().add(scrim);
+
+        FadeTransition fadeIn = new FadeTransition(Duration.millis(140), card);
+        fadeIn.setFromValue(0);
+        fadeIn.setToValue(1);
+        ScaleTransition scaleIn = new ScaleTransition(Duration.millis(180), card);
+        scaleIn.setFromX(0.96);
+        scaleIn.setFromY(0.96);
+        scaleIn.setToX(1.0);
+        scaleIn.setToY(1.0);
+        fadeIn.play();
+        scaleIn.play();
+
+        PauseTransition hold = new PauseTransition(Duration.millis(900));
+        hold.setOnFinished(ev -> {
+            FadeTransition fadeOut = new FadeTransition(Duration.millis(130), scrim);
+            fadeOut.setFromValue(1);
+            fadeOut.setToValue(0);
+            fadeOut.setOnFinished(done -> {
+                stageRoot.getChildren().remove(scrim);
+                after.run();
+            });
+            fadeOut.play();
+        });
+        hold.play();
+    }
+
+    private static void playSubtlePulse(Node node) {
+        if (node == null) return;
+        ScaleTransition pulse = new ScaleTransition(Duration.millis(170), node);
+        pulse.setFromX(1.0);
+        pulse.setFromY(1.0);
+        pulse.setToX(1.015);
+        pulse.setToY(1.015);
+        pulse.setAutoReverse(true);
+        pulse.setCycleCount(2);
+        pulse.play();
+    }
+
+    private static void playEntranceAnimation(Node node) {
+        if (node == null) return;
+        node.setOpacity(0);
+        node.setTranslateY(8);
+
+        FadeTransition fade = new FadeTransition(Duration.millis(200), node);
+        fade.setFromValue(0);
+        fade.setToValue(1);
+        TranslateTransition slide = new TranslateTransition(Duration.millis(220), node);
+        slide.setFromY(8);
+        slide.setToY(0);
+        fade.play();
+        slide.play();
+    }
+
+    private static void playPoolToSelectedAnimation(StackPane stageRoot,
+                                                    Node poolNode,
+                                                    Node selectedHeader,
+                                                    TaskSelection item) {
+        playFunnelFlightAnimation(stageRoot, poolNode, selectedHeader, item, true);
+    }
+
+    private static void playSelectedToPoolAnimation(StackPane stageRoot,
+                                                    Node selectedNode,
+                                                    Node poolNode,
+                                                    TaskSelection item) {
+        playFunnelFlightAnimation(stageRoot, selectedNode, poolNode, item, false);
+    }
+
+    private static void playFunnelFlightAnimation(StackPane stageRoot,
+                                                  Node sourceNode,
+                                                  Node targetNode,
+                                                  TaskSelection item,
+                                                  boolean upward) {
+        if (stageRoot == null || sourceNode == null || targetNode == null || item == null) return;
+
+        Bounds sourceBounds = sourceNode.localToScene(sourceNode.getBoundsInLocal());
+        Bounds targetBounds = targetNode.localToScene(targetNode.getBoundsInLocal());
+        Bounds rootBounds = stageRoot.localToScene(stageRoot.getBoundsInLocal());
+        if (sourceBounds == null || targetBounds == null || rootBounds == null) return;
+
+        String title = item.getTask().getTitle();
+        String chipText = (title == null || title.isBlank()) ? ("Task " + item.getTask().getId()) : title;
+        if (chipText.length() > 28) {
+            chipText = chipText.substring(0, 25) + "...";
+        }
+
+        Label ghost = new Label(chipText);
+        ghost.getStyleClass().add("pool-fly-chip");
+        ghost.setManaged(false);
+        ghost.setMouseTransparent(true);
+        stageRoot.getChildren().add(ghost);
+        ghost.applyCss();
+        ghost.autosize();
+
+        double startX = sourceBounds.getMinX() + sourceBounds.getWidth() * 0.5;
+        double startY = sourceBounds.getMinY() + sourceBounds.getHeight() * 0.5;
+        double endX = targetBounds.getMinX() + targetBounds.getWidth() * (upward ? 0.55 : 0.45);
+        double endY = targetBounds.getMinY() + targetBounds.getHeight() * (upward ? 0.55 : 0.40);
+
+        ghost.relocate(startX - rootBounds.getMinX(), startY - rootBounds.getMinY());
+        ghost.setOpacity(0.96);
+        ghost.setScaleX(1.0);
+        ghost.setScaleY(1.0);
+
+        double dx = endX - startX;
+        double dy = endY - startY;
+        double bendX = dx * 0.42;
+        double funnelLift = upward ? -34 : 34;
+        double funnelPull = upward ? -16 : 16;
+
+        Path path = new Path(
+                new MoveTo(0, 0),
+                new CubicCurveTo(
+                        bendX, dy * 0.20 + funnelLift,
+                        dx * 0.78, dy * 0.78 + funnelPull,
+                        dx, dy
+                )
+        );
+
+        PathTransition travel = new PathTransition(Duration.millis(340), path, ghost);
+
+        ScaleTransition scale = new ScaleTransition(Duration.millis(340), ghost);
+        scale.setFromX(1.0);
+        scale.setFromY(1.0);
+        scale.setToX(0.42);
+        scale.setToY(0.42);
+
+        FadeTransition fade = new FadeTransition(Duration.millis(340), ghost);
+        fade.setFromValue(0.96);
+        fade.setToValue(0.10);
+
+        ParallelTransition flight = new ParallelTransition(travel, scale, fade);
+        flight.setOnFinished(e -> {
+            stageRoot.getChildren().remove(ghost);
+            playSubtlePulse(targetNode);
+        });
+        flight.play();
     }
 }

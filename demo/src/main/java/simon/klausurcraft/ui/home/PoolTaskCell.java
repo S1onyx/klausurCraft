@@ -3,10 +3,9 @@ package simon.klausurcraft.ui.home;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
 import simon.klausurcraft.task.Points;
 
-import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -17,29 +16,40 @@ import java.util.stream.Collectors;
  */
 class PoolTaskCell extends ListCell<TaskSelection> {
 
-    private final List<TaskSelection> selected;
-    private final List<TaskSelection> pool;
+    private final HomeController root;
+    private final Consumer<TaskSelection> onSelectFromPool;
 
     private final CheckBox cbPick = new CheckBox();
     private final Label title = new Label();
     private final Label lblPossible = new Label();
+    private final Button btnWhy = new Button("Why?");
+    private final HBox possibleBox = new HBox(8);
     private final HBox box;
 
     PoolTaskCell(HomeController root,
-                 List<TaskSelection> selected,
-                 List<TaskSelection> pool) {
-        this.selected = selected;
-        this.pool = pool;
+                 Consumer<TaskSelection> onSelectFromPool) {
+        this.root = root;
+        this.onSelectFromPool = onSelectFromPool;
         cbPick.setTooltip(new Tooltip("Check to move this task into selected tasks."));
 
         title.setMaxWidth(Double.MAX_VALUE);
         title.setWrapText(false);
         HBox.setHgrow(title, Priority.ALWAYS);
+        lblPossible.getStyleClass().add("pool-possible-cell");
+        lblPossible.setWrapText(true);
+        possibleBox.getStyleClass().add("pool-possible-column");
+        possibleBox.setMinWidth(260);
+        possibleBox.setPrefWidth(360);
+        possibleBox.setMaxWidth(Double.MAX_VALUE);
+        possibleBox.getChildren().add(lblPossible);
+        lblPossible.maxWidthProperty().bind(possibleBox.widthProperty().subtract(8));
+        HBox.setHgrow(possibleBox, Priority.SOMETIMES);
 
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
+        btnWhy.getStyleClass().add("chip");
+        btnWhy.setTooltip(new Tooltip("Show why this task currently has no possible points."));
+        btnWhy.setOnAction(e -> showNoOptionsHelp());
 
-        box = new HBox(8, cbPick, title, spacer, lblPossible);
+        box = new HBox(12, cbPick, title, possibleBox);
         box.setFillHeight(true);
 
         setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
@@ -49,14 +59,13 @@ class PoolTaskCell extends ListCell<TaskSelection> {
             TaskSelection ts = getItem();
             if (ts == null) return;
             if (nv) {
-                // move to selected
-                ts.setEnabled(true);
-                pool.remove(ts);
-                if (!selected.contains(ts)) {
-                    if (ts.getChosenPoints().compareTo(Points.ZERO) == 0 && !ts.getAchievable().isEmpty()) {
-                        ts.chosenPointsProperty().set(ts.getAchievable().get(0));
-                    }
-                    selected.add(ts);
+                if (ts.getAchievable().isEmpty()) {
+                    cbPick.setSelected(false);
+                    HomeNotifications.showError("This task has no possible points in the current scope.");
+                    return;
+                }
+                if (onSelectFromPool != null) {
+                    onSelectFromPool.accept(ts);
                 }
             }
         });
@@ -75,19 +84,37 @@ class PoolTaskCell extends ListCell<TaskSelection> {
         cbPick.setSelected(false);
         boolean hasOptions = !item.getAchievable().isEmpty();
         cbPick.setDisable(!hasOptions);
+        possibleBox.getChildren().setAll(lblPossible);
 
         if (!hasOptions) {
+            //UI/UX-Rule "Empathy"
             cbPick.setTooltip(new Tooltip("No achievable points in current scope. Add subtasks with valid combinations."));
-            lblPossible.setText("(no possible points)");
+            lblPossible.setText("No possible points in this scope");
+            possibleBox.getChildren().add(btnWhy);
         } else {
             String poss = item.getAchievable().stream()
                     .map(Points::toDisplayString)
                     .collect(Collectors.joining(", "));
-            lblPossible.setText("Possible: " + poss);
+            lblPossible.setText(poss);
             cbPick.setTooltip(new Tooltip("Check to move this task into selected tasks."));
         }
 
         title.setText("Task " + item.getTask().getId() + " — " + item.getTask().getTitle());
         setGraphic(box);
+    }
+
+    private void showNoOptionsHelp() {
+        Alert info = new Alert(Alert.AlertType.INFORMATION);
+        info.setTitle("No possible points");
+        info.setHeaderText("This task has no achievable point sum in the current scope.");
+        info.setContentText("""
+                Try one of these options:
+                1) Go Back and change the scope (exam/practice/both).
+                2) Add or edit subtasks so there are valid combinations.
+                3) Return and include the task afterwards.
+                """);
+        info.initOwner(root.getWindow());
+        simon.klausurcraft.ui.UiStyles.applyCurrentStyles(info);
+        info.showAndWait();
     }
 }
