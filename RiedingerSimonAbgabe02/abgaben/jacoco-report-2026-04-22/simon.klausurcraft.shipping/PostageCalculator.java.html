@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="de"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PostageCalculator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">demo</a> &gt; <a href="index.source.html" class="el_package">simon.klausurcraft.shipping</a> &gt; <span class="el_source">PostageCalculator.java</span></div><h1>PostageCalculator.java</h1><pre class="source lang-java linenums">package simon.klausurcraft.shipping;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
+/**
+ * Calculates postage for parcels.
+ */
+public final class PostageCalculator {
+
+<span class="fc" id="L11">    private static final BigDecimal ZERO = BigDecimal.ZERO;</span>
+<span class="fc" id="L12">    private static final BigDecimal MAX = new BigDecimal(&quot;100.00&quot;);</span>
+
+    private PostageCalculator() {}
+
+    /**
+     * Pricing model:
+     * - base tariff by dimensions
+     * - surcharge by weight bucket
+     * - surcharge by shipping zone
+     * - oversize surcharge for very large parcels
+     * - optional priority/fragile surcharge
+     * - final value clamped to [0, 100]
+     */
+    public static BigDecimal calculate(Parcel parcel) {
+<span class="fc" id="L26">        BigDecimal base = baseTariff(parcel);</span>
+<span class="fc" id="L27">        BigDecimal weight = weightSurcharge(parcel.weightKg());</span>
+<span class="fc" id="L28">        BigDecimal zone = zoneSurcharge(parcel.zone());</span>
+<span class="fc" id="L29">        BigDecimal oversize = oversizeSurcharge(parcel);</span>
+<span class="fc" id="L30">        BigDecimal options = optionSurcharge(parcel.priority(), parcel.fragile());</span>
+
+<span class="fc" id="L32">        BigDecimal total = base.add(weight).add(zone).add(oversize).add(options);</span>
+<span class="pc bpc" id="L33" title="1 of 2 branches missed.">        if (total.compareTo(ZERO) &lt; 0) {</span>
+<span class="nc" id="L34">            total = ZERO;</span>
+<span class="fc bfc" id="L35" title="All 2 branches covered.">        } else if (total.compareTo(MAX) &gt; 0) {</span>
+<span class="fc" id="L36">            total = MAX;</span>
+        }
+<span class="fc" id="L38">        return total.setScale(2, RoundingMode.HALF_UP);</span>
+    }
+
+    private static BigDecimal baseTariff(Parcel parcel) {
+<span class="fc bfc" id="L42" title="All 4 branches covered.">        if (parcel.girthCm() &lt;= 60 &amp;&amp; parcel.maxEdgeCm() &lt;= 35) {</span>
+<span class="fc" id="L43">            return new BigDecimal(&quot;3.49&quot;);</span>
+        }
+<span class="fc bfc" id="L45" title="All 4 branches covered.">        if (parcel.girthCm() &lt;= 120 &amp;&amp; parcel.maxEdgeCm() &lt;= 60) {</span>
+<span class="fc" id="L46">            return new BigDecimal(&quot;5.99&quot;);</span>
+        }
+<span class="fc" id="L48">        return new BigDecimal(&quot;8.99&quot;);</span>
+    }
+
+    private static BigDecimal weightSurcharge(double weightKg) {
+<span class="fc bfc" id="L52" title="All 2 branches covered.">        if (weightKg &lt;= 1.0) return new BigDecimal(&quot;0.00&quot;);</span>
+<span class="fc bfc" id="L53" title="All 2 branches covered.">        if (weightKg &lt;= 5.0) return new BigDecimal(&quot;2.50&quot;);</span>
+<span class="fc bfc" id="L54" title="All 2 branches covered.">        if (weightKg &lt;= 10.0) return new BigDecimal(&quot;5.00&quot;);</span>
+<span class="fc" id="L55">        return new BigDecimal(&quot;8.50&quot;);</span>
+    }
+
+    private static BigDecimal zoneSurcharge(ShippingZone zone) {
+<span class="fc bfc" id="L59" title="All 3 branches covered.">        return switch (zone) {</span>
+<span class="fc" id="L60">            case LOCAL -&gt; new BigDecimal(&quot;0.00&quot;);</span>
+<span class="fc" id="L61">            case NATIONAL -&gt; new BigDecimal(&quot;1.50&quot;);</span>
+<span class="fc" id="L62">            case INTERNATIONAL -&gt; new BigDecimal(&quot;7.50&quot;);</span>
+        };
+    }
+
+    private static BigDecimal oversizeSurcharge(Parcel parcel) {
+<span class="fc" id="L67">        int over = parcel.girthCm() - 200;</span>
+<span class="fc bfc" id="L68" title="All 2 branches covered.">        if (over &lt;= 0) {</span>
+<span class="fc" id="L69">            return ZERO;</span>
+        }
+<span class="fc" id="L71">        return BigDecimal.valueOf(over).multiply(new BigDecimal(&quot;0.75&quot;));</span>
+    }
+
+    private static BigDecimal optionSurcharge(boolean priority, boolean fragile) {
+<span class="fc" id="L75">        BigDecimal options = ZERO;</span>
+<span class="fc bfc" id="L76" title="All 2 branches covered.">        if (priority) {</span>
+<span class="fc" id="L77">            options = options.add(new BigDecimal(&quot;3.00&quot;));</span>
+        }
+<span class="fc bfc" id="L79" title="All 2 branches covered.">        if (fragile) {</span>
+<span class="fc" id="L80">            options = options.add(new BigDecimal(&quot;2.00&quot;));</span>
+        }
+<span class="fc" id="L82">        return options;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

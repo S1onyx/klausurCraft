@@ -1,0 +1,509 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="de"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PdfExportService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">demo</a> &gt; <a href="index.source.html" class="el_package">simon.klausurcraft.task.export</a> &gt; <span class="el_source">PdfExportService.java</span></div><h1>PdfExportService.java</h1><pre class="source lang-java linenums">package simon.klausurcraft.task.export;
+
+import com.lowagie.text.*;
+import com.lowagie.text.pdf.BaseFont;
+import com.lowagie.text.pdf.PdfContentByte;
+import com.lowagie.text.pdf.PdfPCell;
+import com.lowagie.text.pdf.PdfPageEventHelper;
+import com.lowagie.text.pdf.PdfPTable;
+import com.lowagie.text.pdf.PdfTemplate;
+import com.lowagie.text.pdf.PdfWriter;
+import javafx.stage.FileChooser;
+import javafx.stage.Window;
+import simon.klausurcraft.task.Points;
+import simon.klausurcraft.task.Subtask;
+import simon.klausurcraft.task.Task;
+import simon.klausurcraft.task.Variant;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.prefs.Preferences;
+import java.awt.Color;
+
+/**
+ * Generates two PDFs: exam and optional sample solution.
+ */
+<span class="fc" id="L33">public class PdfExportService {</span>
+
+    private static final String PREFS_NODE = &quot;simon.klausurcraft&quot;;
+    private static final String PREF_LAST_EXPORT_DIR = &quot;lastExportDir&quot;;
+
+    public static final class ChosenVariant {
+        private final Subtask subtask;
+        private final Variant variant;
+
+<span class="fc" id="L42">        public ChosenVariant(Subtask subtask, Variant variant) {</span>
+<span class="fc" id="L43">            this.subtask = subtask;</span>
+<span class="fc" id="L44">            this.variant = variant;</span>
+<span class="fc" id="L45">        }</span>
+
+<span class="fc" id="L47">        public Subtask subtask() { return subtask; }</span>
+<span class="fc" id="L48">        public Variant variant() { return variant; }</span>
+    }
+
+    public static final class TaskAssembly {
+        private final int number;
+        private final Task task;
+        private final List&lt;ChosenVariant&gt; chosenSubtasks;
+
+<span class="fc" id="L56">        public TaskAssembly(int number, Task task, List&lt;ChosenVariant&gt; chosenSubtasks) {</span>
+<span class="fc" id="L57">            this.number = number;</span>
+<span class="fc" id="L58">            this.task = task;</span>
+<span class="fc" id="L59">            this.chosenSubtasks = chosenSubtasks;</span>
+<span class="fc" id="L60">        }</span>
+
+<span class="fc" id="L62">        public int number() { return number; }</span>
+<span class="fc" id="L63">        public Task task() { return task; }</span>
+<span class="fc" id="L64">        public List&lt;ChosenVariant&gt; chosenSubtasks() { return chosenSubtasks; }</span>
+    }
+
+    public boolean export(Window owner, String title, LocalDate date,
+                          List&lt;TaskAssembly&gt; tasks, int durationMinutes, boolean withSolution) throws Exception {
+
+<span class="fc" id="L70">        Preferences p = Preferences.userRoot().node(PREFS_NODE);</span>
+
+<span class="fc" id="L72">        String ts = DateTimeFormatter.ofPattern(&quot;yyyyMMdd_HHmmss&quot;).format(LocalDateTime.now());</span>
+<span class="fc" id="L73">        File selected = chooseSaveTarget(owner, &quot;exam_&quot; + ts + &quot;.pdf&quot;, p.get(PREF_LAST_EXPORT_DIR, null));</span>
+<span class="fc bfc" id="L74" title="All 2 branches covered.">        if (selected == null) return false;</span>
+<span class="fc" id="L75">        File examFile = PdfExportRules.ensurePdfExtension(selected);</span>
+
+        // remember chosen directory
+<span class="fc" id="L78">        File parent = examFile.getParentFile();</span>
+<span class="pc bpc" id="L79" title="3 of 6 branches missed.">        if (parent != null &amp;&amp; parent.exists() &amp;&amp; parent.isDirectory()) {</span>
+<span class="fc" id="L80">            p.put(PREF_LAST_EXPORT_DIR, parent.getAbsolutePath());</span>
+        }
+
+<span class="fc" id="L83">        writeExam(examFile, title, date, tasks, durationMinutes, false);</span>
+
+<span class="fc bfc" id="L85" title="All 2 branches covered.">        if (withSolution) {</span>
+<span class="fc" id="L86">            File solFile = PdfExportRules.buildSolutionFile(examFile);</span>
+<span class="fc" id="L87">            writeExam(solFile, title + &quot; — Musterlösung&quot;, date, tasks, durationMinutes, true);</span>
+        }
+<span class="fc" id="L89">        return true;</span>
+    }
+
+    /**
+     * UI boundary for selecting the target PDF file.
+     * Extracted for testability: unit tests can override this method and bypass JavaFX dialogs.
+     */
+    protected File chooseSaveTarget(Window owner, String suggestedName, String lastDir) {
+<span class="nc" id="L97">        FileChooser chooser = new FileChooser();</span>
+<span class="nc" id="L98">        chooser.setTitle(&quot;Save exam PDF&quot;);</span>
+<span class="nc" id="L99">        FileChooser.ExtensionFilter pdfFilter = new FileChooser.ExtensionFilter(&quot;PDF Files&quot;, &quot;*.pdf&quot;);</span>
+<span class="nc" id="L100">        chooser.getExtensionFilters().add(pdfFilter);</span>
+<span class="nc" id="L101">        chooser.setSelectedExtensionFilter(pdfFilter);</span>
+<span class="nc" id="L102">        chooser.setInitialFileName(suggestedName);</span>
+
+<span class="nc bnc" id="L104" title="All 2 branches missed.">        if (lastDir != null) {</span>
+<span class="nc" id="L105">            File dir = new File(lastDir);</span>
+<span class="nc bnc" id="L106" title="All 4 branches missed.">            if (dir.exists() &amp;&amp; dir.isDirectory()) {</span>
+<span class="nc" id="L107">                chooser.setInitialDirectory(dir);</span>
+            }
+        }
+<span class="nc" id="L110">        return chooser.showSaveDialog(owner);</span>
+    }
+
+    private void writeExam(File out, String title, LocalDate date,
+                           List&lt;TaskAssembly&gt; tasks, int durationMinutes, boolean includeSolutions) throws Exception {
+<span class="fc" id="L115">        Document doc = new Document(PageSize.A4, 48, 48, 58, 58);</span>
+<span class="fc" id="L116">        PdfWriter writer = PdfWriter.getInstance(doc, new FileOutputStream(out));</span>
+<span class="fc" id="L117">        writer.setPageEvent(new PageNumberFooter());</span>
+<span class="fc" id="L118">        doc.open();</span>
+
+<span class="fc" id="L120">        PdfFonts fonts = new PdfFonts();</span>
+
+<span class="fc bfc" id="L122" title="All 2 branches covered.">        if (includeSolutions) {</span>
+<span class="fc" id="L123">            addSolutionCover(doc, title, date, tasks, fonts);</span>
+        } else {
+<span class="fc" id="L125">            addExamCover(doc, title, date, tasks, durationMinutes, fonts);</span>
+<span class="fc" id="L126">            doc.newPage();</span>
+<span class="fc" id="L127">            addTeacherOverview(doc, tasks, fonts);</span>
+        }
+
+<span class="fc bfc" id="L130" title="All 2 branches covered.">        if (!tasks.isEmpty()) {</span>
+<span class="fc" id="L131">            doc.newPage();</span>
+<span class="fc" id="L132">            addTaskContent(doc, writer, tasks, includeSolutions, fonts);</span>
+        }
+
+<span class="fc" id="L135">        doc.close();</span>
+<span class="fc" id="L136">    }</span>
+
+    private void addExamCover(Document doc, String title, LocalDate date, List&lt;TaskAssembly&gt; tasks,
+                              int durationMinutes, PdfFonts f) throws Exception {
+<span class="fc" id="L140">        BigDecimal totalPoints = PdfExportRules.totalPoints(tasks);</span>
+<span class="fc" id="L141">        int subtaskCount = tasks.stream().mapToInt(t -&gt; t.chosenSubtasks().size()).sum();</span>
+<span class="fc" id="L142">        int minutes = Math.max(1, durationMinutes);</span>
+
+<span class="fc" id="L144">        Paragraph header = new Paragraph(&quot;Klausur&quot;, f.h1);</span>
+<span class="fc" id="L145">        header.setAlignment(Element.ALIGN_CENTER);</span>
+<span class="fc" id="L146">        header.setSpacingBefore(24);</span>
+<span class="fc" id="L147">        header.setSpacingAfter(12);</span>
+<span class="fc" id="L148">        doc.add(header);</span>
+
+<span class="pc bpc" id="L150" title="1 of 4 branches missed.">        Paragraph subtitle = new Paragraph(title == null || title.isBlank() ? &quot;Unbenannte Klausur&quot; : title, f.h2);</span>
+<span class="fc" id="L151">        subtitle.setAlignment(Element.ALIGN_CENTER);</span>
+<span class="fc" id="L152">        subtitle.setSpacingAfter(18);</span>
+<span class="fc" id="L153">        doc.add(subtitle);</span>
+
+<span class="fc" id="L155">        PdfPTable info = new PdfPTable(2);</span>
+<span class="fc" id="L156">        info.setWidthPercentage(78f);</span>
+<span class="fc" id="L157">        info.setHorizontalAlignment(Element.ALIGN_CENTER);</span>
+<span class="fc" id="L158">        info.setWidths(new float[]{2.2f, 3.2f});</span>
+<span class="fc" id="L159">        info.setSpacingAfter(20);</span>
+<span class="fc" id="L160">        info.addCell(labelCell(&quot;Datum&quot;, f.smallBold));</span>
+<span class="fc" id="L161">        info.addCell(valueCell(PdfExportRules.formatDate(date), f.normal));</span>
+<span class="fc" id="L162">        info.addCell(labelCell(&quot;Aufgaben&quot;, f.smallBold));</span>
+<span class="fc" id="L163">        info.addCell(valueCell(tasks.size() + &quot; Teile / &quot; + subtaskCount + &quot; Teilaufgaben&quot;, f.normal));</span>
+<span class="fc" id="L164">        info.addCell(labelCell(&quot;Gesamtpunkte&quot;, f.smallBold));</span>
+<span class="fc" id="L165">        info.addCell(valueCell(Points.toDisplayString(totalPoints) + &quot; Punkte&quot;, f.normal));</span>
+<span class="fc" id="L166">        info.addCell(labelCell(&quot;Bearbeitungszeit&quot;, f.smallBold));</span>
+<span class="fc" id="L167">        info.addCell(valueCell(minutes + &quot; Minuten&quot;, f.normal));</span>
+<span class="fc" id="L168">        doc.add(info);</span>
+
+<span class="fc" id="L170">        Paragraph hintsTitle = new Paragraph(&quot;Hinweise&quot;, f.h3);</span>
+<span class="fc" id="L171">        hintsTitle.setSpacingAfter(6);</span>
+<span class="fc" id="L172">        doc.add(hintsTitle);</span>
+
+<span class="fc" id="L174">        com.lowagie.text.List hints = new com.lowagie.text.List(com.lowagie.text.List.UNORDERED);</span>
+<span class="fc" id="L175">        hints.setIndentationLeft(18f);</span>
+<span class="fc" id="L176">        hints.add(new ListItem(&quot;Antworten bitte klar und strukturiert formulieren.&quot;, f.normal));</span>
+<span class="fc" id="L177">        hints.add(new ListItem(&quot;Zwischenschritte sind willkommen und können Teilpunkte bringen.&quot;, f.normal));</span>
+<span class="fc" id="L178">        hints.add(new ListItem(&quot;Zeit einteilen: erst sichere Punkte, dann Bonus-Knobelstellen.&quot;, f.normal));</span>
+<span class="fc" id="L179">        doc.add(hints);</span>
+
+<span class="fc" id="L181">        Paragraph egg = new Paragraph(randomQuote(), f.italicMuted);</span>
+<span class="fc" id="L182">        egg.setSpacingBefore(16);</span>
+<span class="fc" id="L183">        egg.setAlignment(Element.ALIGN_CENTER);</span>
+<span class="fc" id="L184">        doc.add(egg);</span>
+<span class="fc" id="L185">    }</span>
+
+    private void addSolutionCover(Document doc, String title, LocalDate date, List&lt;TaskAssembly&gt; tasks, PdfFonts f) throws Exception {
+<span class="fc" id="L188">        BigDecimal total = PdfExportRules.totalPoints(tasks);</span>
+<span class="fc" id="L189">        Paragraph header = new Paragraph(&quot;Musterlösung&quot;, f.h1);</span>
+<span class="fc" id="L190">        header.setAlignment(Element.ALIGN_CENTER);</span>
+<span class="fc" id="L191">        header.setSpacingBefore(28);</span>
+<span class="fc" id="L192">        header.setSpacingAfter(12);</span>
+<span class="fc" id="L193">        doc.add(header);</span>
+
+<span class="pc bpc" id="L195" title="2 of 4 branches missed.">        Paragraph subtitle = new Paragraph(title == null || title.isBlank() ? &quot;Unbenannte Klausur&quot; : title, f.h2);</span>
+<span class="fc" id="L196">        subtitle.setAlignment(Element.ALIGN_CENTER);</span>
+<span class="fc" id="L197">        subtitle.setSpacingAfter(18);</span>
+<span class="fc" id="L198">        doc.add(subtitle);</span>
+
+<span class="fc" id="L200">        PdfPTable info = new PdfPTable(2);</span>
+<span class="fc" id="L201">        info.setWidthPercentage(70f);</span>
+<span class="fc" id="L202">        info.setHorizontalAlignment(Element.ALIGN_CENTER);</span>
+<span class="fc" id="L203">        info.setSpacingAfter(18);</span>
+<span class="fc" id="L204">        info.setWidths(new float[]{2f, 3f});</span>
+<span class="fc" id="L205">        info.addCell(labelCell(&quot;Datum&quot;, f.smallBold));</span>
+<span class="fc" id="L206">        info.addCell(valueCell(PdfExportRules.formatDate(date), f.normal));</span>
+<span class="fc" id="L207">        info.addCell(labelCell(&quot;Aufgaben&quot;, f.smallBold));</span>
+<span class="fc" id="L208">        info.addCell(valueCell(String.valueOf(tasks.size()), f.normal));</span>
+<span class="fc" id="L209">        info.addCell(labelCell(&quot;Max. Punkte&quot;, f.smallBold));</span>
+<span class="fc" id="L210">        info.addCell(valueCell(Points.toDisplayString(total), f.normal));</span>
+<span class="fc" id="L211">        doc.add(info);</span>
+
+<span class="fc" id="L213">        Paragraph note = new Paragraph(&quot;Hinweis: Formulierungen sind Musterantworten; gleichwertige Lösungen sind natürlich korrekt.&quot;, f.italicMuted);</span>
+<span class="fc" id="L214">        note.setAlignment(Element.ALIGN_CENTER);</span>
+<span class="fc" id="L215">        doc.add(note);</span>
+<span class="fc" id="L216">    }</span>
+
+    private void addTeacherOverview(Document doc, List&lt;TaskAssembly&gt; tasks, PdfFonts f) throws Exception {
+<span class="fc" id="L219">        Paragraph title = new Paragraph(&quot;Korrekturübersicht&quot;, f.h2);</span>
+<span class="fc" id="L220">        title.setSpacingBefore(4);</span>
+<span class="fc" id="L221">        title.setSpacingAfter(8);</span>
+<span class="fc" id="L222">        doc.add(title);</span>
+
+<span class="fc" id="L224">        Paragraph sub = new Paragraph(&quot;Eintragen der erreichten Punkte pro Aufgabe&quot;, f.smallMuted);</span>
+<span class="fc" id="L225">        sub.setSpacingAfter(12);</span>
+<span class="fc" id="L226">        doc.add(sub);</span>
+
+<span class="fc" id="L228">        PdfPTable table = new PdfPTable(4);</span>
+<span class="fc" id="L229">        table.setWidthPercentage(100f);</span>
+<span class="fc" id="L230">        table.setWidths(new float[]{1.6f, 1.3f, 1.3f, 3.2f});</span>
+<span class="fc" id="L231">        table.setSpacingAfter(14);</span>
+
+<span class="fc" id="L233">        table.addCell(headerCell(&quot;Aufgabe&quot;, f.smallBold));</span>
+<span class="fc" id="L234">        table.addCell(headerCell(&quot;Max&quot;, f.smallBold));</span>
+<span class="fc" id="L235">        table.addCell(headerCell(&quot;Erreicht&quot;, f.smallBold));</span>
+<span class="fc" id="L236">        table.addCell(headerCell(&quot;Bemerkung&quot;, f.smallBold));</span>
+
+<span class="fc" id="L238">        BigDecimal total = BigDecimal.ZERO;</span>
+<span class="fc bfc" id="L239" title="All 2 branches covered.">        for (TaskAssembly ta : tasks) {</span>
+<span class="fc" id="L240">            BigDecimal max = PdfExportRules.taskPoints(ta);</span>
+<span class="fc" id="L241">            total = total.add(max);</span>
+
+<span class="fc" id="L243">            table.addCell(bodyCell(&quot;Aufgabe &quot; + ta.number(), f.normal));</span>
+<span class="fc" id="L244">            table.addCell(bodyCell(Points.toDisplayString(max), f.normal));</span>
+<span class="fc" id="L245">            table.addCell(emptyWriteCell(&quot; &quot;));</span>
+<span class="fc" id="L246">            table.addCell(emptyWriteCell(&quot; &quot;));</span>
+<span class="fc" id="L247">        }</span>
+
+<span class="fc" id="L249">        table.addCell(totalCell(&quot;Gesamt&quot;, f.smallBold));</span>
+<span class="fc" id="L250">        table.addCell(totalCell(Points.toDisplayString(total), f.smallBold));</span>
+<span class="fc" id="L251">        table.addCell(totalCell(&quot; &quot;, f.smallBold));</span>
+<span class="fc" id="L252">        table.addCell(totalCell(&quot; &quot;, f.smallBold));</span>
+<span class="fc" id="L253">        doc.add(table);</span>
+
+<span class="fc" id="L255">        PdfPTable summary = new PdfPTable(2);</span>
+<span class="fc" id="L256">        summary.setWidthPercentage(100f);</span>
+<span class="fc" id="L257">        summary.setWidths(new float[]{1f, 1f});</span>
+<span class="fc" id="L258">        summary.addCell(valueCell(&quot;Gesamtpunkte: ____ / &quot; + Points.toDisplayString(total), f.normal));</span>
+<span class="fc" id="L259">        summary.addCell(valueCell(&quot;Gesamtbewertung / Note: ____________&quot;, f.normal));</span>
+<span class="fc" id="L260">        summary.addCell(valueCell(&quot;Korrigiert von: ____________________&quot;, f.normal));</span>
+<span class="fc" id="L261">        summary.addCell(valueCell(&quot;Datum / Unterschrift: _____________&quot;, f.normal));</span>
+<span class="fc" id="L262">        doc.add(summary);</span>
+<span class="fc" id="L263">    }</span>
+
+    private void addTaskContent(Document doc, PdfWriter writer, List&lt;TaskAssembly&gt; tasks, boolean includeSolutions, PdfFonts f) throws Exception {
+<span class="fc bfc" id="L266" title="All 2 branches covered.">        for (TaskAssembly ta : tasks) {</span>
+<span class="fc bfc" id="L267" title="All 2 branches covered.">            if (ta.number() &gt; 1) {</span>
+<span class="fc" id="L268">                doc.newPage();</span>
+            }
+
+<span class="fc" id="L271">            BigDecimal max = PdfExportRules.taskPoints(ta);</span>
+<span class="fc" id="L272">            Paragraph taskHeader = new Paragraph(&quot;Aufgabe &quot; + ta.number() + &quot; — &quot; + ta.task().getTitle(), f.h2);</span>
+<span class="fc" id="L273">            taskHeader.setSpacingAfter(2);</span>
+<span class="fc" id="L274">            doc.add(taskHeader);</span>
+
+<span class="fc" id="L276">            Paragraph meta = new Paragraph(&quot;Maximal: &quot; + Points.toDisplayString(max) + &quot; Punkte&quot;, f.smallMuted);</span>
+<span class="fc" id="L277">            meta.setSpacingAfter(10);</span>
+<span class="fc" id="L278">            doc.add(meta);</span>
+
+<span class="fc" id="L280">            AtomicInteger subIndex = new AtomicInteger(0);</span>
+<span class="fc bfc" id="L281" title="All 2 branches covered.">            for (ChosenVariant entry : ta.chosenSubtasks()) {</span>
+<span class="fc" id="L282">                addSubtaskBlock(doc, writer, ta.number(), subIndex.getAndIncrement(), entry, includeSolutions, f);</span>
+<span class="fc" id="L283">            }</span>
+<span class="fc" id="L284">        }</span>
+<span class="fc" id="L285">    }</span>
+
+    private void addSubtaskBlock(Document doc, PdfWriter writer, int taskNumber, int idx, ChosenVariant entry,
+                                 boolean includeSolutions, PdfFonts f) throws Exception {
+<span class="fc" id="L289">        Subtask st = entry.subtask();</span>
+<span class="fc" id="L290">        Variant variant = entry.variant();</span>
+<span class="fc" id="L291">        char letter = (char) ('a' + idx);</span>
+
+<span class="pc bpc" id="L293" title="1 of 2 branches missed.">        String text = (variant != null ? variant.getText() : &quot;&quot;).trim();</span>
+<span class="fc bfc" id="L294" title="All 2 branches covered.">        if (text.isEmpty()) text = &quot;(Kein Aufgabentext hinterlegt)&quot;;</span>
+<span class="pc bpc" id="L295" title="1 of 2 branches missed.">        String sol = (variant != null ? variant.getSolution() : &quot;&quot;).trim();</span>
+<span class="fc" id="L296">        ensureSpaceForSubtask(doc, writer, st, text, includeSolutions);</span>
+
+<span class="fc" id="L298">        Paragraph subHeader = new Paragraph(</span>
+<span class="fc" id="L299">                String.format(&quot;%d.%c  (%s Punkte)&quot;, taskNumber, letter, Points.toDisplayString(st.getPoints())),</span>
+                f.subHeader);
+<span class="fc" id="L301">        subHeader.setSpacingBefore(4);</span>
+<span class="fc" id="L302">        subHeader.setSpacingAfter(4);</span>
+<span class="fc" id="L303">        doc.add(subHeader);</span>
+
+<span class="fc" id="L305">        Paragraph body = new Paragraph(text, f.normal);</span>
+<span class="fc" id="L306">        body.setSpacingAfter(6);</span>
+<span class="fc" id="L307">        doc.add(body);</span>
+
+<span class="fc bfc" id="L309" title="All 2 branches covered.">        if (includeSolutions) {</span>
+<span class="fc" id="L310">            PdfPTable solBox = new PdfPTable(1);</span>
+<span class="fc" id="L311">            solBox.setWidthPercentage(100f);</span>
+<span class="fc" id="L312">            PdfPCell c = new PdfPCell();</span>
+<span class="fc" id="L313">            c.setPadding(8f);</span>
+<span class="fc" id="L314">            c.setBorderWidth(0.8f);</span>
+<span class="fc" id="L315">            c.setBorderColor(new Color(150, 160, 175));</span>
+<span class="fc" id="L316">            c.setBackgroundColor(new Color(245, 247, 250));</span>
+
+<span class="fc" id="L318">            Phrase label = new Phrase(&quot;Musterlösung: &quot;, f.smallBold);</span>
+<span class="fc bfc" id="L319" title="All 2 branches covered.">            Phrase txt = new Phrase(sol.isEmpty() ? &quot;Keine Lösung hinterlegt.&quot; : sol, f.normal);</span>
+<span class="fc" id="L320">            Paragraph p = new Paragraph();</span>
+<span class="fc" id="L321">            p.add(label);</span>
+<span class="fc" id="L322">            p.add(txt);</span>
+<span class="fc" id="L323">            c.setPhrase(p);</span>
+<span class="fc" id="L324">            solBox.addCell(c);</span>
+<span class="fc" id="L325">            solBox.setSpacingAfter(10f);</span>
+<span class="fc" id="L326">            doc.add(solBox);</span>
+<span class="fc" id="L327">        } else {</span>
+<span class="fc" id="L328">            PdfPTable answerBox = new PdfPTable(1);</span>
+<span class="fc" id="L329">            answerBox.setWidthPercentage(100f);</span>
+<span class="fc" id="L330">            PdfPCell cell = new PdfPCell(new Phrase(&quot; &quot;));</span>
+<span class="fc" id="L331">            cell.setPadding(6f);</span>
+<span class="fc" id="L332">            cell.setMinimumHeight(PdfExportRules.answerBoxHeight(st));</span>
+<span class="fc" id="L333">            cell.setBorderWidth(1f);</span>
+<span class="fc" id="L334">            cell.setBorderColor(new Color(165, 175, 190));</span>
+<span class="fc" id="L335">            answerBox.addCell(cell);</span>
+<span class="fc" id="L336">            answerBox.setSpacingAfter(11f);</span>
+<span class="fc" id="L337">            doc.add(answerBox);</span>
+        }
+<span class="fc" id="L339">    }</span>
+
+    private void ensureSpaceForSubtask(Document doc, PdfWriter writer, Subtask st, String text, boolean includeSolutions) {
+<span class="fc" id="L342">        int approxLines = Math.max(1, (text.length() / 90) + 1);</span>
+<span class="fc" id="L343">        float textHeight = approxLines * 13f;</span>
+<span class="fc" id="L344">        float base = 42f + textHeight; // sub header + spacing + question text</span>
+<span class="fc bfc" id="L345" title="All 2 branches covered.">        float needed = base + (includeSolutions ? 72f : PdfExportRules.answerBoxHeight(st) + 12f);</span>
+
+<span class="fc" id="L347">        float y = writer.getVerticalPosition(true);</span>
+<span class="fc" id="L348">        float minY = doc.bottom() + 16f;</span>
+<span class="fc bfc" id="L349" title="All 2 branches covered.">        if (y - needed &lt; minY) {</span>
+<span class="fc" id="L350">            doc.newPage();</span>
+        }
+<span class="fc" id="L352">    }</span>
+
+    private static String randomQuote() {
+<span class="fc" id="L355">        String[] quotes = {</span>
+            &quot;Kaffee ist optional, klare Gedanken sind Pflicht.&quot;,
+            &quot;Wenn ein Ansatz nicht klappt, starte mit einer kleineren Teilfrage.&quot;,
+            &quot;Saubere Struktur gewinnt oft gegen lange Romane.&quot;,
+            &quot;Erst sichere Punkte, dann mutige Optimierungen.&quot;,
+            &quot;Eine gute Skizze spart fünf Minuten Grübeln.&quot;,
+            &quot;Fehler sind erlaubt, unkorrigierte Fehler eher nicht.&quot;,
+            &quot;Rechnen, prüfen, erst dann eintragen.&quot;,
+            &quot;Ein sauberer Zwischenschritt ist nie Zeitverschwendung.&quot;,
+            &quot;Wer Begriffe sauber definiert, sammelt leise Punkte.&quot;,
+            &quot;Halbe Idee aufschreiben kann halbe Punkte retten.&quot;,
+            &quot;Nicht raten, herleiten.&quot;,
+            &quot;Kurze Antwort, starke Begründung.&quot;,
+            &quot;Wenn es komplex wird: Problem in Blöcke schneiden.&quot;,
+            &quot;Einheiten und Größenordnungen sind gute Freunde.&quot;,
+            &quot;Präzision schlägt Geschwindigkeit, wenn beides nicht geht.&quot;,
+            &quot;Sauberer Ansatz &gt; hektischer Endspurt.&quot;,
+            &quot;Zwischenergebnisse markieren hilft beim Kontrollblick.&quot;,
+            &quot;Ein Blick auf Randfälle kostet Sekunden, spart Punkte.&quot;,
+            &quot;Klarheit ist die schnellste Abkürzung.&quot;,
+            &quot;Denke wie ein Debugger: Schritt für Schritt.&quot;,
+            &quot;Unvollständig aber korrekt ist besser als voll und falsch.&quot;,
+            &quot;Begründe Annahmen kurz, dann weiter.&quot;,
+            &quot;Wenn du festhängst, wechsle kurz die Aufgabe.&quot;,
+            &quot;Ruhig bleiben ist ein legitimer Lösungsweg.&quot;,
+            &quot;Formel ohne Kontext ist nur Dekoration.&quot;,
+            &quot;Ein Beispiel kann eine Erklärung retten.&quot;,
+            &quot;Nicht alles auf einmal, aber alles nacheinander.&quot;,
+            &quot;Heute gewinnt die saubere Handschrift extra Sympathiepunkte.&quot;,
+            &quot;Punkte mögen Ordnung.&quot;,
+            &quot;Wer sauber trennt, versteht schneller.&quot;,
+            &quot;Kleine Checks verhindern große Korrekturen.&quot;,
+            &quot;Die erste Idee ist ein Start, nicht immer das Ziel.&quot;,
+            &quot;Konsequent benannte Variablen sind halbe Miete.&quot;,
+            &quot;Wenn etwas zu schön ist, nochmal gegenprüfen.&quot;,
+            &quot;Lieber eine Zeile weniger, aber korrekt.&quot;,
+            &quot;Zeitmanagement ist auch eine Fachkompetenz.&quot;,
+            &quot;Mut zur Lücke, aber nicht zur Logiklücke.&quot;,
+            &quot;Das Blatt weiß nichts ohne deine Zwischenschritte.&quot;,
+            &quot;Wenn es passt, erkläre es in einem Satz.&quot;,
+            &quot;Richtung prüfen, dann rechnen.&quot;,
+            &quot;Ein guter Anfang stabilisiert den Rest.&quot;,
+            &quot;Ein sauberer Schluss sichert den Punkt.&quot;,
+            &quot;Nicht nur Ergebnis, auch Weg zählt.&quot;,
+            &quot;Komplexität sinkt mit jeder klaren Notation.&quot;,
+            &quot;Fragen lesen, Schlüsselwort markieren, starten.&quot;,
+            &quot;Kleine Pause, großer Fokus.&quot;,
+            &quot;Richtig ist besser als spektakulär.&quot;,
+            &quot;Konzentration schlägt Panikmodus.&quot;,
+            &quot;Gut gegliedert ist halb korrigiert.&quot;,
+            &quot;Das hier ist kein Sprint, eher ein präziser Lauf.&quot;
+        };
+<span class="fc" id="L407">        return quotes[ThreadLocalRandom.current().nextInt(quotes.length)];</span>
+    }
+
+    private static PdfPCell labelCell(String text, Font f) {
+<span class="fc" id="L411">        PdfPCell c = new PdfPCell(new Phrase(text, f));</span>
+<span class="fc" id="L412">        c.setPadding(7f);</span>
+<span class="fc" id="L413">        c.setBackgroundColor(new Color(236, 241, 248));</span>
+<span class="fc" id="L414">        c.setBorderColor(new Color(185, 195, 210));</span>
+<span class="fc" id="L415">        return c;</span>
+    }
+
+    private static PdfPCell valueCell(String text, Font f) {
+<span class="fc" id="L419">        PdfPCell c = new PdfPCell(new Phrase(text, f));</span>
+<span class="fc" id="L420">        c.setPadding(7f);</span>
+<span class="fc" id="L421">        c.setBorderColor(new Color(185, 195, 210));</span>
+<span class="fc" id="L422">        c.setBackgroundColor(Color.WHITE);</span>
+<span class="fc" id="L423">        return c;</span>
+    }
+
+    private static PdfPCell headerCell(String text, Font f) {
+<span class="fc" id="L427">        PdfPCell c = new PdfPCell(new Phrase(text, f));</span>
+<span class="fc" id="L428">        c.setPadding(7f);</span>
+<span class="fc" id="L429">        c.setBorderColor(new Color(170, 180, 195));</span>
+<span class="fc" id="L430">        c.setBackgroundColor(new Color(235, 240, 247));</span>
+<span class="fc" id="L431">        return c;</span>
+    }
+
+    private static PdfPCell bodyCell(String text, Font f) {
+<span class="fc" id="L435">        PdfPCell c = new PdfPCell(new Phrase(text, f));</span>
+<span class="fc" id="L436">        c.setPadding(7f);</span>
+<span class="fc" id="L437">        c.setBorderColor(new Color(186, 194, 207));</span>
+<span class="fc" id="L438">        return c;</span>
+    }
+
+    private static PdfPCell emptyWriteCell(String text) {
+<span class="fc" id="L442">        PdfPCell c = new PdfPCell(new Phrase(text));</span>
+<span class="fc" id="L443">        c.setPadding(9f);</span>
+<span class="fc" id="L444">        c.setMinimumHeight(24f);</span>
+<span class="fc" id="L445">        c.setBorderColor(new Color(186, 194, 207));</span>
+<span class="fc" id="L446">        return c;</span>
+    }
+
+    private static PdfPCell totalCell(String text, Font f) {
+<span class="fc" id="L450">        PdfPCell c = new PdfPCell(new Phrase(text, f));</span>
+<span class="fc" id="L451">        c.setPadding(8f);</span>
+<span class="fc" id="L452">        c.setBorderColor(new Color(150, 162, 180));</span>
+<span class="fc" id="L453">        c.setBackgroundColor(new Color(245, 247, 251));</span>
+<span class="fc" id="L454">        return c;</span>
+    }
+
+<span class="fc" id="L457">    private static final class PdfFonts {</span>
+<span class="fc" id="L458">        final Font h1 = new Font(Font.HELVETICA, 26, Font.BOLD);</span>
+<span class="fc" id="L459">        final Font h2 = new Font(Font.HELVETICA, 16, Font.BOLD);</span>
+<span class="fc" id="L460">        final Font h3 = new Font(Font.HELVETICA, 13, Font.BOLD);</span>
+<span class="fc" id="L461">        final Font subHeader = new Font(Font.HELVETICA, 11, Font.BOLD);</span>
+<span class="fc" id="L462">        final Font normal = new Font(Font.HELVETICA, 11, Font.NORMAL);</span>
+<span class="fc" id="L463">        final Font smallBold = new Font(Font.HELVETICA, 10, Font.BOLD);</span>
+<span class="fc" id="L464">        final Font smallMuted = new Font(Font.HELVETICA, 10, Font.NORMAL, new Color(90, 100, 115));</span>
+<span class="fc" id="L465">        final Font italicMuted = new Font(Font.HELVETICA, 10, Font.ITALIC, new Color(95, 104, 118));</span>
+    }
+
+    private static final class PageNumberFooter extends PdfPageEventHelper {
+        private PdfTemplate total;
+        private BaseFont baseFont;
+
+        @Override
+        public void onOpenDocument(PdfWriter writer, Document document) {
+<span class="fc" id="L474">            total = writer.getDirectContent().createTemplate(40, 12);</span>
+            try {
+<span class="fc" id="L476">                baseFont = BaseFont.createFont(BaseFont.HELVETICA, BaseFont.WINANSI, BaseFont.NOT_EMBEDDED);</span>
+<span class="nc" id="L477">            } catch (Exception e) {</span>
+<span class="nc" id="L478">                throw new IllegalStateException(&quot;Failed to initialize page footer font&quot;, e);</span>
+<span class="fc" id="L479">            }</span>
+<span class="fc" id="L480">        }</span>
+
+        @Override
+        public void onEndPage(PdfWriter writer, Document document) {
+<span class="fc" id="L484">            String text = &quot;Seite &quot; + writer.getPageNumber() + &quot;/&quot;;</span>
+<span class="fc" id="L485">            float size = 9f;</span>
+<span class="fc" id="L486">            float textWidth = baseFont.getWidthPoint(text, size);</span>
+<span class="fc" id="L487">            float x = (document.left() + document.right()) / 2f;</span>
+<span class="fc" id="L488">            float y = 22f;</span>
+
+<span class="fc" id="L490">            PdfContentByte cb = writer.getDirectContent();</span>
+<span class="fc" id="L491">            cb.beginText();</span>
+<span class="fc" id="L492">            cb.setFontAndSize(baseFont, size);</span>
+<span class="fc" id="L493">            cb.setTextMatrix(x - textWidth / 2f, y);</span>
+<span class="fc" id="L494">            cb.showText(text);</span>
+<span class="fc" id="L495">            cb.endText();</span>
+<span class="fc" id="L496">            cb.addTemplate(total, x - textWidth / 2f + textWidth, y);</span>
+<span class="fc" id="L497">        }</span>
+
+        @Override
+        public void onCloseDocument(PdfWriter writer, Document document) {
+<span class="fc" id="L501">            total.beginText();</span>
+<span class="fc" id="L502">            total.setFontAndSize(baseFont, 9f);</span>
+<span class="fc" id="L503">            total.setTextMatrix(0, 0);</span>
+<span class="fc" id="L504">            total.showText(String.valueOf(writer.getPageNumber() - 1));</span>
+<span class="fc" id="L505">            total.endText();</span>
+<span class="fc" id="L506">        }</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

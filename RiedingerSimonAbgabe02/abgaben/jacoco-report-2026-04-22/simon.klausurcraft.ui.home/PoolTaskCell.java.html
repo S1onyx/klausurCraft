@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="de"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PoolTaskCell.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">demo</a> &gt; <a href="index.source.html" class="el_package">simon.klausurcraft.ui.home</a> &gt; <span class="el_source">PoolTaskCell.java</span></div><h1>PoolTaskCell.java</h1><pre class="source lang-java linenums">package simon.klausurcraft.ui.home;
+
+import javafx.scene.control.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import simon.klausurcraft.task.Points;
+
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
+/**
+ * Cell for the TASK POOL (bottom).
+ * - Checkbox checked =&gt; move to selected (enable)
+ * - Shows a textual list of achievable point sums (e.g., &quot;Possible: 6, 8, 10&quot;)
+ * - If no achievable sums, checkbox is disabled and a tooltip explains why.
+ */
+class PoolTaskCell extends ListCell&lt;TaskSelection&gt; {
+
+    private final HomeController root;
+    private final Consumer&lt;TaskSelection&gt; onSelectFromPool;
+
+<span class="nc" id="L22">    private final CheckBox cbPick = new CheckBox();</span>
+<span class="nc" id="L23">    private final Label title = new Label();</span>
+<span class="nc" id="L24">    private final Label lblPossible = new Label();</span>
+<span class="nc" id="L25">    private final Button btnWhy = new Button(&quot;Why?&quot;);</span>
+<span class="nc" id="L26">    private final HBox possibleBox = new HBox(8);</span>
+    private final HBox box;
+
+    PoolTaskCell(HomeController root,
+<span class="nc" id="L30">                 Consumer&lt;TaskSelection&gt; onSelectFromPool) {</span>
+<span class="nc" id="L31">        this.root = root;</span>
+<span class="nc" id="L32">        this.onSelectFromPool = onSelectFromPool;</span>
+<span class="nc" id="L33">        cbPick.setTooltip(new Tooltip(&quot;Check to move this task into selected tasks.&quot;));</span>
+
+<span class="nc" id="L35">        title.setMaxWidth(Double.MAX_VALUE);</span>
+<span class="nc" id="L36">        title.setWrapText(false);</span>
+<span class="nc" id="L37">        HBox.setHgrow(title, Priority.ALWAYS);</span>
+<span class="nc" id="L38">        lblPossible.getStyleClass().add(&quot;pool-possible-cell&quot;);</span>
+<span class="nc" id="L39">        lblPossible.setWrapText(true);</span>
+<span class="nc" id="L40">        possibleBox.getStyleClass().add(&quot;pool-possible-column&quot;);</span>
+<span class="nc" id="L41">        possibleBox.setMinWidth(260);</span>
+<span class="nc" id="L42">        possibleBox.setPrefWidth(360);</span>
+<span class="nc" id="L43">        possibleBox.setMaxWidth(Double.MAX_VALUE);</span>
+<span class="nc" id="L44">        possibleBox.getChildren().add(lblPossible);</span>
+<span class="nc" id="L45">        lblPossible.maxWidthProperty().bind(possibleBox.widthProperty().subtract(8));</span>
+<span class="nc" id="L46">        HBox.setHgrow(possibleBox, Priority.SOMETIMES);</span>
+
+<span class="nc" id="L48">        btnWhy.getStyleClass().add(&quot;chip&quot;);</span>
+<span class="nc" id="L49">        btnWhy.setTooltip(new Tooltip(&quot;Show why this task currently has no possible points.&quot;));</span>
+<span class="nc" id="L50">        btnWhy.setOnAction(e -&gt; showNoOptionsHelp());</span>
+
+<span class="nc" id="L52">        box = new HBox(12, cbPick, title, possibleBox);</span>
+<span class="nc" id="L53">        box.setFillHeight(true);</span>
+
+<span class="nc" id="L55">        setContentDisplay(ContentDisplay.GRAPHIC_ONLY);</span>
+<span class="nc" id="L56">        setGraphic(box);</span>
+
+<span class="nc" id="L58">        cbPick.selectedProperty().addListener((o, ov, nv) -&gt; {</span>
+<span class="nc" id="L59">            TaskSelection ts = getItem();</span>
+<span class="nc bnc" id="L60" title="All 2 branches missed.">            if (ts == null) return;</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">            if (nv) {</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">                if (ts.getAchievable().isEmpty()) {</span>
+<span class="nc" id="L63">                    cbPick.setSelected(false);</span>
+<span class="nc" id="L64">                    HomeNotifications.showError(&quot;This task has no possible points in the current scope.&quot;);</span>
+<span class="nc" id="L65">                    return;</span>
+                }
+<span class="nc bnc" id="L67" title="All 2 branches missed.">                if (onSelectFromPool != null) {</span>
+<span class="nc" id="L68">                    onSelectFromPool.accept(ts);</span>
+                }
+            }
+<span class="nc" id="L71">        });</span>
+<span class="nc" id="L72">    }</span>
+
+    @Override
+    protected void updateItem(TaskSelection item, boolean empty) {
+<span class="nc" id="L76">        super.updateItem(item, empty);</span>
+
+<span class="nc bnc" id="L78" title="All 4 branches missed.">        if (empty || item == null) {</span>
+<span class="nc" id="L79">            setGraphic(null);</span>
+<span class="nc" id="L80">            setText(null);</span>
+<span class="nc" id="L81">            return;</span>
+        }
+
+<span class="nc" id="L84">        cbPick.setSelected(false);</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">        boolean hasOptions = !item.getAchievable().isEmpty();</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">        cbPick.setDisable(!hasOptions);</span>
+<span class="nc" id="L87">        possibleBox.getChildren().setAll(lblPossible);</span>
+
+<span class="nc bnc" id="L89" title="All 2 branches missed.">        if (!hasOptions) {</span>
+            // UI/UX-Rule &quot;Empathy&quot;
+<span class="nc" id="L91">            cbPick.setTooltip(new Tooltip(&quot;No achievable points in current scope. Add subtasks with valid combinations.&quot;));</span>
+<span class="nc" id="L92">            lblPossible.setText(&quot;No possible points in this scope&quot;);</span>
+<span class="nc" id="L93">            possibleBox.getChildren().add(btnWhy);</span>
+        } else {
+<span class="nc" id="L95">            String poss = item.getAchievable().stream()</span>
+<span class="nc" id="L96">                    .map(Points::toDisplayString)</span>
+<span class="nc" id="L97">                    .collect(Collectors.joining(&quot;, &quot;));</span>
+<span class="nc" id="L98">            lblPossible.setText(poss);</span>
+<span class="nc" id="L99">            cbPick.setTooltip(new Tooltip(&quot;Check to move this task into selected tasks.&quot;));</span>
+        }
+
+<span class="nc" id="L102">        title.setText(&quot;Task &quot; + item.getTask().getId() + &quot; — &quot; + item.getTask().getTitle());</span>
+<span class="nc" id="L103">        setGraphic(box);</span>
+<span class="nc" id="L104">    }</span>
+
+    private void showNoOptionsHelp() {
+<span class="nc" id="L107">        Alert info = new Alert(Alert.AlertType.INFORMATION);</span>
+<span class="nc" id="L108">        info.setTitle(&quot;No possible points&quot;);</span>
+<span class="nc" id="L109">        info.setHeaderText(&quot;This task has no achievable point sum in the current scope.&quot;);</span>
+<span class="nc" id="L110">        info.setContentText(&quot;&quot;&quot;</span>
+                Try one of these options:
+                1) Go Back and change the scope (exam/practice/both).
+                2) Add or edit subtasks so there are valid combinations.
+                3) Return and include the task afterwards.
+                &quot;&quot;&quot;);
+<span class="nc" id="L116">        info.initOwner(root.getWindow());</span>
+<span class="nc" id="L117">        simon.klausurcraft.ui.UiStyles.applyCurrentStyles(info);</span>
+<span class="nc" id="L118">        info.showAndWait();</span>
+<span class="nc" id="L119">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="de"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HomeTaskSheet.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">demo</a> &gt; <a href="index.source.html" class="el_package">simon.klausurcraft.ui.home</a> &gt; <span class="el_source">HomeTaskSheet.java</span></div><h1>HomeTaskSheet.java</h1><pre class="source lang-java linenums">package simon.klausurcraft.ui.home;
+
+import javafx.application.Platform;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import javafx.geometry.Insets;
+import simon.klausurcraft.task.Task;
+
+import simon.klausurcraft.ui.UiStyles;
+
+import java.util.Optional;
+
+/**
+ * Slide-over for editing/creating tasks (title only) and helper for prompting new task title.
+ */
+final class HomeTaskSheet {
+
+    private HomeTaskSheet(){}
+
+    /** Open slide-over to edit a task's title. */
+    static void openEdit(HomeController root, Task task) {
+<span class="nc" id="L22">        BorderPane sheet = new BorderPane();</span>
+<span class="nc" id="L23">        sheet.setPadding(new Insets(0));</span>
+
+<span class="nc" id="L25">        VBox content = new VBox(14);</span>
+<span class="nc" id="L26">        content.setPadding(new Insets(16));</span>
+
+<span class="nc" id="L28">        Label header = new Label(&quot;Edit task&quot;);</span>
+<span class="nc" id="L29">        header.getStyleClass().add(&quot;header&quot;);</span>
+
+<span class="nc" id="L31">        TextField tfTitle = new TextField(task.getTitle());</span>
+<span class="nc" id="L32">        tfTitle.setPromptText(&quot;Task title&quot;);</span>
+<span class="nc" id="L33">        tfTitle.setMaxWidth(Double.MAX_VALUE);</span>
+<span class="nc" id="L34">        tfTitle.setTooltip(new Tooltip(&quot;Task title shown in list, tree and export.&quot;));</span>
+<span class="nc" id="L35">        tfTitle.textProperty().addListener((o, ov, nv) -&gt; {</span>
+<span class="nc bnc" id="L36" title="All 2 branches missed.">            String newTitle = nv == null ? &quot;&quot; : nv.trim();</span>
+<span class="nc bnc" id="L37" title="All 2 branches missed.">            if (newTitle.isEmpty()) newTitle = &quot;New Task&quot;;</span>
+<span class="nc bnc" id="L38" title="All 2 branches missed.">            if (newTitle.equals(task.getTitle())) return;</span>
+<span class="nc" id="L39">            task.setTitle(newTitle);</span>
+<span class="nc" id="L40">            root.getTaskRepository().updateTaskTitle(task);</span>
+<span class="nc" id="L41">            root.centerController.render(root.getTasks(), root.currentQuery(), root.allowedDifficulties());</span>
+<span class="nc" id="L42">            root.rebuildToc();</span>
+<span class="nc" id="L43">        });</span>
+
+<span class="nc" id="L45">        content.getChildren().addAll(header, new Label(&quot;Title&quot;), tfTitle);</span>
+
+<span class="nc" id="L47">        ScrollPane sp = new ScrollPane(content);</span>
+<span class="nc" id="L48">        sp.setFitToWidth(true);</span>
+<span class="nc" id="L49">        sp.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);</span>
+<span class="nc" id="L50">        sheet.setCenter(sp);</span>
+
+<span class="nc" id="L52">        HBox actions = new HBox(8);</span>
+<span class="nc" id="L53">        actions.getStyleClass().add(&quot;sheet-footer&quot;);</span>
+<span class="nc" id="L54">        Region spacer = new Region(); HBox.setHgrow(spacer, Priority.ALWAYS);</span>
+<span class="nc" id="L55">        Button btnClose = new Button(&quot;Close&quot;);</span>
+<span class="nc" id="L56">        btnClose.getStyleClass().add(&quot;chip&quot;);</span>
+<span class="nc" id="L57">        btnClose.setCancelButton(true);</span>
+<span class="nc" id="L58">        btnClose.setTooltip(new Tooltip(&quot;Close this editor.&quot;));</span>
+<span class="nc" id="L59">        btnClose.setOnAction(e -&gt; {</span>
+<span class="nc" id="L60">            root.getSlideOver().hide();</span>
+<span class="nc" id="L61">            root.rootStack.setMouseTransparent(true);</span>
+<span class="nc" id="L62">        });</span>
+
+<span class="nc" id="L64">        actions.getChildren().addAll(spacer, btnClose);</span>
+<span class="nc" id="L65">        sheet.setBottom(actions);</span>
+
+<span class="nc" id="L67">        root.getSlideOver().setContent(sheet);</span>
+<span class="nc" id="L68">        root.getSlideOver().show();</span>
+<span class="nc" id="L69">        root.rootStack.setMouseTransparent(false);</span>
+
+        // Ensure focus lands on the editor field, not on background controls.
+<span class="nc" id="L72">        Platform.runLater(() -&gt; {</span>
+<span class="nc" id="L73">            tfTitle.requestFocus();</span>
+<span class="nc" id="L74">            tfTitle.selectAll();</span>
+<span class="nc" id="L75">        });</span>
+<span class="nc" id="L76">    }</span>
+
+    /**
+     * Prompt for a new task (title) and create it via TaskXmlStore.
+     * Returns created Task on success, otherwise shows an English error banner.
+     */
+    static Optional&lt;Task&gt; promptNewTask(HomeController root) {
+<span class="nc" id="L83">        TextInputDialog dlg = new TextInputDialog();</span>
+<span class="nc" id="L84">        dlg.setTitle(&quot;+ New task&quot;);</span>
+<span class="nc" id="L85">        dlg.setHeaderText(&quot;Create a new task&quot;);</span>
+<span class="nc" id="L86">        dlg.setContentText(&quot;Title:&quot;);</span>
+        // Make Enter/Escape work even on older JavaFX versions (null-safe)
+<span class="nc" id="L88">        Button okBtn = (Button) dlg.getDialogPane().lookupButton(ButtonType.OK);</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">        if (okBtn != null) okBtn.setDefaultButton(true);</span>
+<span class="nc" id="L90">        Button cancelBtn = (Button) dlg.getDialogPane().lookupButton(ButtonType.CANCEL);</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">        if (cancelBtn != null) cancelBtn.setCancelButton(true);</span>
+
+<span class="nc" id="L93">        dlg.initOwner(root.getWindow());</span>
+        // Apply app styles to dialog (dark mode fix)
+<span class="nc" id="L95">        UiStyles.applyCurrentStyles(dlg);</span>
+
+<span class="nc" id="L97">        Optional&lt;String&gt; res = dlg.showAndWait();</span>
+<span class="nc bnc" id="L98" title="All 2 branches missed.">        if (res.isPresent()) {</span>
+<span class="nc" id="L99">            String title = res.get().trim();</span>
+<span class="nc bnc" id="L100" title="All 2 branches missed.">            if (title.isEmpty()) title = &quot;New Task&quot;;</span>
+
+            // Attempt to create task in the currently loaded XML
+<span class="nc" id="L103">            Optional&lt;Task&gt; created = root.getTaskRepository().addTask(title);</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">            if (created.isEmpty()) {</span>
+                // Most likely no XML loaded yet (TaskXmlStore.doc == null)
+<span class="nc" id="L106">                HomeNotifications.showError(&quot;No XML file is open. Please open an XML file first.&quot;);</span>
+<span class="nc" id="L107">                return Optional.empty();</span>
+            }
+
+<span class="nc" id="L110">            return created;</span>
+        }
+<span class="nc" id="L112">        return Optional.empty();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

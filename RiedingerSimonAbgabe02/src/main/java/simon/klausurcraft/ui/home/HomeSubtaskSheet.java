@@ -1,0 +1,301 @@
+package simon.klausurcraft.ui.home;
+
+import javafx.application.Platform;
+import javafx.geometry.Insets;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import simon.klausurcraft.task.*;
+import simon.klausurcraft.task.io.TaskXmlStore;
+import simon.klausurcraft.ui.UiStyles;
+
+import java.math.BigDecimal;
+
+final class HomeSubtaskSheet {
+
+    private HomeSubtaskSheet(){}
+
+    static void open(HomeController root, Task task, Subtask sub) {
+        // Root layout with sticky footer
+        BorderPane sheet = new BorderPane();
+        sheet.setPadding(new Insets(0));
+
+        VBox content = new VBox(14);
+        content.setPadding(new Insets(16));
+
+        Label title = new Label("Subtask " + task.getId() + "." + sub.getId());
+        title.getStyleClass().add("header");
+
+        TaskXmlStore xmlService = root.getTaskRepository();
+
+        // Subtask "title" from variants@group
+        String currentGroup = xmlService.readSubtaskGroup(sub);
+        TextField tfSubtaskTitle = new TextField(currentGroup);
+        tfSubtaskTitle.setPromptText("Subtask title (variants@group)");
+        tfSubtaskTitle.setMaxWidth(Double.MAX_VALUE);
+        tfSubtaskTitle.setTooltip(new Tooltip("Shared subtask title stored in variants@group."));
+        tfSubtaskTitle.textProperty().addListener((o, ov, nv) -> {
+            xmlService.updateSubtaskGroup(sub, nv == null ? "" : nv);
+            // live refresh center + tree
+            root.centerController.render(root.getTasks(), root.currentQuery(), root.allowedDifficulties());
+            root.rebuildToc();
+        });
+
+        // Meta grid
+        GridPane meta = new GridPane();
+        meta.setHgap(10);
+        meta.setVgap(6);
+        ColumnConstraints c1 = new ColumnConstraints(); c1.setPercentWidth(33);
+        ColumnConstraints c2 = new ColumnConstraints(); c2.setPercentWidth(33);
+        ColumnConstraints c3 = new ColumnConstraints(); c3.setPercentWidth(34);
+        meta.getColumnConstraints().addAll(c1, c2, c3);
+
+        // Points
+        VBox ptsBox = new VBox(4);
+        Label lblPts = new Label("Points");
+        TextField tfPoints = new TextField(Points.toDisplayString(sub.getPoints()));
+        tfPoints.setPromptText("Number (>= 0, steps of 0,5)");
+        tfPoints.setTooltip(new Tooltip("Points for this subtask (0.5 steps allowed)."));
+        Label lblPtsHint = new Label("Allowed: 0, 0,5, 1, 1,5, ...");
+        lblPtsHint.getStyleClass().add("muted");
+        Label lblPtsError = new Label();
+        lblPtsError.getStyleClass().add("field-error"); // styled via existing CSS theme
+        lblPtsError.setManaged(false);
+        lblPtsError.setVisible(false);
+
+        Runnable clearPointsError = () -> {
+            lblPtsError.setManaged(false);
+            lblPtsError.setVisible(false);
+            tfPoints.getStyleClass().remove("field-error-border");
+        };
+        java.util.function.Consumer<String> showPointsError = msg -> {
+            lblPtsError.setText(msg);
+            lblPtsError.setManaged(true);
+            lblPtsError.setVisible(true);
+            if (!tfPoints.getStyleClass().contains("field-error-border")) {
+                tfPoints.getStyleClass().add("field-error-border");
+            }
+        };
+
+        tfPoints.textProperty().addListener((o, ov, nv) -> {
+            String s = nv == null ? "" : nv.trim();
+            try {
+                BigDecimal parsedPoints = Points.parseInput(s);
+                sub.setPoints(parsedPoints);
+                xmlService.updateSubtaskMeta(sub);
+                root.centerController.render(root.getTasks(), root.currentQuery(), root.allowedDifficulties());
+                clearPointsError.run();
+            } catch (IllegalArgumentException ex) {
+                showPointsError.accept(ex.getMessage());
+            } catch (Exception ex) {
+                showPointsError.accept("Failed to save points: " + ex.getMessage());
+            }
+        });
+        ptsBox.getChildren().addAll(lblPts, tfPoints, lblPtsHint, lblPtsError);
+
+        // Difficulty
+        VBox diffBox = new VBox(4);
+        Label lblDiff = new Label("Difficulty");
+        ComboBox<Difficulty> cbDiff = new ComboBox<>();
+        cbDiff.getItems().setAll(Difficulty.values());
+        cbDiff.getSelectionModel().select(sub.getDifficulty());
+        cbDiff.setMaxWidth(Double.MAX_VALUE);
+        cbDiff.setTooltip(new Tooltip("Difficulty label for filtering and generation."));
+        Runnable paintDiff = () -> {
+            cbDiff.getStyleClass().removeAll("combo-diff-easy","combo-diff-medium","combo-diff-hard");
+            Difficulty d = cbDiff.getValue();
+            if (d != null) switch (d) {
+                case EASY -> cbDiff.getStyleClass().add("combo-diff-easy");
+                case MEDIUM -> cbDiff.getStyleClass().add("combo-diff-medium");
+                case HARD -> cbDiff.getStyleClass().add("combo-diff-hard");
+            }
+        };
+        paintDiff.run();
+        cbDiff.valueProperty().addListener((o, ov, nv) -> {
+            sub.setDifficulty(nv);
+            xmlService.updateSubtaskMeta(sub);
+            paintDiff.run();
+            root.centerController.render(root.getTasks(), root.currentQuery(), root.allowedDifficulties());
+        });
+        diffBox.getChildren().addAll(lblDiff, cbDiff);
+
+        // Eligibility
+        VBox eligBox = new VBox(4);
+        Label lblElig = new Label("Eligibility");
+        ComboBox<Eligibility> cbElig = new ComboBox<>();
+        cbElig.getItems().setAll(Eligibility.values());
+        cbElig.getSelectionModel().select(sub.getEligibility());
+        cbElig.setMaxWidth(Double.MAX_VALUE);
+        cbElig.setTooltip(new Tooltip("Where this subtask may appear: exam, practice, or both."));
+        Runnable paintElig = () -> {
+            cbElig.getStyleClass().removeAll("combo-elig-exam","combo-elig-practice","combo-elig-both");
+            Eligibility e = cbElig.getValue();
+            if (e != null) switch (e) {
+                case EXAM -> cbElig.getStyleClass().add("combo-elig-exam");
+                case PRACTICE -> cbElig.getStyleClass().add("combo-elig-practice");
+                case BOTH -> cbElig.getStyleClass().add("combo-elig-both");
+            }
+        };
+        paintElig.run();
+        cbElig.valueProperty().addListener((o, ov, nv) -> {
+            sub.setEligibility(nv);
+            xmlService.updateSubtaskMeta(sub);
+            paintElig.run();
+            root.centerController.render(root.getTasks(), root.currentQuery(), root.allowedDifficulties());
+        });
+        eligBox.getChildren().addAll(lblElig, cbElig);
+
+        meta.add(ptsBox, 0, 0);
+        meta.add(diffBox, 1, 0);
+        meta.add(eligBox, 2, 0);
+
+        // Variants
+        VBox variantsBox = new VBox(12);
+
+        // Header row for variants with "+ Variant" and "Delete subtask"
+        HBox variantsHeader = new HBox(8);
+        Label vTitle = new Label("Variants");
+        Region vSpacer = new Region(); HBox.setHgrow(vSpacer, Priority.ALWAYS);
+        Button btnAddVariant = new Button("+ Variant");
+        btnAddVariant.getStyleClass().add("chip");
+        btnAddVariant.setTooltip(new Tooltip("Add a new variant to this subtask."));
+        btnAddVariant.setOnAction(e -> {
+            xmlService.addVariant(sub).ifPresent(v -> {
+                open(root, task, sub); // refresh
+                root.centerController.render(root.getTasks(), root.currentQuery(), root.allowedDifficulties());
+            });
+        });
+
+        Button btnDeleteSubtask = new Button("Delete subtask");
+        btnDeleteSubtask.getStyleClass().addAll("chip", "danger");
+        btnDeleteSubtask.setTooltip(new Tooltip("Delete this subtask and all of its variants."));
+        btnDeleteSubtask.setOnAction(e -> {
+            Alert a = new Alert(Alert.AlertType.CONFIRMATION);
+            a.setTitle("Delete subtask");
+            a.setHeaderText("Delete this subtask?");
+            a.setContentText("This will delete the subtask including all its variants. This action cannot be undone.");
+            a.initOwner(root.getWindow());
+            UiStyles.applyCurrentStyles(a);
+            a.showAndWait().ifPresent(bt -> {
+                if (bt == ButtonType.OK) {
+                    if (root.getTaskRepository().deleteSubtask(task, sub)) {
+                        task.getSubtasks().remove(sub);
+                        root.getSlideOver().hide();
+                        root.rootStack.setMouseTransparent(true);
+                        root.centerController.render(root.getTasks(), root.currentQuery(), root.allowedDifficulties());
+                        root.rebuildToc();
+                    } else {
+                        HomeNotifications.showError("Failed to delete subtask.");
+                    }
+                }
+            });
+        });
+
+        variantsHeader.getChildren().addAll(vTitle, vSpacer, btnAddVariant, btnDeleteSubtask);
+        variantsBox.getChildren().add(variantsHeader);
+
+        for (Variant v : sub.getVariants()) {
+            VBox vCard = new VBox(8);
+            vCard.getStyleClass().add("card");
+            vCard.setPadding(new Insets(12));
+
+            HBox vHeader = new HBox(8);
+            Label vHeaderLbl = new Label("Variant " + v.getId());
+            vHeaderLbl.getStyleClass().add("header");
+            Region spacer = new Region(); HBox.setHgrow(spacer, Priority.ALWAYS);
+            Button btnDelVar = new Button("Delete");
+            btnDelVar.getStyleClass().addAll("chip", "danger");
+            btnDelVar.setTooltip(new Tooltip("Delete this variant."));
+            btnDelVar.setDisable(sub.getVariants().size() <= 1);
+            btnDelVar.setOnAction(e -> {
+                if (sub.getVariants().size() <= 1) {
+                    HomeNotifications.showError("Cannot delete the last variant of a subtask.");
+                    return;
+                }
+                Alert a = new Alert(Alert.AlertType.CONFIRMATION);
+                a.setTitle("Delete variant");
+                a.setHeaderText("Delete this variant?");
+                a.setContentText("This action cannot be undone.");
+                a.initOwner(root.getWindow());
+                UiStyles.applyCurrentStyles(a);
+                a.showAndWait().ifPresent(bt -> {
+                    if (bt == ButtonType.OK) {
+                        if (root.getTaskRepository().deleteVariant(sub, v)) {
+                            sub.getVariants().remove(v);
+                            open(root, task, sub); // refresh sheet content
+                            root.centerController.render(root.getTasks(), root.currentQuery(), root.allowedDifficulties());
+                        } else {
+                            HomeNotifications.showError("Failed to delete variant.");
+                        }
+                    }
+                });
+            });
+
+            vHeader.getChildren().addAll(vHeaderLbl, spacer, btnDelVar);
+
+            TextArea taText = new TextArea(v.getText());
+            taText.setPromptText("Variant text");
+            taText.setPrefRowCount(3);
+            taText.setTooltip(new Tooltip("Task text shown to students."));
+            taText.textProperty().addListener((o, ov, nv) -> {
+                v.setText(nv);
+                xmlService.updateVariant(v);
+            });
+
+            TextArea taSol = new TextArea(v.getSolution());
+            taSol.setPromptText("Solution (leave empty if none)");
+            taSol.setPrefRowCount(3);
+            taSol.setTooltip(new Tooltip("Sample solution text for this variant."));
+            taSol.textProperty().addListener((o, ov, nv) -> {
+                v.setSolution(nv);
+                xmlService.updateVariant(v);
+            });
+
+            vCard.getChildren().addAll(vHeader, new Label("Text"), taText, new Label("Solution"), taSol);
+            variantsBox.getChildren().add(vCard);
+        }
+
+        // Build scrollable center and sticky footer
+        ScrollPane sp = new ScrollPane(content);
+        sp.setFitToWidth(true);
+        sp.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        sheet.setCenter(sp);
+
+        HBox footer = new HBox(8);
+        footer.getStyleClass().add("sheet-footer");
+        Region footSpacer = new Region(); HBox.setHgrow(footSpacer, Priority.ALWAYS);
+        Button btnClose = new Button("Close");
+        btnClose.getStyleClass().add("chip");
+        btnClose.setCancelButton(true);
+        btnClose.setTooltip(new Tooltip("Close this editor."));
+        btnClose.setOnAction(e -> {
+            root.getSlideOver().hide();
+            rootStackMouseTransparent(root, true);
+        });
+        footer.getChildren().addAll(footSpacer, btnClose);
+        sheet.setBottom(footer);
+
+        // assemble content
+        content.getChildren().addAll(
+                title,
+                new Label("Subtask title"), tfSubtaskTitle,
+                new Separator(),
+                meta,
+                new Separator(),
+                variantsBox
+        );
+
+        root.getSlideOver().setContent(sheet);
+        root.getSlideOver().show();
+        rootStackMouseTransparent(root, false);
+
+        // Ensure focus lands on the active editor field after opening.
+        Platform.runLater(() -> {
+            tfSubtaskTitle.requestFocus();
+            tfSubtaskTitle.selectAll();
+        });
+    }
+
+    private static void rootStackMouseTransparent(HomeController root, boolean v) {
+        root.rootStack.setMouseTransparent(v);
+    }
+}

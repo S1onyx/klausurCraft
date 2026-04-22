@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="de"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HomeSearchService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">demo</a> &gt; <a href="index.source.html" class="el_package">simon.klausurcraft.ui.home</a> &gt; <span class="el_source">HomeSearchService.java</span></div><h1>HomeSearchService.java</h1><pre class="source lang-java linenums">package simon.klausurcraft.ui.home;
+
+import simon.klausurcraft.task.Subtask;
+import simon.klausurcraft.task.Task;
+
+/**
+ * Search/filter helper for task/subtask matching in the center view.
+ */
+final class HomeSearchService {
+
+    private HomeSearchService() {}
+
+    /**
+     * Checks whether a query matches the task header fields.
+     *
+     * @param task task candidate
+     * @param query user query string
+     * @return {@code true} if id or title matches
+     */
+    static boolean matchesTaskHeader(Task task, String query) {
+<span class="fc" id="L21">        String normalizedQuery = normalizeQuery(query);</span>
+<span class="fc bfc" id="L22" title="All 2 branches covered.">        if (normalizedQuery.isEmpty()) {</span>
+<span class="fc" id="L23">            return true;</span>
+        }
+<span class="fc bfc" id="L25" title="All 2 branches covered.">        if (task.getId().toLowerCase().contains(normalizedQuery)) {</span>
+<span class="fc" id="L26">            return true;</span>
+        }
+<span class="fc" id="L28">        return task.getTitle().toLowerCase().contains(normalizedQuery);</span>
+    }
+
+    /**
+     * Checks whether a query matches a subtask row.
+     *
+     * @param subtask subtask candidate
+     * @param subtaskGroup human-readable subtask group
+     * @param query user query string
+     * @return {@code true} if id, variant text, solution or group matches
+     */
+    static boolean matchesSubtask(Subtask subtask, String subtaskGroup, String query) {
+<span class="fc" id="L40">        String normalizedQuery = normalizeQuery(query);</span>
+<span class="fc bfc" id="L41" title="All 2 branches covered.">        if (normalizedQuery.isEmpty()) {</span>
+<span class="fc" id="L42">            return true;</span>
+        }
+<span class="pc bpc" id="L44" title="1 of 2 branches missed.">        if (subtask.getId().toLowerCase().contains(normalizedQuery)) {</span>
+<span class="nc" id="L45">            return true;</span>
+        }
+
+<span class="pc bpc" id="L48" title="1 of 2 branches missed.">        String group = subtaskGroup == null ? &quot;&quot; : subtaskGroup.toLowerCase();</span>
+<span class="fc" id="L49">        return subtask.getVariants().stream().anyMatch(variant -&gt;</span>
+<span class="pc bpc" id="L50" title="1 of 4 branches missed.">            (variant.getText() != null &amp;&amp; variant.getText().toLowerCase().contains(normalizedQuery))</span>
+<span class="pc bpc" id="L51" title="1 of 4 branches missed.">            || (variant.getSolution() != null &amp;&amp; variant.getSolution().toLowerCase().contains(normalizedQuery))</span>
+<span class="fc bfc" id="L52" title="All 2 branches covered.">            || group.contains(normalizedQuery)</span>
+        );
+    }
+
+    /**
+     * Formats one task title in the sidebar/tree style.
+     *
+     * @param task task to format
+     * @return task label ({@code ID — title})
+     */
+    static String formatTaskTitle(Task task) {
+<span class="fc" id="L63">        return String.format(&quot;%s \u2014 %s&quot;, task.getId(), task.getTitle());</span>
+    }
+
+    private static String normalizeQuery(String query) {
+<span class="pc bpc" id="L67" title="1 of 2 branches missed.">        return query == null ? &quot;&quot; : query.trim().toLowerCase();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

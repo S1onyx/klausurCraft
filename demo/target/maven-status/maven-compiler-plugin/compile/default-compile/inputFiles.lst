@@ -1,5 +1,9 @@
+/Users/simonriedinger/dev/klausurCraft/demo/src/main/java/simon/klausurcraft/ui/home/HomeStatusService.java
+/Users/simonriedinger/dev/klausurCraft/demo/src/main/java/simon/klausurcraft/task/export/PdfExportRules.java
 /Users/simonriedinger/dev/klausurCraft/demo/src/main/java/simon/klausurcraft/task/Variant.java
+/Users/simonriedinger/dev/klausurCraft/demo/src/main/java/simon/klausurcraft/ui/home/HomeGeneratePlanner.java
 /Users/simonriedinger/dev/klausurCraft/demo/src/main/java/simon/klausurcraft/task/export/PdfExportService.java
+/Users/simonriedinger/dev/klausurCraft/demo/src/main/java/simon/klausurcraft/shipping/Parcel.java
 /Users/simonriedinger/dev/klausurCraft/demo/src/main/java/simon/klausurcraft/ui/UiStyles.java
 /Users/simonriedinger/dev/klausurCraft/demo/src/main/java/simon/klausurcraft/task/Eligibility.java
 /Users/simonriedinger/dev/klausurCraft/demo/src/main/java/simon/klausurcraft/task/Points.java
@@ -11,9 +15,12 @@
 /Users/simonriedinger/dev/klausurCraft/demo/src/main/java/simon/klausurcraft/ui/home/HomeSubtaskSheet.java
 /Users/simonriedinger/dev/klausurCraft/demo/src/main/java/simon/klausurcraft/task/Task.java
 /Users/simonriedinger/dev/klausurCraft/demo/src/main/java/simon/klausurcraft/ui/home/HomeSidebarController.java
+/Users/simonriedinger/dev/klausurCraft/demo/src/main/java/simon/klausurcraft/shipping/ShippingZone.java
 /Users/simonriedinger/dev/klausurCraft/demo/src/main/java/simon/klausurcraft/app/KlausurCraftApp.java
 /Users/simonriedinger/dev/klausurCraft/demo/src/main/java/simon/klausurcraft/ui/home/TaskSelectionCell.java
 /Users/simonriedinger/dev/klausurCraft/demo/src/main/java/simon/klausurcraft/ui/home/SelectedTaskCell.java
+/Users/simonriedinger/dev/klausurCraft/demo/src/main/java/simon/klausurcraft/shipping/PostageCalculator.java
+/Users/simonriedinger/dev/klausurCraft/demo/src/main/java/simon/klausurcraft/ui/home/HomeSearchService.java
 /Users/simonriedinger/dev/klausurCraft/demo/src/main/java/simon/klausurcraft/task/Difficulty.java
 /Users/simonriedinger/dev/klausurCraft/demo/src/main/java/simon/klausurcraft/ui/home/HomeFileController.java
 /Users/simonriedinger/dev/klausurCraft/demo/src/main/java/simon/klausurcraft/ui/home/PoolTaskCell.java

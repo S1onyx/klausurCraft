@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="de"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Subtask.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">demo</a> &gt; <a href="index.source.html" class="el_package">simon.klausurcraft.task</a> &gt; <span class="el_source">Subtask.java</span></div><h1>Subtask.java</h1><pre class="source lang-java linenums">package simon.klausurcraft.task;
+
+import org.w3c.dom.Element;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Subtask within a task. Holds DOM element for autosave-on-change.
+ */
+public class Subtask {
+    private final Element dom; // &lt;subtask&gt;
+    private final Task parent;
+
+    private final String id;
+    private BigDecimal points;
+    private Difficulty difficulty;
+    private Eligibility eligibility;
+
+<span class="fc" id="L21">    private final List&lt;Variant&gt; variants = new ArrayList&lt;&gt;();</span>
+
+    public Subtask(Element dom, Task parent, String id, BigDecimal points,
+<span class="fc" id="L24">                   Difficulty difficulty, Eligibility eligibility) {</span>
+<span class="fc" id="L25">        this.dom = dom;</span>
+<span class="fc" id="L26">        this.parent = parent;</span>
+<span class="fc" id="L27">        this.id = id;</span>
+<span class="fc" id="L28">        this.points = points;</span>
+<span class="fc" id="L29">        this.difficulty = difficulty;</span>
+<span class="fc" id="L30">        this.eligibility = eligibility;</span>
+<span class="fc" id="L31">    }</span>
+
+<span class="fc" id="L33">    public Element getDom() { return dom; }</span>
+<span class="fc" id="L34">    public Task getParent() { return parent; }</span>
+
+<span class="fc" id="L36">    public String getId() { return id; }</span>
+<span class="fc" id="L37">    public BigDecimal getPoints() { return points; }</span>
+<span class="fc" id="L38">    public Difficulty getDifficulty() { return difficulty; }</span>
+<span class="fc" id="L39">    public Eligibility getEligibility() { return eligibility; }</span>
+
+<span class="fc" id="L41">    public void setPoints(BigDecimal points) { this.points = points; }</span>
+<span class="fc" id="L42">    public void setDifficulty(Difficulty d) { this.difficulty = d; }</span>
+<span class="fc" id="L43">    public void setEligibility(Eligibility e) { this.eligibility = e; }</span>
+
+<span class="fc" id="L45">    public List&lt;Variant&gt; getVariants() { return variants; }</span>
+
+    public boolean isEligibleFor(GenerateScope scope) {
+<span class="fc bfc" id="L48" title="All 4 branches covered.">        if (scope == null || eligibility == null) return false;</span>
+<span class="fc bfc" id="L49" title="All 2 branches covered.">        if (scope == GenerateScope.BOTH) return true;</span>
+<span class="fc bfc" id="L50" title="All 2 branches covered.">        if (scope == GenerateScope.EXAM) {</span>
+<span class="fc bfc" id="L51" title="All 4 branches covered.">            return eligibility == Eligibility.EXAM || eligibility == Eligibility.BOTH;</span>
+        }
+<span class="pc bpc" id="L53" title="1 of 2 branches missed.">        if (scope == GenerateScope.PRACTICE) {</span>
+<span class="fc bfc" id="L54" title="All 4 branches covered.">            return eligibility == Eligibility.PRACTICE || eligibility == Eligibility.BOTH;</span>
+        }
+<span class="nc" id="L56">        return false;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

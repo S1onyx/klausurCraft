@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="de"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PointDistributionPlanner.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">demo</a> &gt; <a href="index.source.html" class="el_package">simon.klausurcraft.task.planning</a> &gt; <span class="el_source">PointDistributionPlanner.java</span></div><h1>PointDistributionPlanner.java</h1><pre class="source lang-java linenums">package simon.klausurcraft.task.planning;
+
+import simon.klausurcraft.task.Difficulty;
+import simon.klausurcraft.task.Points;
+import simon.klausurcraft.task.Subtask;
+import simon.klausurcraft.task.Task;
+import simon.klausurcraft.task.GenerateScope;
+
+import java.math.BigDecimal;
+import java.util.*;
+import java.util.stream.Collectors;
+
+/**
+ * Computes achievable point sums under eligibility and selects combinations
+ * that (approximately) respect the 1/3 difficulty distribution rule.
+ *
+ * Rule:
+ *  - Use points in half-step units (0.5).
+ *  - Distribution target per category = round(N/3), tolerance ±1 per category.
+ */
+public final class PointDistributionPlanner {
+
+    private PointDistributionPlanner() {}
+
+    /** Return all achievable sums for a task respecting eligibility and distribution (non-empty). */
+    public static List&lt;BigDecimal&gt; achievablePointSums(Task task, GenerateScope scope) {
+<span class="fc" id="L27">        List&lt;Subtask&gt; eligible = task.getSubtasks().stream()</span>
+<span class="fc" id="L28">            .filter(st -&gt; st.isEligibleFor(scope))</span>
+<span class="fc" id="L29">            .collect(Collectors.toList());</span>
+
+<span class="fc bfc" id="L31" title="All 2 branches covered.">        if (eligible.isEmpty()) return List.of();</span>
+
+<span class="fc" id="L33">        Set&lt;Integer&gt; sums = new TreeSet&lt;&gt;();</span>
+
+<span class="fc" id="L35">        Map&lt;Integer, FeasibleDist&gt; dp = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L36">        dp.put(0, new FeasibleDist(0,0,0,0));</span>
+
+<span class="fc bfc" id="L38" title="All 2 branches covered.">        for (Subtask st : eligible) {</span>
+<span class="fc" id="L39">            int pts = Points.toHalfSteps(st.getPoints());</span>
+<span class="fc" id="L40">            Difficulty d = st.getDifficulty();</span>
+<span class="fc" id="L41">            Map&lt;Integer, FeasibleDist&gt; next = new HashMap&lt;&gt;(dp);</span>
+<span class="fc bfc" id="L42" title="All 2 branches covered.">            for (Map.Entry&lt;Integer, FeasibleDist&gt; e : dp.entrySet()) {</span>
+<span class="fc" id="L43">                int ns = e.getKey() + pts;</span>
+<span class="fc" id="L44">                FeasibleDist fd = e.getValue().add(d);</span>
+<span class="fc" id="L45">                FeasibleDist prev = next.get(ns);</span>
+<span class="pc bpc" id="L46" title="1 of 4 branches missed.">                if (prev == null || fd.count &gt; prev.count) {</span>
+<span class="fc" id="L47">                    next.put(ns, fd);</span>
+                }
+<span class="fc" id="L49">            }</span>
+<span class="fc" id="L50">            dp = next;</span>
+<span class="fc" id="L51">        }</span>
+
+<span class="fc bfc" id="L53" title="All 2 branches covered.">        for (Map.Entry&lt;Integer, FeasibleDist&gt; e : dp.entrySet()) {</span>
+<span class="fc bfc" id="L54" title="All 2 branches covered.">            if (e.getKey() == 0) continue;</span>
+<span class="fc bfc" id="L55" title="All 2 branches covered.">            if (e.getValue().isDistributionOk()) {</span>
+<span class="fc" id="L56">                sums.add(e.getKey());</span>
+            }
+<span class="fc" id="L58">        }</span>
+
+<span class="fc" id="L60">        return sums.stream()</span>
+<span class="fc" id="L61">            .map(Points::fromHalfSteps)</span>
+<span class="fc" id="L62">            .collect(Collectors.toCollection(ArrayList::new));</span>
+    }
+
+    /** Pick an actual combination hitting the sum with near-1/3 distribution; returns null if impossible. */
+    public static List&lt;Subtask&gt; pickSubtasksWithDistribution(List&lt;Subtask&gt; eligible, BigDecimal targetSum) {
+<span class="fc" id="L67">        eligible = new ArrayList&lt;&gt;(eligible);</span>
+<span class="fc" id="L68">        eligible.sort(Comparator.comparingInt(st -&gt; -Points.toHalfSteps(st.getPoints()))); // big first to reduce branching</span>
+
+<span class="fc" id="L70">        int targetHalfSteps = Points.toHalfSteps(targetSum);</span>
+
+<span class="fc" id="L72">        List&lt;Subtask&gt; best = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L73">        backtrack(eligible, 0, targetHalfSteps, new ArrayList&lt;&gt;(), new int[3], best);</span>
+<span class="fc bfc" id="L74" title="All 2 branches covered.">        return best.isEmpty() ? null : best;</span>
+    }
+
+    private static void backtrack(List&lt;Subtask&gt; arr, int idx, int remaining,
+                                  List&lt;Subtask&gt; cur, int[] dist, List&lt;Subtask&gt; best) {
+<span class="fc bfc" id="L79" title="All 2 branches covered.">        if (remaining == 0) {</span>
+<span class="fc bfc" id="L80" title="All 2 branches covered.">            if (distributionOk(dist)) {</span>
+<span class="pc bpc" id="L81" title="1 of 2 branches missed.">                if (cur.size() &gt; best.size()) {</span>
+<span class="fc" id="L82">                    best.clear();</span>
+<span class="fc" id="L83">                    best.addAll(cur);</span>
+                }
+            }
+<span class="fc" id="L86">            return;</span>
+        }
+<span class="fc bfc" id="L88" title="All 4 branches covered.">        if (remaining &lt; 0 || idx &gt;= arr.size()) return;</span>
+
+<span class="fc" id="L90">        int maxPossible = 0;</span>
+<span class="fc bfc" id="L91" title="All 2 branches covered.">        for (int i = idx; i &lt; arr.size(); i++) maxPossible += Points.toHalfSteps(arr.get(i).getPoints());</span>
+<span class="fc bfc" id="L92" title="All 2 branches covered.">        if (maxPossible &lt; remaining) return;</span>
+
+<span class="fc" id="L94">        Subtask st = arr.get(idx);</span>
+<span class="fc bfc" id="L95" title="All 3 branches covered.">        int dIdx = switch (st.getDifficulty()) {</span>
+<span class="fc" id="L96">            case EASY -&gt; 0; case MEDIUM -&gt; 1; case HARD -&gt; 2;</span>
+        };
+<span class="fc" id="L98">        cur.add(st);</span>
+<span class="fc" id="L99">        dist[dIdx]++;</span>
+<span class="fc" id="L100">        backtrack(arr, idx + 1, remaining - Points.toHalfSteps(st.getPoints()), cur, dist, best);</span>
+<span class="fc" id="L101">        cur.remove(cur.size() - 1);</span>
+<span class="fc" id="L102">        dist[dIdx]--;</span>
+
+<span class="fc" id="L104">        backtrack(arr, idx + 1, remaining, cur, dist, best);</span>
+<span class="fc" id="L105">    }</span>
+
+    /**
+     * Suggests the best point sum for a task in the given scope.
+     * Ranking:
+     *  1) minimal distribution deviation to exact 1/3 split
+     *  2) higher total points
+     */
+    public static Optional&lt;BigDecimal&gt; suggestBestPointSum(Task task, GenerateScope scope) {
+<span class="fc" id="L114">        List&lt;Subtask&gt; eligible = task.getSubtasks().stream()</span>
+<span class="fc" id="L115">                .filter(st -&gt; st.isEligibleFor(scope))</span>
+<span class="fc" id="L116">                .collect(Collectors.toList());</span>
+<span class="fc bfc" id="L117" title="All 2 branches covered.">        if (eligible.isEmpty()) return Optional.empty();</span>
+
+<span class="fc" id="L119">        List&lt;BigDecimal&gt; sums = achievablePointSums(task, scope);</span>
+<span class="pc bpc" id="L120" title="1 of 2 branches missed.">        if (sums.isEmpty()) return Optional.empty();</span>
+
+<span class="fc" id="L122">        BigDecimal bestSum = null;</span>
+<span class="fc" id="L123">        double bestDeviation = Double.POSITIVE_INFINITY;</span>
+<span class="fc" id="L124">        int bestHalfSteps = -1;</span>
+
+<span class="fc bfc" id="L126" title="All 2 branches covered.">        for (BigDecimal sum : sums) {</span>
+<span class="fc" id="L127">            List&lt;Subtask&gt; chosen = pickSubtasksWithDistribution(eligible, sum);</span>
+<span class="pc bpc" id="L128" title="2 of 4 branches missed.">            if (chosen == null || chosen.isEmpty()) continue;</span>
+
+<span class="fc" id="L130">            double deviation = distributionDeviation(chosen);</span>
+<span class="fc" id="L131">            int halfSteps = Points.toHalfSteps(sum);</span>
+
+<span class="pc bpc" id="L133" title="1 of 6 branches missed.">            if (deviation &lt; bestDeviation || (Double.compare(deviation, bestDeviation) == 0 &amp;&amp; halfSteps &gt; bestHalfSteps)) {</span>
+<span class="fc" id="L134">                bestDeviation = deviation;</span>
+<span class="fc" id="L135">                bestHalfSteps = halfSteps;</span>
+<span class="fc" id="L136">                bestSum = sum;</span>
+            }
+<span class="fc" id="L138">        }</span>
+
+<span class="fc" id="L140">        return Optional.ofNullable(bestSum);</span>
+    }
+
+    private static boolean distributionOk(int[] dist) {
+<span class="fc" id="L144">        int n = dist[0] + dist[1] + dist[2];</span>
+<span class="fc bfc" id="L145" title="All 2 branches covered.">        if (n == 0) return false;</span>
+<span class="fc" id="L146">        int target = Math.round(n / 3f);</span>
+<span class="fc bfc" id="L147" title="All 2 branches covered.">        return Math.abs(dist[0] - target) &lt;= 1 &amp;&amp;</span>
+<span class="pc bpc" id="L148" title="1 of 2 branches missed.">               Math.abs(dist[1] - target) &lt;= 1 &amp;&amp;</span>
+<span class="pc bpc" id="L149" title="1 of 2 branches missed.">               Math.abs(dist[2] - target) &lt;= 1;</span>
+    }
+
+    private static double distributionDeviation(List&lt;Subtask&gt; subtasks) {
+<span class="fc" id="L153">        int easy = 0;</span>
+<span class="fc" id="L154">        int med = 0;</span>
+<span class="fc" id="L155">        int hard = 0;</span>
+<span class="fc bfc" id="L156" title="All 2 branches covered.">        for (Subtask st : subtasks) {</span>
+<span class="pc bpc" id="L157" title="3 of 4 branches missed.">            switch (st.getDifficulty()) {</span>
+<span class="fc" id="L158">                case EASY -&gt; easy++;</span>
+<span class="nc" id="L159">                case MEDIUM -&gt; med++;</span>
+<span class="nc" id="L160">                case HARD -&gt; hard++;</span>
+            }
+<span class="fc" id="L162">        }</span>
+
+<span class="fc" id="L164">        int n = easy + med + hard;</span>
+<span class="pc bpc" id="L165" title="1 of 2 branches missed.">        if (n == 0) return Double.POSITIVE_INFINITY;</span>
+
+<span class="fc" id="L167">        double target = n / 3.0;</span>
+<span class="fc" id="L168">        return Math.abs(easy - target) + Math.abs(med - target) + Math.abs(hard - target);</span>
+    }
+
+<span class="fc" id="L171">    private record FeasibleDist(int easy, int med, int hard, int count) {</span>
+        FeasibleDist add(Difficulty d) {
+<span class="fc bfc" id="L173" title="All 3 branches covered.">            return switch (d) {</span>
+<span class="fc" id="L174">                case EASY -&gt; new FeasibleDist(easy + 1, med, hard, count + 1);</span>
+<span class="fc" id="L175">                case MEDIUM -&gt; new FeasibleDist(easy, med + 1, hard, count + 1);</span>
+<span class="fc" id="L176">                case HARD -&gt; new FeasibleDist(easy, med, hard + 1, count + 1);</span>
+            };
+        }
+        boolean isDistributionOk() {
+<span class="fc" id="L180">            return distributionOk(new int[]{easy, med, hard});</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

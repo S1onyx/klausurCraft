@@ -1,0 +1,337 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="de"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HomeController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">demo</a> &gt; <a href="index.source.html" class="el_package">simon.klausurcraft.ui.home</a> &gt; <span class="el_source">HomeController.java</span></div><h1>HomeController.java</h1><pre class="source lang-java linenums">package simon.klausurcraft.ui.home;
+
+import javafx.animation.ScaleTransition;
+import javafx.application.Platform;
+import javafx.beans.property.*;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.fxml.FXML;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
+import javafx.stage.Window;
+import javafx.util.Duration;
+import simon.klausurcraft.app.KlausurCraftApp;
+import simon.klausurcraft.ui.components.SlideOverPane;
+import simon.klausurcraft.task.Difficulty;
+import simon.klausurcraft.task.GenerateScope;
+import simon.klausurcraft.task.Task;
+import simon.klausurcraft.task.io.TaskXmlStore;
+import simon.klausurcraft.ui.ThemeService;
+import simon.klausurcraft.ui.UiStyles;
+
+import java.io.InputStream;
+import java.time.LocalDate;
+import java.util.EnumSet;
+import java.util.Properties;
+import java.util.Set;
+
+<span class="nc" id="L42">public class HomeController {</span>
+
+    // Injected child controllers via fx:include
+    @FXML private HomeTopbarController topbarController;
+    @FXML private HomeSidebarController sidebarController;
+    @FXML HomeCenterController centerController; // package-private: internal use
+
+    // Status bar
+    @FXML private Button themeToggle;      // icon-only theme toggle (changed from ToggleButton)
+    @FXML private Button btnInfo;
+    @FXML private Label fileLabel;
+    @FXML private Label countsLabel;
+    @FXML private Button btnGenerateBottom; // generate button in status bar
+    @FXML private Button btnAddTask;        // + Task button in status bar
+    @FXML private VBox notificationHost;
+
+    // Overlay for sheets
+    @FXML StackPane rootStack;
+    private SlideOverPane slideOver;
+
+    // Models / Services
+<span class="nc" id="L63">    private final TaskXmlStore taskRepository = new TaskXmlStore();</span>
+<span class="nc" id="L64">    private final ObservableList&lt;Task&gt; tasks = FXCollections.observableArrayList();</span>
+
+    // State / binding
+<span class="nc" id="L67">    private final StringProperty loadedFileName = new SimpleStringProperty(&quot;No file loaded&quot;);</span>
+<span class="nc" id="L68">    private final IntegerProperty taskCount = new SimpleIntegerProperty(0);</span>
+<span class="nc" id="L69">    private final IntegerProperty subtaskCount = new SimpleIntegerProperty(0);</span>
+<span class="nc" id="L70">    private final Tooltip countsTooltip = new Tooltip();</span>
+
+    // Generate flow state (shared)
+<span class="nc" id="L73">    final ObjectProperty&lt;GenerateScope&gt; scope = new SimpleObjectProperty&lt;&gt;(GenerateScope.EXAM);</span>
+<span class="nc" id="L74">    final StringProperty examTitle = new SimpleStringProperty(&quot;Exam&quot;);</span>
+<span class="nc" id="L75">    final ObjectProperty&lt;LocalDate&gt; examDate = new SimpleObjectProperty&lt;&gt;(LocalDate.now());</span>
+<span class="nc" id="L76">    final IntegerProperty examDurationMinutes = new SimpleIntegerProperty(90);</span>
+<span class="nc" id="L77">    final BooleanProperty withSampleSolution = new SimpleBooleanProperty(true);</span>
+
+<span class="nc" id="L79">    public TaskXmlStore getTaskRepository() { return taskRepository; }</span>
+<span class="nc" id="L80">    public ObservableList&lt;Task&gt; getTasks() { return tasks; }</span>
+<span class="nc" id="L81">    public SlideOverPane getSlideOver() { return slideOver; }</span>
+<span class="nc" id="L82">    public Window getWindow() { return KlausurCraftApp.getScene().getWindow(); }</span>
+
+    @FXML
+    public void initialize() {
+        // Overlay
+<span class="nc" id="L87">        slideOver = new SlideOverPane();</span>
+<span class="nc" id="L88">        rootStack.getChildren().add(slideOver.getContainer());</span>
+<span class="nc" id="L89">        rootStack.setMouseTransparent(true);</span>
+<span class="nc" id="L90">        slideOver.hideInstant();</span>
+<span class="nc" id="L91">        HomeNotifications.attachHost(notificationHost);</span>
+
+        // Bind status bar
+<span class="nc" id="L94">        fileLabel.textProperty().bind(loadedFileName);</span>
+<span class="nc" id="L95">        countsLabel.textProperty().bind(taskCount.asString().concat(&quot; / &quot;).concat(subtaskCount.asString()));</span>
+<span class="nc" id="L96">        countsTooltip.setWrapText(true);</span>
+<span class="nc" id="L97">        countsTooltip.setMaxWidth(360);</span>
+<span class="nc" id="L98">        countsLabel.setTooltip(countsTooltip);</span>
+<span class="nc" id="L99">        countsLabel.setAccessibleText(&quot;Hover for detailed statistics&quot;);</span>
+<span class="nc" id="L100">        countsLabel.setOnMouseEntered(e -&gt; updateCounts());</span>
+<span class="nc" id="L101">        updateCounts();</span>
+
+        // Icon-only theme toggle -&gt; ThemeService.toggle
+<span class="nc bnc" id="L104" title="All 2 branches missed.">        if (themeToggle != null) {</span>
+<span class="nc" id="L105">            themeToggle.setOnAction(e -&gt; ThemeService.toggle(KlausurCraftApp.getScene()));</span>
+            // also keep keyboard accelerator (Ctrl+D) set in KlausurCraftApp
+        }
+<span class="nc bnc" id="L108" title="All 2 branches missed.">        if (btnInfo != null) {</span>
+<span class="nc" id="L109">            btnInfo.setOnAction(e -&gt; openInfoDialog());</span>
+        }
+
+        // Wire sub-controllers
+<span class="nc" id="L113">        topbarController.init(this);</span>
+<span class="nc" id="L114">        sidebarController.init(this);</span>
+<span class="nc" id="L115">        centerController.init(this);</span>
+
+        // Generate
+<span class="nc bnc" id="L118" title="All 2 branches missed.">        if (btnGenerateBottom != null) {</span>
+<span class="nc" id="L119">            btnGenerateBottom.setTooltip(new Tooltip(&quot;Open exam generation wizard.&quot;));</span>
+<span class="nc" id="L120">            btnGenerateBottom.setOnAction(e -&gt; HomeGenerateFlow.openStep1(this));</span>
+        }
+
+        // + Task button -&gt; prompt &amp; create + open edit
+<span class="nc bnc" id="L124" title="All 2 branches missed.">        if (btnAddTask != null) {</span>
+<span class="nc" id="L125">            btnAddTask.setTooltip(new Tooltip(&quot;Create a new task and open its editor.&quot;));</span>
+<span class="nc" id="L126">            btnAddTask.setOnAction(e -&gt; HomeTaskSheet.promptNewTask(this).ifPresent(newTask -&gt; {</span>
+<span class="nc" id="L127">                tasks.add(newTask);</span>
+                // open slide-over to edit right away
+<span class="nc" id="L129">                HomeTaskSheet.openEdit(this, newTask);</span>
+<span class="nc" id="L130">            }));</span>
+        }
+
+        // ESC closes sheet
+<span class="nc" id="L134">        rootStack.sceneProperty().addListener((obs, oldScene, newScene) -&gt; {</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">            if (newScene != null) {</span>
+<span class="nc" id="L136">                installGlobalKeybindings(newScene);</span>
+<span class="nc" id="L137">                Platform.runLater(() -&gt; {</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">                    if (btnAddTask != null) {</span>
+<span class="nc" id="L139">                        btnAddTask.requestFocus();</span>
+                    } else {
+<span class="nc" id="L141">                        rootStack.requestFocus();</span>
+                    }
+<span class="nc" id="L143">                });</span>
+<span class="nc" id="L144">                newScene.addEventFilter(KeyEvent.KEY_PRESSED, ev -&gt; {</span>
+<span class="nc bnc" id="L145" title="All 4 branches missed.">                    if (ev.getCode() == KeyCode.ESCAPE &amp;&amp; slideOver.isShown()) {</span>
+<span class="nc" id="L146">                        slideOver.hide();</span>
+<span class="nc" id="L147">                        rootStack.setMouseTransparent(true);</span>
+<span class="nc" id="L148">                        ev.consume();</span>
+                    }
+<span class="nc" id="L150">                });</span>
+
+                // Close open slide-over when clicking anywhere outside the sheet.
+<span class="nc" id="L153">                newScene.addEventFilter(MouseEvent.MOUSE_PRESSED, ev -&gt; {</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">                    if (!slideOver.isShown()) return;</span>
+<span class="nc bnc" id="L155" title="All 4 branches missed.">                    if (ev.getTarget() instanceof javafx.scene.Node n &amp;&amp; !slideOver.isInSheet(n)) {</span>
+<span class="nc" id="L156">                        slideOver.hide();</span>
+<span class="nc" id="L157">                        rootStack.setMouseTransparent(true);</span>
+                    }
+<span class="nc" id="L159">                });</span>
+            }
+<span class="nc" id="L161">        });</span>
+
+        // React to task list changes
+<span class="nc" id="L164">        tasks.addListener((javafx.collections.ListChangeListener&lt;? super Task&gt;) c -&gt; {</span>
+<span class="nc" id="L165">            updateCounts();</span>
+<span class="nc" id="L166">            rebuildToc();</span>
+<span class="nc" id="L167">            centerController.render(tasks, currentQuery(), allowedDifficulties());</span>
+<span class="nc" id="L168">        });</span>
+
+        // Initial auto-load
+<span class="nc" id="L171">        Platform.runLater(() -&gt; HomeFileController.autoLoadLastFile(this));</span>
+<span class="nc" id="L172">    }</span>
+
+    void updateCounts() {
+<span class="nc" id="L175">        HomeStatusService.StatusStats stats = HomeStatusService.computeStatusStats(tasks);</span>
+<span class="nc bnc" id="L176" title="All 4 branches missed.">        boolean changed = stats.tasks != taskCount.get() || stats.subtasks != subtaskCount.get();</span>
+<span class="nc" id="L177">        taskCount.set(stats.tasks);</span>
+<span class="nc" id="L178">        subtaskCount.set(stats.subtasks);</span>
+<span class="nc" id="L179">        countsTooltip.setText(HomeStatusService.buildStatusTooltip(stats));</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">        if (changed) {</span>
+<span class="nc" id="L181">            playCountsFeedback();</span>
+        }
+<span class="nc" id="L183">    }</span>
+
+    // Exposed for sub-controllers
+<span class="nc" id="L186">    public StringProperty loadedFileNameProperty() { return loadedFileName; }</span>
+<span class="nc" id="L187">    public IntegerProperty taskCountProperty() { return taskCount; }</span>
+<span class="nc" id="L188">    public IntegerProperty subtaskCountProperty() { return subtaskCount; }</span>
+
+    @FXML
+    private void onSwitchFile() {
+<span class="nc" id="L192">        HomeFileController.chooseAndLoadXml(this);</span>
+<span class="nc" id="L193">    }</span>
+
+    public String currentQuery() {
+<span class="nc bnc" id="L196" title="All 2 branches missed.">        return (topbarController != null) ? topbarController.currentQuery() : &quot;&quot;;</span>
+    }
+
+    public Set&lt;Difficulty&gt; allowedDifficulties() {
+<span class="nc bnc" id="L200" title="All 2 branches missed.">        return (topbarController != null) ? topbarController.allowedDifficulties() : EnumSet.allOf(Difficulty.class);</span>
+    }
+
+    /** Public helper so other controllers don't need access to sidebarController directly. */
+    public void rebuildToc() {
+<span class="nc" id="L205">        sidebarController.rebuildToc(tasks);</span>
+<span class="nc" id="L206">    }</span>
+
+    private void playCountsFeedback() {
+<span class="nc bnc" id="L209" title="All 2 branches missed.">        if (countsLabel == null) return;</span>
+<span class="nc" id="L210">        ScaleTransition pulse = new ScaleTransition(Duration.millis(150), countsLabel);</span>
+<span class="nc" id="L211">        pulse.setFromX(1.0);</span>
+<span class="nc" id="L212">        pulse.setFromY(1.0);</span>
+<span class="nc" id="L213">        pulse.setToX(1.06);</span>
+<span class="nc" id="L214">        pulse.setToY(1.06);</span>
+<span class="nc" id="L215">        pulse.setAutoReverse(true);</span>
+<span class="nc" id="L216">        pulse.setCycleCount(2);</span>
+<span class="nc" id="L217">        pulse.play();</span>
+<span class="nc" id="L218">    }</span>
+
+    private void installGlobalKeybindings(Scene scene) {
+<span class="nc" id="L221">        scene.getAccelerators().put(</span>
+                new KeyCodeCombination(KeyCode.N, KeyCombination.SHORTCUT_DOWN),
+<span class="nc" id="L223">                () -&gt; HomeFileController.createNewXml(this)</span>
+        );
+<span class="nc" id="L225">        scene.getAccelerators().put(</span>
+                new KeyCodeCombination(KeyCode.O, KeyCombination.SHORTCUT_DOWN),
+<span class="nc" id="L227">                () -&gt; HomeFileController.chooseAndLoadXml(this)</span>
+        );
+<span class="nc" id="L229">        scene.getAccelerators().put(</span>
+                new KeyCodeCombination(KeyCode.F, KeyCombination.SHORTCUT_DOWN),
+                () -&gt; {
+<span class="nc bnc" id="L232" title="All 2 branches missed.">                    if (topbarController != null) {</span>
+<span class="nc" id="L233">                        topbarController.focusSearch();</span>
+                    }
+<span class="nc" id="L235">                }</span>
+        );
+<span class="nc" id="L237">        scene.getAccelerators().put(</span>
+                new KeyCodeCombination(KeyCode.G, KeyCombination.SHORTCUT_DOWN),
+<span class="nc" id="L239">                () -&gt; HomeGenerateFlow.openStep1(this)</span>
+        );
+<span class="nc" id="L241">        scene.getAccelerators().put(</span>
+                new KeyCodeCombination(KeyCode.I, KeyCombination.SHORTCUT_DOWN),
+                this::openInfoDialog
+        );
+<span class="nc" id="L245">        scene.getAccelerators().put(</span>
+                new KeyCodeCombination(KeyCode.F1),
+                this::openInfoDialog
+        );
+<span class="nc" id="L249">    }</span>
+
+    private void openInfoDialog() {
+<span class="nc" id="L252">        Alert info = new Alert(Alert.AlertType.INFORMATION);</span>
+<span class="nc" id="L253">        info.setTitle(&quot;About klausurCraft&quot;);</span>
+<span class="nc" id="L254">        info.setHeaderText(null);</span>
+<span class="nc" id="L255">        info.setGraphic(null);</span>
+
+<span class="nc" id="L257">        VBox root = new VBox(12);</span>
+<span class="nc" id="L258">        root.getStyleClass().add(&quot;info-dialog-root&quot;);</span>
+
+<span class="nc" id="L260">        HBox head = new HBox(10);</span>
+<span class="nc" id="L261">        Label title = new Label(&quot;klausurCraft&quot;);</span>
+<span class="nc" id="L262">        title.getStyleClass().add(&quot;info-dialog-title&quot;);</span>
+<span class="nc" id="L263">        Label versionChip = new Label(&quot;v&quot; + resolveAppVersion());</span>
+<span class="nc" id="L264">        versionChip.getStyleClass().addAll(&quot;badge&quot;, &quot;kbd-chip&quot;);</span>
+<span class="nc" id="L265">        Region headSpacer = new Region();</span>
+<span class="nc" id="L266">        HBox.setHgrow(headSpacer, Priority.ALWAYS);</span>
+<span class="nc" id="L267">        head.getChildren().addAll(title, headSpacer, versionChip);</span>
+
+<span class="nc" id="L269">        GridPane meta = new GridPane();</span>
+<span class="nc" id="L270">        meta.getStyleClass().add(&quot;info-dialog-meta&quot;);</span>
+<span class="nc" id="L271">        meta.setHgap(10);</span>
+<span class="nc" id="L272">        meta.setVgap(6);</span>
+<span class="nc" id="L273">        addInfoMetaRow(meta, 0, &quot;Developer&quot;, &quot;Simon Riedinger&quot;);</span>
+<span class="nc" id="L274">        addInfoMetaRow(meta, 1, &quot;Stack&quot;, &quot;Java 25, JavaFX, OpenPDF&quot;);</span>
+
+<span class="nc" id="L276">        Label shortcutsTitle = new Label(&quot;Keybindings&quot;);</span>
+<span class="nc" id="L277">        shortcutsTitle.getStyleClass().add(&quot;info-dialog-section-title&quot;);</span>
+
+<span class="nc" id="L279">        GridPane shortcuts = new GridPane();</span>
+<span class="nc" id="L280">        shortcuts.getStyleClass().add(&quot;info-dialog-shortcuts&quot;);</span>
+<span class="nc" id="L281">        shortcuts.setHgap(10);</span>
+<span class="nc" id="L282">        shortcuts.setVgap(8);</span>
+<span class="nc" id="L283">        addShortcutRow(shortcuts, 0, &quot;Cmd/Ctrl+N&quot;, &quot;New XML&quot;);</span>
+<span class="nc" id="L284">        addShortcutRow(shortcuts, 1, &quot;Cmd/Ctrl+O&quot;, &quot;Load XML&quot;);</span>
+<span class="nc" id="L285">        addShortcutRow(shortcuts, 2, &quot;Cmd/Ctrl+F&quot;, &quot;Focus search&quot;);</span>
+<span class="nc" id="L286">        addShortcutRow(shortcuts, 3, &quot;Cmd/Ctrl+G&quot;, &quot;Generate exam&quot;);</span>
+<span class="nc" id="L287">        addShortcutRow(shortcuts, 4, &quot;Cmd/Ctrl+D&quot;, &quot;Toggle theme&quot;);</span>
+<span class="nc" id="L288">        addShortcutRow(shortcuts, 5, &quot;Cmd/Ctrl+I&quot;, &quot;Open info&quot;);</span>
+<span class="nc" id="L289">        addShortcutRow(shortcuts, 6, &quot;F1&quot;, &quot;Open info&quot;);</span>
+<span class="nc" id="L290">        addShortcutRow(shortcuts, 7, &quot;Delete&quot;, &quot;Delete selected item in left tree&quot;);</span>
+<span class="nc" id="L291">        addShortcutRow(shortcuts, 8, &quot;Esc&quot;, &quot;Close open side sheet&quot;);</span>
+<span class="nc" id="L292">        addShortcutRow(shortcuts, 9, &quot;Space&quot;, &quot;In Generate dialog: move selected task between lists&quot;);</span>
+
+<span class="nc" id="L294">        root.getChildren().addAll(head, meta, shortcutsTitle, shortcuts);</span>
+<span class="nc" id="L295">        info.getDialogPane().setContent(root);</span>
+<span class="nc" id="L296">        info.getDialogPane().setPrefWidth(560);</span>
+<span class="nc" id="L297">        info.initOwner(getWindow());</span>
+<span class="nc" id="L298">        UiStyles.applyCurrentStyles(info);</span>
+<span class="nc" id="L299">        info.showAndWait();</span>
+<span class="nc" id="L300">    }</span>
+
+    private void addInfoMetaRow(GridPane grid, int row, String key, String value) {
+<span class="nc" id="L303">        Label k = new Label(key + &quot;:&quot;);</span>
+<span class="nc" id="L304">        k.getStyleClass().add(&quot;muted&quot;);</span>
+<span class="nc" id="L305">        Label v = new Label(value);</span>
+<span class="nc" id="L306">        v.getStyleClass().add(&quot;info-dialog-value&quot;);</span>
+<span class="nc" id="L307">        grid.add(k, 0, row);</span>
+<span class="nc" id="L308">        grid.add(v, 1, row);</span>
+<span class="nc" id="L309">    }</span>
+
+    private void addShortcutRow(GridPane grid, int row, String key, String action) {
+<span class="nc" id="L312">        Label keyLabel = new Label(key);</span>
+<span class="nc" id="L313">        keyLabel.getStyleClass().addAll(&quot;badge&quot;, &quot;kbd-chip&quot;);</span>
+<span class="nc" id="L314">        Label actionLabel = new Label(action);</span>
+<span class="nc" id="L315">        actionLabel.getStyleClass().add(&quot;info-dialog-value&quot;);</span>
+<span class="nc" id="L316">        grid.add(keyLabel, 0, row);</span>
+<span class="nc" id="L317">        grid.add(actionLabel, 1, row);</span>
+<span class="nc" id="L318">    }</span>
+
+    private static String resolveAppVersion() {
+<span class="nc" id="L321">        String v = HomeController.class.getPackage().getImplementationVersion();</span>
+<span class="nc bnc" id="L322" title="All 4 branches missed.">        if (v != null &amp;&amp; !v.isBlank()) return v;</span>
+
+<span class="nc" id="L324">        try (InputStream in = HomeController.class.getResourceAsStream(&quot;/META-INF/maven/simon.klausurcraft/demo/pom.properties&quot;)) {</span>
+<span class="nc bnc" id="L325" title="All 2 branches missed.">            if (in != null) {</span>
+<span class="nc" id="L326">                Properties p = new Properties();</span>
+<span class="nc" id="L327">                p.load(in);</span>
+<span class="nc" id="L328">                String fromPom = p.getProperty(&quot;version&quot;);</span>
+<span class="nc bnc" id="L329" title="All 4 branches missed.">                if (fromPom != null &amp;&amp; !fromPom.isBlank()) return fromPom.trim();</span>
+            }
+<span class="nc bnc" id="L331" title="All 2 branches missed.">        } catch (Exception ignored) {</span>
+            // fallback below
+<span class="nc" id="L333">        }</span>
+<span class="nc" id="L334">        return &quot;dev&quot;;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

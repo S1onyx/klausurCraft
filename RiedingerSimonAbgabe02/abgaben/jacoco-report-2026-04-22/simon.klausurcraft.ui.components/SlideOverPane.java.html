@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="de"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SlideOverPane.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">demo</a> &gt; <a href="index.source.html" class="el_package">simon.klausurcraft.ui.components</a> &gt; <span class="el_source">SlideOverPane.java</span></div><h1>SlideOverPane.java</h1><pre class="source lang-java linenums">package simon.klausurcraft.ui.components;
+
+import javafx.animation.TranslateTransition;
+import javafx.geometry.Insets;
+import javafx.scene.Node;
+import javafx.scene.layout.*;
+import javafx.util.Duration;
+
+/**
+ * Minimal, dependency-free slide-over (&quot;sheet&quot;) from the right.
+ */
+public class SlideOverPane {
+
+<span class="nc" id="L14">    private final StackPane container = new StackPane();</span>
+<span class="nc" id="L15">    private final StackPane backdrop = new StackPane();</span>
+<span class="nc" id="L16">    private final VBox sheet = new VBox();</span>
+
+<span class="nc" id="L18">    private boolean shown = false;</span>
+
+<span class="nc" id="L20">    public SlideOverPane() {</span>
+<span class="nc" id="L21">        container.setPickOnBounds(false); // don't block clicks outside children</span>
+
+<span class="nc" id="L23">        backdrop.setStyle(&quot;-fx-background-color: rgba(0,0,0,0.35);&quot;);</span>
+<span class="nc" id="L24">        backdrop.setVisible(false);</span>
+<span class="nc" id="L25">        backdrop.setManaged(false);</span>
+
+<span class="nc" id="L27">        sheet.getStyleClass().add(&quot;sheet&quot;);</span>
+<span class="nc" id="L28">        sheet.setMinWidth(420);</span>
+<span class="nc" id="L29">        sheet.setMaxWidth(520);</span>
+<span class="nc" id="L30">        sheet.setPadding(new Insets(12));</span>
+<span class="nc" id="L31">        sheet.setTranslateX(520);</span>
+
+<span class="nc" id="L33">        HBox holder = new HBox();</span>
+<span class="nc" id="L34">        Region spacer = new Region();</span>
+<span class="nc" id="L35">        HBox.setHgrow(spacer, Priority.ALWAYS);</span>
+<span class="nc" id="L36">        holder.getChildren().addAll(spacer, sheet);</span>
+
+<span class="nc" id="L38">        container.getChildren().addAll(backdrop, holder);</span>
+
+<span class="nc" id="L40">        backdrop.setOnMouseClicked(e -&gt; hide());</span>
+<span class="nc" id="L41">    }</span>
+
+<span class="nc" id="L43">    public StackPane getContainer() { return container; }</span>
+
+    /** Replace the full content of the sheet. Use a layout with bottom bar for sticky footer. */
+    public void setContent(Node content) {
+<span class="nc" id="L47">        sheet.getChildren().setAll(content);</span>
+<span class="nc" id="L48">    }</span>
+
+    public void show() {
+<span class="nc bnc" id="L51" title="All 2 branches missed.">        if (shown) return;</span>
+<span class="nc" id="L52">        shown = true;</span>
+<span class="nc" id="L53">        backdrop.setVisible(true);</span>
+<span class="nc" id="L54">        animateTo(0);</span>
+<span class="nc" id="L55">    }</span>
+
+    public void hide() {
+<span class="nc bnc" id="L58" title="All 2 branches missed.">        if (!shown) return;</span>
+<span class="nc" id="L59">        shown = false;</span>
+<span class="nc" id="L60">        animateTo(520);</span>
+<span class="nc" id="L61">        backdrop.setVisible(false);</span>
+<span class="nc" id="L62">    }</span>
+
+    public void hideInstant() {
+<span class="nc" id="L65">        shown = false;</span>
+<span class="nc" id="L66">        sheet.setTranslateX(520);</span>
+<span class="nc" id="L67">        backdrop.setVisible(false);</span>
+<span class="nc" id="L68">    }</span>
+
+<span class="nc" id="L70">    public boolean isShown() { return shown; }</span>
+
+    /** Returns whether a target node is inside the sheet content area. */
+    public boolean isInSheet(Node node) {
+<span class="nc" id="L74">        Node cur = node;</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">        while (cur != null) {</span>
+<span class="nc bnc" id="L76" title="All 2 branches missed.">            if (cur == sheet) return true;</span>
+<span class="nc" id="L77">            cur = cur.getParent();</span>
+        }
+<span class="nc" id="L79">        return false;</span>
+    }
+
+    private void animateTo(double x) {
+<span class="nc" id="L83">        TranslateTransition tt = new TranslateTransition(Duration.millis(220), sheet);</span>
+<span class="nc" id="L84">        tt.setToX(x);</span>
+<span class="nc" id="L85">        tt.play();</span>
+<span class="nc" id="L86">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

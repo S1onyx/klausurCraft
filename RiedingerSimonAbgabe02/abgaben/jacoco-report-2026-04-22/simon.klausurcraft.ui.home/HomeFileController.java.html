@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="de"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HomeFileController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">demo</a> &gt; <a href="index.source.html" class="el_package">simon.klausurcraft.ui.home</a> &gt; <span class="el_source">HomeFileController.java</span></div><h1>HomeFileController.java</h1><pre class="source lang-java linenums">package simon.klausurcraft.ui.home;
+
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
+import javafx.stage.FileChooser;
+import org.xml.sax.SAXParseException;
+import simon.klausurcraft.task.io.TaskXmlStore;
+import simon.klausurcraft.ui.UiStyles;
+
+import java.io.File;
+import java.nio.file.Path;
+import java.util.prefs.Preferences;
+
+public final class HomeFileController {
+
+    private static final String PREFS_NODE = &quot;simon.klausurcraft&quot;;
+    private static final String PREF_LAST_FILE = &quot;lastXmlFile&quot;;
+    private static final String PREF_LAST_DIR  = &quot;lastXmlDir&quot;;
+
+    private HomeFileController() {}
+
+    public static void autoLoadLastFile(HomeController root) {
+<span class="nc" id="L23">        Preferences p = Preferences.userRoot().node(PREFS_NODE);</span>
+<span class="nc" id="L24">        String last = p.get(PREF_LAST_FILE, null);</span>
+<span class="nc bnc" id="L25" title="All 2 branches missed.">        if (last != null) {</span>
+<span class="nc" id="L26">            File f = new File(last);</span>
+<span class="nc bnc" id="L27" title="All 4 branches missed.">            if (f.exists() &amp;&amp; f.isFile()) {</span>
+                try {
+<span class="nc" id="L29">                    loadXmlFile(root, f);</span>
+<span class="nc" id="L30">                } catch (Exception ex) {</span>
+<span class="nc" id="L31">                    HomeNotifications.showError(&quot;Failed to load last file. &quot; + englishXmlError(ex));</span>
+<span class="nc" id="L32">                }</span>
+            }
+        }
+<span class="nc" id="L35">    }</span>
+
+    public static void chooseAndLoadXml(HomeController root) {
+<span class="nc" id="L38">        Preferences p = Preferences.userRoot().node(PREFS_NODE);</span>
+
+<span class="nc" id="L40">        FileChooser chooser = new FileChooser();</span>
+<span class="nc" id="L41">        chooser.setTitle(&quot;Open tasks XML&quot;);</span>
+<span class="nc" id="L42">        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(&quot;XML Files&quot;, &quot;*.xml&quot;));</span>
+
+        // Remember last directory
+<span class="nc" id="L45">        String lastDir = p.get(PREF_LAST_DIR, null);</span>
+<span class="nc bnc" id="L46" title="All 2 branches missed.">        if (lastDir != null) {</span>
+<span class="nc" id="L47">            File dir = new File(lastDir);</span>
+<span class="nc bnc" id="L48" title="All 4 branches missed.">            if (dir.exists() &amp;&amp; dir.isDirectory()) {</span>
+<span class="nc" id="L49">                chooser.setInitialDirectory(dir);</span>
+            }
+        }
+
+<span class="nc" id="L53">        File f = chooser.showOpenDialog(root.getWindow());</span>
+<span class="nc bnc" id="L54" title="All 2 branches missed.">        if (f != null) {</span>
+            try {
+<span class="nc" id="L56">                loadXmlFile(root, f);</span>
+<span class="nc" id="L57">                p.put(PREF_LAST_FILE, f.getAbsolutePath());</span>
+<span class="nc" id="L58">                p.put(PREF_LAST_DIR, f.getParentFile().getAbsolutePath());</span>
+<span class="nc" id="L59">            } catch (Exception ex) {</span>
+<span class="nc" id="L60">                HomeNotifications.showError(&quot;Failed to load XML: &quot; + englishXmlError(ex));</span>
+<span class="nc" id="L61">            }</span>
+        }
+<span class="nc" id="L63">    }</span>
+
+    public static void loadXmlFile(HomeController root, File f) throws Exception {
+<span class="nc" id="L66">        Path xsd = Path.of(HomeController.class.getResource(&quot;/simon/klausurcraft/exam-tasks.xsd&quot;).toURI());</span>
+<span class="nc" id="L67">        TaskXmlStore.LoadResult result = root.getTaskRepository().load(f.toPath(), xsd);</span>
+<span class="nc" id="L68">        root.centerController.resetExpansionState();</span>
+<span class="nc" id="L69">        root.getTasks().setAll(result.tasks());</span>
+<span class="nc" id="L70">        root.loadedFileNameProperty().set(f.getName());</span>
+<span class="nc" id="L71">        HomeNotifications.showInfo(&quot;Loaded &quot; + f.getName());</span>
+<span class="nc" id="L72">    }</span>
+
+    public static void createNewXml(HomeController root) {
+<span class="nc" id="L75">        Preferences p = Preferences.userRoot().node(PREFS_NODE);</span>
+
+<span class="nc" id="L77">        FileChooser chooser = new FileChooser();</span>
+<span class="nc" id="L78">        chooser.setTitle(&quot;Create tasks XML&quot;);</span>
+<span class="nc" id="L79">        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(&quot;XML Files&quot;, &quot;*.xml&quot;));</span>
+<span class="nc" id="L80">        chooser.setInitialFileName(&quot;tasks.xml&quot;);</span>
+
+<span class="nc" id="L82">        String lastDir = p.get(PREF_LAST_DIR, null);</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">        if (lastDir != null) {</span>
+<span class="nc" id="L84">            File dir = new File(lastDir);</span>
+<span class="nc bnc" id="L85" title="All 4 branches missed.">            if (dir.exists() &amp;&amp; dir.isDirectory()) {</span>
+<span class="nc" id="L86">                chooser.setInitialDirectory(dir);</span>
+            }
+        }
+
+<span class="nc" id="L90">        File f = chooser.showSaveDialog(root.getWindow());</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">        if (f == null) {</span>
+<span class="nc" id="L92">            return;</span>
+        }
+
+<span class="nc bnc" id="L95" title="All 2 branches missed.">        if (f.exists()) {</span>
+<span class="nc" id="L96">            Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);</span>
+<span class="nc" id="L97">            confirm.setTitle(&quot;Overwrite existing file?&quot;);</span>
+<span class="nc" id="L98">            confirm.setHeaderText(&quot;The file already exists.&quot;);</span>
+<span class="nc" id="L99">            confirm.setContentText(&quot;Do you want to overwrite \&quot;&quot; + f.getName() + &quot;\&quot;?&quot;);</span>
+<span class="nc" id="L100">            confirm.initOwner(root.getWindow());</span>
+<span class="nc" id="L101">            UiStyles.applyCurrentStyles(confirm);</span>
+
+<span class="nc" id="L103">            var decision = confirm.showAndWait();</span>
+<span class="nc bnc" id="L104" title="All 4 branches missed.">            if (decision.isEmpty() || decision.get() != ButtonType.OK) {</span>
+<span class="nc" id="L105">                return;</span>
+            }
+        }
+
+        try {
+<span class="nc" id="L110">            Path xsd = Path.of(HomeController.class.getResource(&quot;/simon/klausurcraft/exam-tasks.xsd&quot;).toURI());</span>
+<span class="nc" id="L111">            TaskXmlStore.LoadResult result = root.getTaskRepository().createNew(f.toPath(), xsd);</span>
+<span class="nc" id="L112">            root.centerController.resetExpansionState();</span>
+<span class="nc" id="L113">            root.getTasks().setAll(result.tasks());</span>
+<span class="nc" id="L114">            root.loadedFileNameProperty().set(f.getName());</span>
+<span class="nc" id="L115">            HomeNotifications.showInfo(&quot;Created &quot; + f.getName());</span>
+
+<span class="nc" id="L117">            p.put(PREF_LAST_FILE, f.getAbsolutePath());</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">            if (f.getParentFile() != null) {</span>
+<span class="nc" id="L119">                p.put(PREF_LAST_DIR, f.getParentFile().getAbsolutePath());</span>
+            }
+<span class="nc" id="L121">        } catch (Exception ex) {</span>
+<span class="nc" id="L122">            HomeNotifications.showError(&quot;Failed to create XML: &quot; + englishXmlError(ex));</span>
+<span class="nc" id="L123">        }</span>
+<span class="nc" id="L124">    }</span>
+
+    /** Build a clear, English-only message for XML parse/validation errors. */
+    private static String englishXmlError(Exception ex) {
+<span class="nc bnc" id="L128" title="All 2 branches missed.">        if (ex instanceof SAXParseException spe) {</span>
+<span class="nc" id="L129">            int line = spe.getLineNumber();</span>
+<span class="nc" id="L130">            int col  = spe.getColumnNumber();</span>
+<span class="nc" id="L131">            return &quot;Invalid XML (line &quot; + line + &quot;, column &quot; + col + &quot;). &quot; +</span>
+                   &quot;Please check for unescaped characters (e.g., use &amp;amp; for '&amp;').&quot;;
+        }
+<span class="nc" id="L134">        String msg = ex.getMessage();</span>
+<span class="nc bnc" id="L135" title="All 4 branches missed.">        return (msg == null || msg.isBlank())</span>
+<span class="nc" id="L136">                ? (ex.getClass().getSimpleName() + &quot; occurred.&quot;)</span>
+<span class="nc" id="L137">                : msg;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

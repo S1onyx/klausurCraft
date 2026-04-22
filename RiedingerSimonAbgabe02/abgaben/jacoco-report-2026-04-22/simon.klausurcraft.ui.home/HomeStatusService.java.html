@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="de"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HomeStatusService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">demo</a> &gt; <a href="index.source.html" class="el_package">simon.klausurcraft.ui.home</a> &gt; <span class="el_source">HomeStatusService.java</span></div><h1>HomeStatusService.java</h1><pre class="source lang-java linenums">package simon.klausurcraft.ui.home;
+
+import simon.klausurcraft.task.Difficulty;
+import simon.klausurcraft.task.Eligibility;
+import simon.klausurcraft.task.Points;
+import simon.klausurcraft.task.Subtask;
+import simon.klausurcraft.task.Task;
+
+import java.math.BigDecimal;
+import java.util.List;
+
+/**
+ * Status aggregation helper used by the Home bottom status bar.
+ */
+final class HomeStatusService {
+
+    private HomeStatusService() {}
+
+    /**
+     * Aggregates task/subtask counters and summary values for the status bar.
+     *
+     * @param tasks all loaded tasks
+     * @return aggregated status object
+     */
+    static StatusStats computeStatusStats(List&lt;Task&gt; tasks) {
+<span class="fc" id="L26">        StatusStats stats = new StatusStats();</span>
+<span class="fc bfc" id="L27" title="All 2 branches covered.">        if (tasks == null) {</span>
+<span class="fc" id="L28">            return stats;</span>
+        }
+
+<span class="fc" id="L31">        stats.tasks = tasks.size();</span>
+<span class="fc bfc" id="L32" title="All 2 branches covered.">        for (Task task : tasks) {</span>
+<span class="fc bfc" id="L33" title="All 2 branches covered.">            for (Subtask subtask : task.getSubtasks()) {</span>
+<span class="fc" id="L34">                stats.subtasks++;</span>
+<span class="fc" id="L35">                stats.variants += subtask.getVariants().size();</span>
+
+<span class="fc bfc" id="L37" title="All 2 branches covered.">                if (subtask.getPoints() != null) {</span>
+<span class="fc" id="L38">                    stats.points = stats.points.add(subtask.getPoints());</span>
+                }
+
+<span class="fc" id="L41">                Difficulty difficulty = subtask.getDifficulty();</span>
+<span class="fc bfc" id="L42" title="All 2 branches covered.">                if (difficulty == null) {</span>
+<span class="fc" id="L43">                    stats.withoutDifficulty++;</span>
+                } else {
+<span class="pc bpc" id="L45" title="1 of 4 branches missed.">                    switch (difficulty) {</span>
+<span class="fc" id="L46">                        case EASY -&gt; stats.easy++;</span>
+<span class="fc" id="L47">                        case MEDIUM -&gt; stats.medium++;</span>
+<span class="fc" id="L48">                        case HARD -&gt; stats.hard++;</span>
+                    }
+                }
+
+<span class="fc" id="L52">                Eligibility eligibility = subtask.getEligibility();</span>
+<span class="fc bfc" id="L53" title="All 2 branches covered.">                if (eligibility == null) {</span>
+<span class="fc" id="L54">                    stats.withoutEligibility++;</span>
+                } else {
+<span class="pc bpc" id="L56" title="1 of 4 branches missed.">                    switch (eligibility) {</span>
+<span class="fc" id="L57">                        case EXAM -&gt; stats.exam++;</span>
+<span class="fc" id="L58">                        case PRACTICE -&gt; stats.practice++;</span>
+<span class="fc" id="L59">                        case BOTH -&gt; stats.both++;</span>
+                    }
+                }
+<span class="fc" id="L62">            }</span>
+<span class="fc" id="L63">        }</span>
+
+<span class="fc" id="L65">        return stats;</span>
+    }
+
+    /**
+     * Builds the multi-line tooltip text shown over the status counters.
+     *
+     * @param stats precomputed status values
+     * @return formatted tooltip content
+     */
+    static String buildStatusTooltip(StatusStats stats) {
+<span class="fc" id="L75">        return &quot;Unten angezeigt: Tasks / Subtasks\n\n&quot;</span>
+                + &quot;Tasks: &quot; + stats.tasks + &quot;\n&quot;
+                + &quot;Subtasks: &quot; + stats.subtasks + &quot;\n&quot;
+                + &quot;Varianten: &quot; + stats.variants + &quot;\n&quot;
+<span class="fc" id="L79">                + &quot;Punkte gesamt: &quot; + Points.toDisplayString(stats.points) + &quot;\n\n&quot;</span>
+                + &quot;Schwierigkeit (Subtasks):\n&quot;
+                + &quot;easy: &quot; + stats.easy + &quot;\n&quot;
+                + &quot;medium: &quot; + stats.medium + &quot;\n&quot;
+                + &quot;hard: &quot; + stats.hard
+<span class="fc bfc" id="L84" title="All 2 branches covered.">                + (stats.withoutDifficulty &gt; 0 ? &quot;\nohne Schwierigkeit: &quot; + stats.withoutDifficulty : &quot;&quot;)</span>
+                + &quot;\n\n&quot;
+                + &quot;Eignung (Subtasks):\n&quot;
+                + &quot;exam: &quot; + stats.exam + &quot;\n&quot;
+                + &quot;practice: &quot; + stats.practice + &quot;\n&quot;
+                + &quot;both: &quot; + stats.both
+<span class="fc bfc" id="L90" title="All 2 branches covered.">                + (stats.withoutEligibility &gt; 0 ? &quot;\nohne Eignung: &quot; + stats.withoutEligibility : &quot;&quot;);</span>
+    }
+
+    /**
+     * Value container for status-bar aggregation.
+     */
+<span class="fc" id="L96">    static final class StatusStats {</span>
+        int tasks;
+        int subtasks;
+        int variants;
+<span class="fc" id="L100">        BigDecimal points = Points.ZERO;</span>
+
+        int easy;
+        int medium;
+        int hard;
+        int withoutDifficulty;
+
+        int exam;
+        int practice;
+        int both;
+        int withoutEligibility;
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

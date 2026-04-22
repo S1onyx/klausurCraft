@@ -1,0 +1,53 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+demo,simon.klausurcraft.task,Subtask,2,101,1,17,1,25,1,20,0,12
+demo,simon.klausurcraft.task,GenerateScope,0,21,0,0,0,2,0,1,0,1
+demo,simon.klausurcraft.task,Difficulty,0,52,0,7,0,11,0,8,0,3
+demo,simon.klausurcraft.task,Points,0,137,0,18,0,34,0,19,0,10
+demo,simon.klausurcraft.task,Eligibility,0,52,0,7,0,11,0,8,0,3
+demo,simon.klausurcraft.task,Task,2,49,1,3,0,12,1,8,0,7
+demo,simon.klausurcraft.task,Variant,0,51,0,8,0,12,0,11,0,7
+demo,simon.klausurcraft.ui.components,SlideOverPane,202,0,8,0,48,0,14,0,10,0
+demo,simon.klausurcraft.app,KlausurCraftApp,662,0,20,0,136,0,27,0,17,0
+demo,simon.klausurcraft.task.export,PdfExportService.PageNumberFooter,7,99,0,0,2,23,0,3,0,3
+demo,simon.klausurcraft.task.export,PdfExportRules,0,178,1,25,0,41,1,19,0,7
+demo,simon.klausurcraft.task.export,PdfExportService.ChosenVariant,0,15,0,0,0,6,0,3,0,3
+demo,simon.klausurcraft.task.export,PdfExportService.PdfFonts,0,79,0,0,0,9,0,1,0,1
+demo,simon.klausurcraft.task.export,PdfExportService,53,1411,14,36,11,233,12,31,1,17
+demo,simon.klausurcraft.task.export,PdfExportService.TaskAssembly,0,21,0,0,0,8,0,4,0,4
+demo,simon.klausurcraft.ui.home,HomeSidebarController.TocNode,57,0,0,0,9,0,7,0,7,0
+demo,simon.klausurcraft.ui.home,SelectedTaskCell,717,0,48,0,155,0,43,0,19,0
+demo,simon.klausurcraft.ui.home,HomeTaskSheet,285,0,16,0,65,0,13,0,5,0
+demo,simon.klausurcraft.ui.home,HomeGenerateFlow,2169,0,98,0,428,0,95,0,46,0
+demo,simon.klausurcraft.ui.home,HomeStatusService,0,174,2,22,0,31,2,14,0,2
+demo,simon.klausurcraft.ui.home,HomeNotifications,113,0,8,0,26,0,10,0,6,0
+demo,simon.klausurcraft.ui.home,HomeSidebarController.new TreeCell() {...},32,0,4,0,8,0,4,0,2,0
+demo,simon.klausurcraft.ui.home,TaskSelectionCell.new ListCell() {...},21,0,4,0,5,0,4,0,2,0
+demo,simon.klausurcraft.ui.home,TaskSelectionCell.new ListCell() {...},21,0,4,0,5,0,4,0,2,0
+demo,simon.klausurcraft.ui.home,PoolTaskCell,321,0,18,0,69,0,14,0,5,0
+demo,simon.klausurcraft.ui.home,HomeController,906,0,48,0,181,0,60,0,36,0
+demo,simon.klausurcraft.ui.home,HomeSearchService,6,96,5,17,1,17,5,11,0,5
+demo,simon.klausurcraft.ui.home,HomeSubtaskSheet,1175,0,32,0,225,0,38,0,20,0
+demo,simon.klausurcraft.ui.home,HomeTopbarController,230,0,12,0,35,0,16,0,10,0
+demo,simon.klausurcraft.ui.home,HomeCenterController,1634,0,160,0,297,0,125,0,44,0
+demo,simon.klausurcraft.ui.home,TaskSelection,4,104,0,6,1,21,1,14,1,11
+demo,simon.klausurcraft.ui.home,SelectedTaskCell.new ListCell() {...},21,0,4,0,5,0,4,0,2,0
+demo,simon.klausurcraft.ui.home,HomeSidebarController.TocNode.Type,21,0,0,0,1,0,1,0,1,0
+demo,simon.klausurcraft.ui.home,SelectedTaskCell.new ListCell() {...},21,0,4,0,5,0,4,0,2,0
+demo,simon.klausurcraft.ui.home,TaskSelection.new StringBinding() {...},0,93,0,2,0,19,0,7,0,6
+demo,simon.klausurcraft.ui.home,HomeStatusService.StatusStats,0,6,0,0,0,2,0,1,0,1
+demo,simon.klausurcraft.ui.home,HomeSidebarController,567,0,49,0,105,0,48,0,22,0
+demo,simon.klausurcraft.ui.home,HomeFileController,314,0,36,0,79,0,23,0,5,0
+demo,simon.klausurcraft.ui.home,HomeFilterController,208,0,14,0,26,0,17,0,10,0
+demo,simon.klausurcraft.ui.home,HomeGeneratePlanner,10,233,12,24,6,63,12,14,0,8
+demo,simon.klausurcraft.ui.home,TaskSelectionCell,525,0,48,0,109,0,38,0,14,0
+demo,simon.klausurcraft.shipping,PostageCalculator,3,176,1,26,1,35,1,20,0,7
+demo,simon.klausurcraft.shipping,ShippingZone,0,21,0,0,0,4,0,1,0,1
+demo,simon.klausurcraft.shipping,Parcel,0,69,1,9,0,10,1,7,0,3
+demo,simon.klausurcraft.ui,ThemeService.Theme,28,0,0,0,5,0,3,0,3,0
+demo,simon.klausurcraft.ui,UiStyles,26,0,4,0,11,0,4,0,2,0
+demo,simon.klausurcraft.ui,ThemeService,131,0,16,0,37,0,18,0,10,0
+demo,simon.klausurcraft.task.planning,PointDistributionPlanner,8,480,12,55,2,91,12,32,0,9
+demo,simon.klausurcraft.task.planning,PointDistributionPlanner.FeasibleDist,0,87,0,3,0,6,0,5,0,3
+demo,simon.klausurcraft.task.io,TaskXmlStore,8,841,7,37,0,200,7,34,0,19
+demo,simon.klausurcraft.task.io,TaskXmlStore.new ErrorHandler() {...},19,19,0,0,4,4,2,3,2,3
+demo,simon.klausurcraft.task.io,TaskXmlStore.LoadResult,0,6,0,0,0,1,0,1,0,1

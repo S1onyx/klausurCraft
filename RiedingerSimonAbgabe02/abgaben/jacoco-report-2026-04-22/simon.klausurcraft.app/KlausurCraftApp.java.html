@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="de"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>KlausurCraftApp.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">demo</a> &gt; <a href="index.source.html" class="el_package">simon.klausurcraft.app</a> &gt; <span class="el_source">KlausurCraftApp.java</span></div><h1>KlausurCraftApp.java</h1><pre class="source lang-java linenums">package simon.klausurcraft.app;
+
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
+
+import javafx.animation.PauseTransition;
+import javafx.animation.ScaleTransition;
+import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.SnapshotParameters;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.Label;
+import javafx.scene.control.ProgressIndicator;
+import javafx.scene.image.Image;
+import javafx.scene.image.PixelReader;
+import javafx.scene.image.WritableImage;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.paint.CycleMethod;
+import javafx.scene.paint.LinearGradient;
+import javafx.scene.paint.Stop;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.scene.text.TextAlignment;
+import javafx.geometry.VPos;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
+import javafx.util.Duration;
+import simon.klausurcraft.ui.ThemeService;
+
+import java.awt.Taskbar;
+import java.awt.image.BufferedImage;
+
+/**
+ * JavaFX entry point for KlausurCraft.
+ */
+<span class="nc" id="L52">public class KlausurCraftApp extends Application {</span>
+
+    private static Scene scene;
+    private static Image appIcon;
+<span class="nc" id="L56">    private static List&lt;Image&gt; stageIcons = List.of();</span>
+
+    @Override
+    public void start(Stage stage) throws IOException {
+<span class="nc" id="L60">        appIcon = createAppIcon(1024); // hi-res icon for macOS Dock/Taskbar</span>
+<span class="nc" id="L61">        stageIcons = createStageIcons();</span>
+<span class="nc" id="L62">        stage.setTitle(&quot;klausurCraft&quot;);</span>
+<span class="nc" id="L63">        stage.getIcons().setAll(stageIcons);</span>
+<span class="nc" id="L64">        installAppIconOnTaskbar();</span>
+
+<span class="nc" id="L66">        Stage splash = createSplashStage();</span>
+<span class="nc" id="L67">        splash.show();</span>
+
+<span class="nc" id="L69">        PauseTransition splashDelay = new PauseTransition(Duration.millis(1400));</span>
+<span class="nc" id="L70">        splashDelay.setOnFinished(event -&gt; {</span>
+            try {
+<span class="nc" id="L72">                showMainWindow(stage);</span>
+<span class="nc" id="L73">                splash.close();</span>
+<span class="nc" id="L74">            } catch (IOException ex) {</span>
+<span class="nc" id="L75">                throw new UncheckedIOException(ex);</span>
+<span class="nc" id="L76">            }</span>
+<span class="nc" id="L77">        });</span>
+<span class="nc" id="L78">        splashDelay.play();</span>
+<span class="nc" id="L79">    }</span>
+
+    private void showMainWindow(Stage stage) throws IOException {
+<span class="nc" id="L82">        scene = new Scene(loadFXML(&quot;home&quot;), 1200, 800);</span>
+
+        // Apply default theme (LIGHT by default)
+<span class="nc" id="L85">        ThemeService.register(scene);</span>
+<span class="nc" id="L86">        ThemeService.apply(scene, ThemeService.Theme.LIGHT);</span>
+
+        // Keyboard toggle: Ctrl + D switches theme
+<span class="nc" id="L89">        scene.getAccelerators().put(</span>
+            new KeyCodeCombination(KeyCode.D, KeyCombination.CONTROL_DOWN),
+<span class="nc" id="L91">            () -&gt; ThemeService.toggle(scene)</span>
+        );
+
+<span class="nc" id="L94">        stage.getIcons().setAll(stageIcons);</span>
+<span class="nc" id="L95">        stage.setTitle(&quot;klausurCraft&quot;);</span>
+<span class="nc" id="L96">        stage.setScene(scene);</span>
+<span class="nc" id="L97">        stage.show();</span>
+<span class="nc" id="L98">    }</span>
+
+    public static Image getAppIcon() {
+<span class="nc" id="L101">        return appIcon;</span>
+    }
+
+    public static List&lt;Image&gt; getStageIcons() {
+<span class="nc" id="L105">        return stageIcons;</span>
+    }
+
+    private void installAppIconOnTaskbar() {
+<span class="nc" id="L109">        BufferedImage awtIcon = toBufferedImage(appIcon);</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">        if (awtIcon == null) return;</span>
+
+        try {
+<span class="nc bnc" id="L113" title="All 2 branches missed.">            if (Taskbar.isTaskbarSupported()) {</span>
+<span class="nc" id="L114">                Taskbar taskbar = Taskbar.getTaskbar();</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">                if (taskbar.isSupported(Taskbar.Feature.ICON_IMAGE)) {</span>
+<span class="nc" id="L116">                    taskbar.setIconImage(awtIcon);</span>
+<span class="nc" id="L117">                    return;</span>
+                }
+            }
+<span class="nc" id="L120">        } catch (Exception ignored) {</span>
+            // Try macOS fallback below
+<span class="nc" id="L122">        }</span>
+
+        // macOS legacy fallback for Dock icon
+        try {
+<span class="nc" id="L126">            Class&lt;?&gt; appClass = Class.forName(&quot;com.apple.eawt.Application&quot;);</span>
+<span class="nc" id="L127">            Method getApplication = appClass.getMethod(&quot;getApplication&quot;);</span>
+<span class="nc" id="L128">            Object appInstance = getApplication.invoke(null);</span>
+<span class="nc" id="L129">            Method setDockIconImage = appClass.getMethod(&quot;setDockIconImage&quot;, java.awt.Image.class);</span>
+<span class="nc" id="L130">            setDockIconImage.invoke(appInstance, awtIcon);</span>
+<span class="nc" id="L131">        } catch (Exception ignored) {</span>
+            // best effort only
+<span class="nc" id="L133">        }</span>
+<span class="nc" id="L134">    }</span>
+
+    private static BufferedImage toBufferedImage(Image fxImage) {
+<span class="nc bnc" id="L137" title="All 2 branches missed.">        if (fxImage == null) return null;</span>
+<span class="nc" id="L138">        int width = (int) Math.ceil(fxImage.getWidth());</span>
+<span class="nc" id="L139">        int height = (int) Math.ceil(fxImage.getHeight());</span>
+<span class="nc" id="L140">        PixelReader reader = fxImage.getPixelReader();</span>
+<span class="nc bnc" id="L141" title="All 6 branches missed.">        if (reader == null || width &lt;= 0 || height &lt;= 0) return null;</span>
+
+<span class="nc" id="L143">        BufferedImage out = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">        for (int y = 0; y &lt; height; y++) {</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">            for (int x = 0; x &lt; width; x++) {</span>
+<span class="nc" id="L146">                out.setRGB(x, y, reader.getArgb(x, y));</span>
+            }
+        }
+<span class="nc" id="L149">        return out;</span>
+    }
+
+    private Stage createSplashStage() {
+<span class="nc" id="L153">        Label brandText = new Label(&quot;KC&quot;);</span>
+<span class="nc" id="L154">        brandText.setTextFill(Color.WHITE);</span>
+<span class="nc" id="L155">        brandText.setFont(Font.font(&quot;Inter&quot;, FontWeight.EXTRA_BOLD, 40));</span>
+
+<span class="nc" id="L157">        StackPane brandMark = new StackPane(brandText);</span>
+<span class="nc" id="L158">        brandMark.setMinSize(92, 92);</span>
+<span class="nc" id="L159">        brandMark.setPrefSize(92, 92);</span>
+<span class="nc" id="L160">        brandMark.setMaxSize(92, 92);</span>
+<span class="nc" id="L161">        brandMark.setStyle(</span>
+            &quot;-fx-background-radius: 24;&quot; +
+            &quot;-fx-background-color: linear-gradient(to bottom right, #475569, #64748b);&quot; +
+            &quot;-fx-effect: dropshadow(gaussian, rgba(51,65,85,0.34), 16, 0.24, 0, 5);&quot;
+        );
+
+<span class="nc" id="L167">        ScaleTransition pulse = new ScaleTransition(Duration.seconds(1.2), brandMark);</span>
+<span class="nc" id="L168">        pulse.setFromX(0.95);</span>
+<span class="nc" id="L169">        pulse.setFromY(0.95);</span>
+<span class="nc" id="L170">        pulse.setToX(1.05);</span>
+<span class="nc" id="L171">        pulse.setToY(1.05);</span>
+<span class="nc" id="L172">        pulse.setCycleCount(ScaleTransition.INDEFINITE);</span>
+<span class="nc" id="L173">        pulse.setAutoReverse(true);</span>
+<span class="nc" id="L174">        pulse.play();</span>
+
+<span class="nc" id="L176">        Label title = new Label(&quot;klausurCraft&quot;);</span>
+<span class="nc" id="L177">        title.setTextFill(Color.web(&quot;#f8fafc&quot;));</span>
+<span class="nc" id="L178">        title.setFont(Font.font(&quot;Inter&quot;, FontWeight.BOLD, 30));</span>
+
+<span class="nc" id="L180">        Label subtitle = new Label(&quot;Building your exam workspace...&quot;);</span>
+<span class="nc" id="L181">        subtitle.setTextFill(Color.web(&quot;#cbd5e1&quot;));</span>
+<span class="nc" id="L182">        subtitle.setFont(Font.font(&quot;Inter&quot;, FontWeight.SEMI_BOLD, 13));</span>
+
+<span class="nc" id="L184">        ProgressIndicator loading = new ProgressIndicator();</span>
+<span class="nc" id="L185">        loading.setPrefSize(30, 30);</span>
+<span class="nc" id="L186">        loading.setStyle(&quot;-fx-progress-color: #94a3b8;&quot;);</span>
+
+<span class="nc" id="L188">        Label loadingLabel = new Label(&quot;Loading&quot;);</span>
+<span class="nc" id="L189">        loadingLabel.setTextFill(Color.web(&quot;#e2e8f0&quot;));</span>
+<span class="nc" id="L190">        loadingLabel.setFont(Font.font(&quot;Inter&quot;, FontWeight.MEDIUM, 14));</span>
+
+<span class="nc" id="L192">        HBox loadingRow = new HBox(12, loading, loadingLabel);</span>
+<span class="nc" id="L193">        loadingRow.setAlignment(Pos.CENTER);</span>
+
+<span class="nc" id="L195">        VBox content = new VBox(16, brandMark, title, subtitle, loadingRow);</span>
+<span class="nc" id="L196">        content.setAlignment(Pos.CENTER);</span>
+<span class="nc" id="L197">        content.setPadding(new Insets(26));</span>
+<span class="nc" id="L198">        content.setStyle(</span>
+            &quot;-fx-background-color: linear-gradient(to bottom right, #111827, #1f2937);&quot; +
+            &quot;-fx-background-radius: 20;&quot; +
+            &quot;-fx-border-color: rgba(148,163,184,0.24);&quot; +
+            &quot;-fx-border-radius: 20;&quot;
+        );
+
+<span class="nc" id="L205">        StackPane root = new StackPane(content);</span>
+<span class="nc" id="L206">        root.setPadding(new Insets(20));</span>
+<span class="nc" id="L207">        root.setStyle(&quot;-fx-background-color: transparent;&quot;);</span>
+
+<span class="nc" id="L209">        Scene splashScene = new Scene(root, 500, 320);</span>
+<span class="nc" id="L210">        splashScene.setFill(Color.TRANSPARENT);</span>
+
+<span class="nc" id="L212">        Stage splashStage = new Stage(StageStyle.TRANSPARENT);</span>
+<span class="nc" id="L213">        splashStage.setScene(splashScene);</span>
+<span class="nc" id="L214">        splashStage.getIcons().setAll(stageIcons);</span>
+<span class="nc" id="L215">        splashStage.setAlwaysOnTop(true);</span>
+<span class="nc" id="L216">        return splashStage;</span>
+    }
+
+    private List&lt;Image&gt; createStageIcons() {
+<span class="nc" id="L220">        int[] sizes = {16, 24, 32, 48, 64, 128, 256, 512};</span>
+<span class="nc" id="L221">        List&lt;Image&gt; icons = new ArrayList&lt;&gt;(sizes.length);</span>
+<span class="nc bnc" id="L222" title="All 2 branches missed.">        for (int size : sizes) {</span>
+<span class="nc" id="L223">            icons.add(createAppIcon(size));</span>
+        }
+<span class="nc" id="L225">        return Collections.unmodifiableList(icons);</span>
+    }
+
+    private Image createAppIcon(int size) {
+<span class="nc" id="L229">        Canvas canvas = new Canvas(size, size);</span>
+<span class="nc" id="L230">        GraphicsContext gc = canvas.getGraphicsContext2D();</span>
+<span class="nc" id="L231">        double s = size;</span>
+<span class="nc" id="L232">        double corner = s * 0.25;</span>
+
+<span class="nc" id="L234">        gc.clearRect(0, 0, s, s);</span>
+
+<span class="nc" id="L236">        gc.setFill(new LinearGradient(</span>
+            0, 0, 1, 1, true, CycleMethod.NO_CYCLE,
+<span class="nc" id="L238">            new Stop(0, Color.web(&quot;#4b5b70&quot;)),</span>
+<span class="nc" id="L239">            new Stop(1, Color.web(&quot;#708399&quot;))</span>
+        ));
+<span class="nc" id="L241">        gc.fillRoundRect(0, 0, s, s, corner, corner);</span>
+
+<span class="nc" id="L243">        gc.setFill(Color.rgb(255, 255, 255, 0.14));</span>
+<span class="nc" id="L244">        gc.fillOval(s * 0.08, s * 0.07, s * 0.42, s * 0.42);</span>
+
+        // Match requested brand mark: centered &quot;KC&quot; in white.
+<span class="nc" id="L247">        gc.setFill(Color.WHITE);</span>
+<span class="nc" id="L248">        gc.setFont(Font.font(&quot;System&quot;, FontWeight.EXTRA_BOLD, s * 0.37));</span>
+<span class="nc" id="L249">        gc.setTextAlign(TextAlignment.CENTER);</span>
+<span class="nc" id="L250">        gc.setTextBaseline(VPos.CENTER);</span>
+<span class="nc" id="L251">        gc.fillText(&quot;KC&quot;, s * 0.5, s * 0.53);</span>
+
+<span class="nc" id="L253">        SnapshotParameters params = new SnapshotParameters();</span>
+<span class="nc" id="L254">        params.setFill(Color.TRANSPARENT);</span>
+<span class="nc" id="L255">        WritableImage image = new WritableImage(size, size);</span>
+<span class="nc" id="L256">        canvas.snapshot(params, image);</span>
+<span class="nc" id="L257">        return image;</span>
+    }
+
+    static void setRoot(String fxml) throws IOException {
+<span class="nc" id="L261">        scene.setRoot(loadFXML(fxml));</span>
+<span class="nc" id="L262">    }</span>
+
+    public static Scene getScene() {
+<span class="nc" id="L265">        return scene;</span>
+    }
+
+    private static Parent loadFXML(String name) throws IOException {
+<span class="nc" id="L269">        FXMLLoader fxmlLoader = new FXMLLoader(KlausurCraftApp.class.getResource(&quot;/simon/klausurcraft/&quot; + name + &quot;.fxml&quot;));</span>
+<span class="nc" id="L270">        return fxmlLoader.load();</span>
+    }
+
+    public static void main(String[] args) {
+        // Force English locale globally
+<span class="nc" id="L275">        Locale.setDefault(Locale.ENGLISH);</span>
+
+<span class="nc" id="L277">        launch();</span>
+<span class="nc" id="L278">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,20 @@
+metric,value,unit,notes
+generated_at,2026-04-22 11:05:20 CEST,timestamp,Automatisch mit scripts/collect-metrics.sh
+date_of_analysis,2026-04-22,date,Aktueller Analysezeitpunkt
+java_files,29,files,Alle .java-Dateien inkl. module-info.java
+code_lines_java,4163,lines,cloc Java code
+comment_lines_java,211,lines,cloc Java comments
+blank_lines_java,718,lines,cloc Java blank lines
+comment_ratio,4.82,percent,comment/(comment+code)
+package_count,8,packages,Eindeutige package-Deklarationen
+class_count,26,types,Nur class-Deklarationen
+enum_count,5,types,enum-Deklarationen
+record_count,1,types,record-Deklarationen
+interface_count,0,types,interface-Deklarationen
+type_count_total,32,types,class+enum+record+interface
+method_count_heuristic,218,methods,Regex-basierte Erkennung
+average_method_size,19.10,loc_per_method,code_lines_java/method_count_heuristic
+total_imports,327,imports,Alle import-Zeilen in Java-Dateien
+avg_imports_per_type,11.68,imports_per_type,Proxy für Coupling
+max_import_file_imports,43,imports,Datei mit höchster Importzahl
+max_import_file,src/main/java/simon/klausurcraft/app/KlausurCraftApp.java,path,Datei mit höchster Importzahl

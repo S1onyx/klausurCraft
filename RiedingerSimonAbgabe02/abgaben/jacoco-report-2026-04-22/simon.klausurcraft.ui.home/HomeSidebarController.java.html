@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="de"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HomeSidebarController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">demo</a> &gt; <a href="index.source.html" class="el_package">simon.klausurcraft.ui.home</a> &gt; <span class="el_source">HomeSidebarController.java</span></div><h1>HomeSidebarController.java</h1><pre class="source lang-java linenums">package simon.klausurcraft.ui.home;
+
+import javafx.application.Platform;
+import javafx.fxml.FXML;
+import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import simon.klausurcraft.task.Subtask;
+import simon.klausurcraft.task.Task;
+import simon.klausurcraft.ui.UiStyles;
+
+import java.util.List;
+import java.util.Optional;
+
+/**
+ * Sidebar &quot;Contents&quot; with strongly typed nodes to support edit/delete via context menu and Delete key.
+ */
+<span class="nc" id="L18">public class HomeSidebarController {</span>
+
+    private HomeController root;
+
+    @FXML private TreeView&lt;TocNode&gt; tocTree;
+    @FXML private Button btnLoad;
+    @FXML private Button btnNewXml;
+
+    public void init(HomeController root) {
+<span class="nc" id="L27">        this.root = root;</span>
+<span class="nc" id="L28">        btnLoad.setOnAction(e -&gt; HomeFileController.chooseAndLoadXml(root));</span>
+<span class="nc" id="L29">        btnLoad.setTooltip(new Tooltip(&quot;Open an existing XML task file.&quot;));</span>
+<span class="nc bnc" id="L30" title="All 2 branches missed.">        if (btnNewXml != null) {</span>
+<span class="nc" id="L31">            btnNewXml.setOnAction(e -&gt; HomeFileController.createNewXml(root));</span>
+<span class="nc" id="L32">            btnNewXml.setTooltip(new Tooltip(&quot;Create a new empty XML task file.&quot;));</span>
+        }
+<span class="nc" id="L34">        tocTree.setTooltip(new Tooltip(&quot;Contents tree. Click to jump to task/subtask.&quot;));</span>
+
+        // Render cell text
+<span class="nc" id="L37">        tocTree.setCellFactory(tv -&gt; new TreeCell&lt;&gt;() {</span>
+            @Override
+            protected void updateItem(TocNode item, boolean empty) {
+<span class="nc" id="L40">                super.updateItem(item, empty);</span>
+<span class="nc bnc" id="L41" title="All 4 branches missed.">                if (empty || item == null) {</span>
+<span class="nc" id="L42">                    setText(null);</span>
+<span class="nc" id="L43">                    setContextMenu(null);</span>
+                } else {
+<span class="nc" id="L45">                    setText(item.label());</span>
+<span class="nc" id="L46">                    setContextMenu(buildContextMenu(item));</span>
+                }
+<span class="nc" id="L48">            }</span>
+        });
+
+        // Delete key handling (only in tree)
+<span class="nc" id="L52">        tocTree.addEventFilter(KeyEvent.KEY_PRESSED, ev -&gt; {</span>
+<span class="nc bnc" id="L53" title="All 2 branches missed.">            if (ev.getCode() == KeyCode.DELETE) {</span>
+<span class="nc" id="L54">                TreeItem&lt;TocNode&gt; sel = tocTree.getSelectionModel().getSelectedItem();</span>
+<span class="nc bnc" id="L55" title="All 4 branches missed.">                if (sel != null &amp;&amp; sel.getValue() != null) {</span>
+<span class="nc" id="L56">                    handleDelete(sel.getValue());</span>
+<span class="nc" id="L57">                    ev.consume();</span>
+                }
+            }
+<span class="nc" id="L60">        });</span>
+
+        // Single click selection should jump to the corresponding position on the right.
+<span class="nc" id="L63">        tocTree.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -&gt; {</span>
+<span class="nc bnc" id="L64" title="All 4 branches missed.">            if (newSel == null || newSel.getValue() == null) return;</span>
+<span class="nc" id="L65">            navigateToNode(newSel.getValue());</span>
+<span class="nc" id="L66">        });</span>
+
+        // Also react on plain single-clicks so repeated clicks on the same selected item still jump.
+<span class="nc" id="L69">        tocTree.setOnMouseClicked(ev -&gt; {</span>
+<span class="nc bnc" id="L70" title="All 2 branches missed.">            if (ev.getClickCount() != 1) return;</span>
+<span class="nc" id="L71">            TreeItem&lt;TocNode&gt; sel = tocTree.getSelectionModel().getSelectedItem();</span>
+<span class="nc bnc" id="L72" title="All 4 branches missed.">            if (sel != null &amp;&amp; sel.getValue() != null) {</span>
+<span class="nc" id="L73">                navigateToNode(sel.getValue());</span>
+            }
+<span class="nc" id="L75">        });</span>
+<span class="nc" id="L76">    }</span>
+
+    public void rebuildToc(List&lt;Task&gt; tasks) {
+<span class="nc" id="L79">        TreeItem&lt;TocNode&gt; rootItem = new TreeItem&lt;&gt;(new TocNode(TocNode.Type.ROOT, null, null, &quot;Contents&quot;));</span>
+<span class="nc" id="L80">        rootItem.setExpanded(true);</span>
+
+<span class="nc bnc" id="L82" title="All 2 branches missed.">        for (Task t : tasks) {</span>
+<span class="nc" id="L83">            TreeItem&lt;TocNode&gt; taskNode = new TreeItem&lt;&gt;(TocNode.forTask(t));</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">            for (Subtask st : t.getSubtasks()) {</span>
+<span class="nc" id="L85">                String name = root.getTaskRepository().readSubtaskGroup(st);</span>
+<span class="nc bnc" id="L86" title="All 4 branches missed.">                if (name == null || name.isBlank()) {</span>
+<span class="nc" id="L87">                    name = &quot;Subtask &quot; + t.getId() + &quot;.&quot; + st.getId();</span>
+                }
+<span class="nc" id="L89">                taskNode.getChildren().add(new TreeItem&lt;&gt;(TocNode.forSubtask(t, st, name)));</span>
+<span class="nc" id="L90">            }</span>
+<span class="nc" id="L91">            taskNode.setExpanded(false);</span>
+<span class="nc" id="L92">            rootItem.getChildren().add(taskNode);</span>
+<span class="nc" id="L93">        }</span>
+
+<span class="nc" id="L95">        tocTree.setRoot(rootItem);</span>
+<span class="nc" id="L96">        tocTree.setShowRoot(false);</span>
+<span class="nc" id="L97">    }</span>
+
+    private ContextMenu buildContextMenu(TocNode node) {
+<span class="nc" id="L100">        ContextMenu menu = new ContextMenu();</span>
+<span class="nc bnc" id="L101" title="All 3 branches missed.">        switch (node.type()) {</span>
+            case TASK -&gt; {
+<span class="nc" id="L103">                MenuItem open = new MenuItem(&quot;Scroll to task&quot;);</span>
+<span class="nc" id="L104">                open.setOnAction(e -&gt; root.centerController.scrollToTask(node.task()));</span>
+<span class="nc" id="L105">                MenuItem addSub = new MenuItem(&quot;Add subtask&quot;);</span>
+<span class="nc" id="L106">                addSub.setOnAction(e -&gt; {</span>
+                    // Create and immediately open the subtask editor (slide-over) with title focused
+<span class="nc" id="L108">                    root.getTaskRepository().addSubtask(node.task()).ifPresent(newSub -&gt; {</span>
+<span class="nc" id="L109">                        root.centerController.render(root.getTasks(), root.currentQuery(), root.allowedDifficulties());</span>
+<span class="nc" id="L110">                        rebuildToc(root.getTasks());</span>
+<span class="nc" id="L111">                        HomeSubtaskSheet.open(root, node.task(), newSub); // focuses title field inside</span>
+<span class="nc" id="L112">                    });</span>
+<span class="nc" id="L113">                });</span>
+<span class="nc" id="L114">                MenuItem edit = new MenuItem(&quot;Edit task…&quot;);</span>
+<span class="nc" id="L115">                edit.setOnAction(e -&gt; HomeTaskSheet.openEdit(root, node.task()));</span>
+<span class="nc" id="L116">                MenuItem del = new MenuItem(&quot;Delete task&quot;);</span>
+<span class="nc" id="L117">                del.setOnAction(e -&gt; confirmDeleteTask(node.task()));</span>
+<span class="nc" id="L118">                menu.getItems().addAll(open, addSub, edit, new SeparatorMenuItem(), del);</span>
+<span class="nc" id="L119">            }</span>
+            case SUBTASK -&gt; {
+<span class="nc" id="L121">                MenuItem open = new MenuItem(&quot;Open details&quot;);</span>
+<span class="nc" id="L122">                open.setOnAction(e -&gt; HomeSubtaskSheet.open(root, node.task(), node.subtask()));</span>
+<span class="nc" id="L123">                MenuItem del = new MenuItem(&quot;Delete subtask&quot;);</span>
+<span class="nc" id="L124">                del.setOnAction(e -&gt; confirmDeleteSubtask(node.task(), node.subtask()));</span>
+<span class="nc" id="L125">                menu.getItems().addAll(open, new SeparatorMenuItem(), del);</span>
+<span class="nc" id="L126">            }</span>
+            default -&gt; {}
+        }
+<span class="nc" id="L129">        return menu;</span>
+    }
+
+    private void handleDelete(TocNode node) {
+<span class="nc bnc" id="L133" title="All 3 branches missed.">        switch (node.type()) {</span>
+<span class="nc" id="L134">            case TASK -&gt; confirmDeleteTask(node.task()); </span>
+<span class="nc" id="L135">            case SUBTASK -&gt; confirmDeleteSubtask(node.task(), node.subtask());</span>
+            default -&gt; {}
+        }
+<span class="nc" id="L138">    }</span>
+
+    private void navigateToNode(TocNode node) {
+<span class="nc bnc" id="L141" title="All 2 branches missed.">        if (node == null) return;</span>
+<span class="nc" id="L142">        Platform.runLater(() -&gt; {</span>
+<span class="nc bnc" id="L143" title="All 3 branches missed.">            switch (node.type()) {</span>
+<span class="nc" id="L144">                case TASK -&gt; root.centerController.scrollToTask(node.task());</span>
+<span class="nc" id="L145">                case SUBTASK -&gt; root.centerController.scrollToSubtask(node.task(), node.subtask());</span>
+                default -&gt; { }
+            }
+<span class="nc" id="L148">        });</span>
+<span class="nc" id="L149">    }</span>
+
+    private void confirmDeleteTask(Task t) {
+<span class="nc" id="L152">        Alert a = new Alert(Alert.AlertType.CONFIRMATION);</span>
+<span class="nc" id="L153">        a.setTitle(&quot;Delete task&quot;);</span>
+<span class="nc" id="L154">        a.setHeaderText(&quot;Delete this task?&quot;);</span>
+<span class="nc" id="L155">        a.setContentText(&quot;This will delete the task and all its subtasks and variants. This action cannot be undone.&quot;);</span>
+<span class="nc" id="L156">        a.initOwner(root.getWindow());</span>
+<span class="nc" id="L157">        UiStyles.applyCurrentStyles(a);</span>
+<span class="nc" id="L158">        Optional&lt;ButtonType&gt; res = a.showAndWait();</span>
+<span class="nc bnc" id="L159" title="All 4 branches missed.">        if (res.isPresent() &amp;&amp; res.get() == ButtonType.OK) {</span>
+<span class="nc bnc" id="L160" title="All 2 branches missed.">            if (root.getTaskRepository().deleteTask(t)) {</span>
+<span class="nc" id="L161">                root.getTasks().remove(t);</span>
+            } else {
+<span class="nc" id="L163">                HomeNotifications.showError(&quot;Failed to delete task.&quot;);</span>
+            }
+        }
+<span class="nc" id="L166">    }</span>
+
+    private void confirmDeleteSubtask(Task task, Subtask st) {
+<span class="nc" id="L169">        Alert a = new Alert(Alert.AlertType.CONFIRMATION);</span>
+<span class="nc" id="L170">        a.setTitle(&quot;Delete subtask&quot;);</span>
+<span class="nc" id="L171">        a.setHeaderText(&quot;Delete this subtask?&quot;);</span>
+<span class="nc" id="L172">        a.setContentText(&quot;This will delete the subtask including all its variants. This action cannot be undone.&quot;);</span>
+<span class="nc" id="L173">        a.initOwner(root.getWindow());</span>
+<span class="nc" id="L174">        UiStyles.applyCurrentStyles(a);</span>
+<span class="nc" id="L175">        Optional&lt;ButtonType&gt; res = a.showAndWait();</span>
+<span class="nc bnc" id="L176" title="All 4 branches missed.">        if (res.isPresent() &amp;&amp; res.get() == ButtonType.OK) {</span>
+<span class="nc bnc" id="L177" title="All 2 branches missed.">            if (root.getTaskRepository().deleteSubtask(task, st)) {</span>
+<span class="nc" id="L178">                task.getSubtasks().remove(st);</span>
+<span class="nc" id="L179">                root.centerController.render(root.getTasks(), root.currentQuery(), root.allowedDifficulties());</span>
+<span class="nc" id="L180">                rebuildToc(root.getTasks());</span>
+            } else {
+<span class="nc" id="L182">                HomeNotifications.showError(&quot;Failed to delete subtask.&quot;);</span>
+            }
+        }
+<span class="nc" id="L185">    }</span>
+
+    /** Node descriptor for TreeView. */
+    public static final class TocNode {
+<span class="nc" id="L189">        enum Type { ROOT, TASK, SUBTASK }</span>
+        private final Type type;
+        private final Task task;
+        private final Subtask subtask;
+        private final String label;
+
+<span class="nc" id="L195">        private TocNode(Type type, Task task, Subtask subtask, String label) {</span>
+<span class="nc" id="L196">            this.type = type; this.task = task; this.subtask = subtask; this.label = label;</span>
+<span class="nc" id="L197">        }</span>
+<span class="nc" id="L198">        static TocNode forTask(Task t) { return new TocNode(Type.TASK, t, null, String.format(&quot;%s — %s&quot;, t.getId(), t.getTitle())); }</span>
+<span class="nc" id="L199">        static TocNode forSubtask(Task t, Subtask st, String label) { return new TocNode(Type.SUBTASK, t, st, &quot;• &quot; + label); }</span>
+
+<span class="nc" id="L201">        public Type type() { return type; }</span>
+<span class="nc" id="L202">        public Task task() { return task; }</span>
+<span class="nc" id="L203">        public Subtask subtask() { return subtask; }</span>
+<span class="nc" id="L204">        public String label() { return label; }</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="de"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HomeSubtaskSheet.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">demo</a> &gt; <a href="index.source.html" class="el_package">simon.klausurcraft.ui.home</a> &gt; <span class="el_source">HomeSubtaskSheet.java</span></div><h1>HomeSubtaskSheet.java</h1><pre class="source lang-java linenums">package simon.klausurcraft.ui.home;
+
+import javafx.application.Platform;
+import javafx.geometry.Insets;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import simon.klausurcraft.task.*;
+import simon.klausurcraft.task.io.TaskXmlStore;
+import simon.klausurcraft.ui.UiStyles;
+
+import java.math.BigDecimal;
+
+final class HomeSubtaskSheet {
+
+    private HomeSubtaskSheet(){}
+
+    static void open(HomeController root, Task task, Subtask sub) {
+        // Root layout with sticky footer
+<span class="nc" id="L19">        BorderPane sheet = new BorderPane();</span>
+<span class="nc" id="L20">        sheet.setPadding(new Insets(0));</span>
+
+<span class="nc" id="L22">        VBox content = new VBox(14);</span>
+<span class="nc" id="L23">        content.setPadding(new Insets(16));</span>
+
+<span class="nc" id="L25">        Label title = new Label(&quot;Subtask &quot; + task.getId() + &quot;.&quot; + sub.getId());</span>
+<span class="nc" id="L26">        title.getStyleClass().add(&quot;header&quot;);</span>
+
+<span class="nc" id="L28">        TaskXmlStore xmlService = root.getTaskRepository();</span>
+
+        // Subtask &quot;title&quot; from variants@group
+<span class="nc" id="L31">        String currentGroup = xmlService.readSubtaskGroup(sub);</span>
+<span class="nc" id="L32">        TextField tfSubtaskTitle = new TextField(currentGroup);</span>
+<span class="nc" id="L33">        tfSubtaskTitle.setPromptText(&quot;Subtask title (variants@group)&quot;);</span>
+<span class="nc" id="L34">        tfSubtaskTitle.setMaxWidth(Double.MAX_VALUE);</span>
+<span class="nc" id="L35">        tfSubtaskTitle.setTooltip(new Tooltip(&quot;Shared subtask title stored in variants@group.&quot;));</span>
+<span class="nc" id="L36">        tfSubtaskTitle.textProperty().addListener((o, ov, nv) -&gt; {</span>
+<span class="nc bnc" id="L37" title="All 2 branches missed.">            xmlService.updateSubtaskGroup(sub, nv == null ? &quot;&quot; : nv);</span>
+            // live refresh center + tree
+<span class="nc" id="L39">            root.centerController.render(root.getTasks(), root.currentQuery(), root.allowedDifficulties());</span>
+<span class="nc" id="L40">            root.rebuildToc();</span>
+<span class="nc" id="L41">        });</span>
+
+        // Meta grid
+<span class="nc" id="L44">        GridPane meta = new GridPane();</span>
+<span class="nc" id="L45">        meta.setHgap(10);</span>
+<span class="nc" id="L46">        meta.setVgap(6);</span>
+<span class="nc" id="L47">        ColumnConstraints c1 = new ColumnConstraints(); c1.setPercentWidth(33);</span>
+<span class="nc" id="L48">        ColumnConstraints c2 = new ColumnConstraints(); c2.setPercentWidth(33);</span>
+<span class="nc" id="L49">        ColumnConstraints c3 = new ColumnConstraints(); c3.setPercentWidth(34);</span>
+<span class="nc" id="L50">        meta.getColumnConstraints().addAll(c1, c2, c3);</span>
+
+        // Points
+<span class="nc" id="L53">        VBox ptsBox = new VBox(4);</span>
+<span class="nc" id="L54">        Label lblPts = new Label(&quot;Points&quot;);</span>
+<span class="nc" id="L55">        TextField tfPoints = new TextField(Points.toDisplayString(sub.getPoints()));</span>
+<span class="nc" id="L56">        tfPoints.setPromptText(&quot;Number (&gt;= 0, steps of 0,5)&quot;);</span>
+<span class="nc" id="L57">        tfPoints.setTooltip(new Tooltip(&quot;Points for this subtask (0.5 steps allowed).&quot;));</span>
+<span class="nc" id="L58">        Label lblPtsHint = new Label(&quot;Allowed: 0, 0,5, 1, 1,5, ...&quot;);</span>
+<span class="nc" id="L59">        lblPtsHint.getStyleClass().add(&quot;muted&quot;);</span>
+<span class="nc" id="L60">        Label lblPtsError = new Label();</span>
+<span class="nc" id="L61">        lblPtsError.getStyleClass().add(&quot;field-error&quot;); // styled via existing CSS theme</span>
+<span class="nc" id="L62">        lblPtsError.setManaged(false);</span>
+<span class="nc" id="L63">        lblPtsError.setVisible(false);</span>
+
+<span class="nc" id="L65">        Runnable clearPointsError = () -&gt; {</span>
+<span class="nc" id="L66">            lblPtsError.setManaged(false);</span>
+<span class="nc" id="L67">            lblPtsError.setVisible(false);</span>
+<span class="nc" id="L68">            tfPoints.getStyleClass().remove(&quot;field-error-border&quot;);</span>
+<span class="nc" id="L69">        };</span>
+<span class="nc" id="L70">        java.util.function.Consumer&lt;String&gt; showPointsError = msg -&gt; {</span>
+<span class="nc" id="L71">            lblPtsError.setText(msg);</span>
+<span class="nc" id="L72">            lblPtsError.setManaged(true);</span>
+<span class="nc" id="L73">            lblPtsError.setVisible(true);</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">            if (!tfPoints.getStyleClass().contains(&quot;field-error-border&quot;)) {</span>
+<span class="nc" id="L75">                tfPoints.getStyleClass().add(&quot;field-error-border&quot;);</span>
+            }
+<span class="nc" id="L77">        };</span>
+
+<span class="nc" id="L79">        tfPoints.textProperty().addListener((o, ov, nv) -&gt; {</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">            String s = nv == null ? &quot;&quot; : nv.trim();</span>
+            try {
+<span class="nc" id="L82">                BigDecimal parsedPoints = Points.parseInput(s);</span>
+<span class="nc" id="L83">                sub.setPoints(parsedPoints);</span>
+<span class="nc" id="L84">                xmlService.updateSubtaskMeta(sub);</span>
+<span class="nc" id="L85">                root.centerController.render(root.getTasks(), root.currentQuery(), root.allowedDifficulties());</span>
+<span class="nc" id="L86">                clearPointsError.run();</span>
+<span class="nc" id="L87">            } catch (IllegalArgumentException ex) {</span>
+<span class="nc" id="L88">                showPointsError.accept(ex.getMessage());</span>
+<span class="nc" id="L89">            } catch (Exception ex) {</span>
+<span class="nc" id="L90">                showPointsError.accept(&quot;Failed to save points: &quot; + ex.getMessage());</span>
+<span class="nc" id="L91">            }</span>
+<span class="nc" id="L92">        });</span>
+<span class="nc" id="L93">        ptsBox.getChildren().addAll(lblPts, tfPoints, lblPtsHint, lblPtsError);</span>
+
+        // Difficulty
+<span class="nc" id="L96">        VBox diffBox = new VBox(4);</span>
+<span class="nc" id="L97">        Label lblDiff = new Label(&quot;Difficulty&quot;);</span>
+<span class="nc" id="L98">        ComboBox&lt;Difficulty&gt; cbDiff = new ComboBox&lt;&gt;();</span>
+<span class="nc" id="L99">        cbDiff.getItems().setAll(Difficulty.values());</span>
+<span class="nc" id="L100">        cbDiff.getSelectionModel().select(sub.getDifficulty());</span>
+<span class="nc" id="L101">        cbDiff.setMaxWidth(Double.MAX_VALUE);</span>
+<span class="nc" id="L102">        cbDiff.setTooltip(new Tooltip(&quot;Difficulty label for filtering and generation.&quot;));</span>
+<span class="nc" id="L103">        Runnable paintDiff = () -&gt; {</span>
+<span class="nc" id="L104">            cbDiff.getStyleClass().removeAll(&quot;combo-diff-easy&quot;,&quot;combo-diff-medium&quot;,&quot;combo-diff-hard&quot;);</span>
+<span class="nc" id="L105">            Difficulty d = cbDiff.getValue();</span>
+<span class="nc bnc" id="L106" title="All 6 branches missed.">            if (d != null) switch (d) {</span>
+<span class="nc" id="L107">                case EASY -&gt; cbDiff.getStyleClass().add(&quot;combo-diff-easy&quot;);</span>
+<span class="nc" id="L108">                case MEDIUM -&gt; cbDiff.getStyleClass().add(&quot;combo-diff-medium&quot;);</span>
+<span class="nc" id="L109">                case HARD -&gt; cbDiff.getStyleClass().add(&quot;combo-diff-hard&quot;);</span>
+            }
+<span class="nc" id="L111">        };</span>
+<span class="nc" id="L112">        paintDiff.run();</span>
+<span class="nc" id="L113">        cbDiff.valueProperty().addListener((o, ov, nv) -&gt; {</span>
+<span class="nc" id="L114">            sub.setDifficulty(nv);</span>
+<span class="nc" id="L115">            xmlService.updateSubtaskMeta(sub);</span>
+<span class="nc" id="L116">            paintDiff.run();</span>
+<span class="nc" id="L117">            root.centerController.render(root.getTasks(), root.currentQuery(), root.allowedDifficulties());</span>
+<span class="nc" id="L118">        });</span>
+<span class="nc" id="L119">        diffBox.getChildren().addAll(lblDiff, cbDiff);</span>
+
+        // Eligibility
+<span class="nc" id="L122">        VBox eligBox = new VBox(4);</span>
+<span class="nc" id="L123">        Label lblElig = new Label(&quot;Eligibility&quot;);</span>
+<span class="nc" id="L124">        ComboBox&lt;Eligibility&gt; cbElig = new ComboBox&lt;&gt;();</span>
+<span class="nc" id="L125">        cbElig.getItems().setAll(Eligibility.values());</span>
+<span class="nc" id="L126">        cbElig.getSelectionModel().select(sub.getEligibility());</span>
+<span class="nc" id="L127">        cbElig.setMaxWidth(Double.MAX_VALUE);</span>
+<span class="nc" id="L128">        cbElig.setTooltip(new Tooltip(&quot;Where this subtask may appear: exam, practice, or both.&quot;));</span>
+<span class="nc" id="L129">        Runnable paintElig = () -&gt; {</span>
+<span class="nc" id="L130">            cbElig.getStyleClass().removeAll(&quot;combo-elig-exam&quot;,&quot;combo-elig-practice&quot;,&quot;combo-elig-both&quot;);</span>
+<span class="nc" id="L131">            Eligibility e = cbElig.getValue();</span>
+<span class="nc bnc" id="L132" title="All 6 branches missed.">            if (e != null) switch (e) {</span>
+<span class="nc" id="L133">                case EXAM -&gt; cbElig.getStyleClass().add(&quot;combo-elig-exam&quot;);</span>
+<span class="nc" id="L134">                case PRACTICE -&gt; cbElig.getStyleClass().add(&quot;combo-elig-practice&quot;);</span>
+<span class="nc" id="L135">                case BOTH -&gt; cbElig.getStyleClass().add(&quot;combo-elig-both&quot;);</span>
+            }
+<span class="nc" id="L137">        };</span>
+<span class="nc" id="L138">        paintElig.run();</span>
+<span class="nc" id="L139">        cbElig.valueProperty().addListener((o, ov, nv) -&gt; {</span>
+<span class="nc" id="L140">            sub.setEligibility(nv);</span>
+<span class="nc" id="L141">            xmlService.updateSubtaskMeta(sub);</span>
+<span class="nc" id="L142">            paintElig.run();</span>
+<span class="nc" id="L143">            root.centerController.render(root.getTasks(), root.currentQuery(), root.allowedDifficulties());</span>
+<span class="nc" id="L144">        });</span>
+<span class="nc" id="L145">        eligBox.getChildren().addAll(lblElig, cbElig);</span>
+
+<span class="nc" id="L147">        meta.add(ptsBox, 0, 0);</span>
+<span class="nc" id="L148">        meta.add(diffBox, 1, 0);</span>
+<span class="nc" id="L149">        meta.add(eligBox, 2, 0);</span>
+
+        // Variants
+<span class="nc" id="L152">        VBox variantsBox = new VBox(12);</span>
+
+        // Header row for variants with &quot;+ Variant&quot; and &quot;Delete subtask&quot;
+<span class="nc" id="L155">        HBox variantsHeader = new HBox(8);</span>
+<span class="nc" id="L156">        Label vTitle = new Label(&quot;Variants&quot;);</span>
+<span class="nc" id="L157">        Region vSpacer = new Region(); HBox.setHgrow(vSpacer, Priority.ALWAYS);</span>
+<span class="nc" id="L158">        Button btnAddVariant = new Button(&quot;+ Variant&quot;);</span>
+<span class="nc" id="L159">        btnAddVariant.getStyleClass().add(&quot;chip&quot;);</span>
+<span class="nc" id="L160">        btnAddVariant.setTooltip(new Tooltip(&quot;Add a new variant to this subtask.&quot;));</span>
+<span class="nc" id="L161">        btnAddVariant.setOnAction(e -&gt; {</span>
+<span class="nc" id="L162">            xmlService.addVariant(sub).ifPresent(v -&gt; {</span>
+<span class="nc" id="L163">                open(root, task, sub); // refresh</span>
+<span class="nc" id="L164">                root.centerController.render(root.getTasks(), root.currentQuery(), root.allowedDifficulties());</span>
+<span class="nc" id="L165">            });</span>
+<span class="nc" id="L166">        });</span>
+
+<span class="nc" id="L168">        Button btnDeleteSubtask = new Button(&quot;Delete subtask&quot;);</span>
+<span class="nc" id="L169">        btnDeleteSubtask.getStyleClass().addAll(&quot;chip&quot;, &quot;danger&quot;);</span>
+<span class="nc" id="L170">        btnDeleteSubtask.setTooltip(new Tooltip(&quot;Delete this subtask and all of its variants.&quot;));</span>
+<span class="nc" id="L171">        btnDeleteSubtask.setOnAction(e -&gt; {</span>
+<span class="nc" id="L172">            Alert a = new Alert(Alert.AlertType.CONFIRMATION);</span>
+<span class="nc" id="L173">            a.setTitle(&quot;Delete subtask&quot;);</span>
+<span class="nc" id="L174">            a.setHeaderText(&quot;Delete this subtask?&quot;);</span>
+<span class="nc" id="L175">            a.setContentText(&quot;This will delete the subtask including all its variants. This action cannot be undone.&quot;);</span>
+<span class="nc" id="L176">            a.initOwner(root.getWindow());</span>
+<span class="nc" id="L177">            UiStyles.applyCurrentStyles(a);</span>
+<span class="nc" id="L178">            a.showAndWait().ifPresent(bt -&gt; {</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">                if (bt == ButtonType.OK) {</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">                    if (root.getTaskRepository().deleteSubtask(task, sub)) {</span>
+<span class="nc" id="L181">                        task.getSubtasks().remove(sub);</span>
+<span class="nc" id="L182">                        root.getSlideOver().hide();</span>
+<span class="nc" id="L183">                        root.rootStack.setMouseTransparent(true);</span>
+<span class="nc" id="L184">                        root.centerController.render(root.getTasks(), root.currentQuery(), root.allowedDifficulties());</span>
+<span class="nc" id="L185">                        root.rebuildToc();</span>
+                    } else {
+<span class="nc" id="L187">                        HomeNotifications.showError(&quot;Failed to delete subtask.&quot;);</span>
+                    }
+                }
+<span class="nc" id="L190">            });</span>
+<span class="nc" id="L191">        });</span>
+
+<span class="nc" id="L193">        variantsHeader.getChildren().addAll(vTitle, vSpacer, btnAddVariant, btnDeleteSubtask);</span>
+<span class="nc" id="L194">        variantsBox.getChildren().add(variantsHeader);</span>
+
+<span class="nc bnc" id="L196" title="All 2 branches missed.">        for (Variant v : sub.getVariants()) {</span>
+<span class="nc" id="L197">            VBox vCard = new VBox(8);</span>
+<span class="nc" id="L198">            vCard.getStyleClass().add(&quot;card&quot;);</span>
+<span class="nc" id="L199">            vCard.setPadding(new Insets(12));</span>
+
+<span class="nc" id="L201">            HBox vHeader = new HBox(8);</span>
+<span class="nc" id="L202">            Label vHeaderLbl = new Label(&quot;Variant &quot; + v.getId());</span>
+<span class="nc" id="L203">            vHeaderLbl.getStyleClass().add(&quot;header&quot;);</span>
+<span class="nc" id="L204">            Region spacer = new Region(); HBox.setHgrow(spacer, Priority.ALWAYS);</span>
+<span class="nc" id="L205">            Button btnDelVar = new Button(&quot;Delete&quot;);</span>
+<span class="nc" id="L206">            btnDelVar.getStyleClass().addAll(&quot;chip&quot;, &quot;danger&quot;);</span>
+<span class="nc" id="L207">            btnDelVar.setTooltip(new Tooltip(&quot;Delete this variant.&quot;));</span>
+<span class="nc bnc" id="L208" title="All 2 branches missed.">            btnDelVar.setDisable(sub.getVariants().size() &lt;= 1);</span>
+<span class="nc" id="L209">            btnDelVar.setOnAction(e -&gt; {</span>
+<span class="nc bnc" id="L210" title="All 2 branches missed.">                if (sub.getVariants().size() &lt;= 1) {</span>
+<span class="nc" id="L211">                    HomeNotifications.showError(&quot;Cannot delete the last variant of a subtask.&quot;);</span>
+<span class="nc" id="L212">                    return;</span>
+                }
+<span class="nc" id="L214">                Alert a = new Alert(Alert.AlertType.CONFIRMATION);</span>
+<span class="nc" id="L215">                a.setTitle(&quot;Delete variant&quot;);</span>
+<span class="nc" id="L216">                a.setHeaderText(&quot;Delete this variant?&quot;);</span>
+<span class="nc" id="L217">                a.setContentText(&quot;This action cannot be undone.&quot;);</span>
+<span class="nc" id="L218">                a.initOwner(root.getWindow());</span>
+<span class="nc" id="L219">                UiStyles.applyCurrentStyles(a);</span>
+<span class="nc" id="L220">                a.showAndWait().ifPresent(bt -&gt; {</span>
+<span class="nc bnc" id="L221" title="All 2 branches missed.">                    if (bt == ButtonType.OK) {</span>
+<span class="nc bnc" id="L222" title="All 2 branches missed.">                        if (root.getTaskRepository().deleteVariant(sub, v)) {</span>
+<span class="nc" id="L223">                            sub.getVariants().remove(v);</span>
+<span class="nc" id="L224">                            open(root, task, sub); // refresh sheet content</span>
+<span class="nc" id="L225">                            root.centerController.render(root.getTasks(), root.currentQuery(), root.allowedDifficulties());</span>
+                        } else {
+<span class="nc" id="L227">                            HomeNotifications.showError(&quot;Failed to delete variant.&quot;);</span>
+                        }
+                    }
+<span class="nc" id="L230">                });</span>
+<span class="nc" id="L231">            });</span>
+
+<span class="nc" id="L233">            vHeader.getChildren().addAll(vHeaderLbl, spacer, btnDelVar);</span>
+
+<span class="nc" id="L235">            TextArea taText = new TextArea(v.getText());</span>
+<span class="nc" id="L236">            taText.setPromptText(&quot;Variant text&quot;);</span>
+<span class="nc" id="L237">            taText.setPrefRowCount(3);</span>
+<span class="nc" id="L238">            taText.setTooltip(new Tooltip(&quot;Task text shown to students.&quot;));</span>
+<span class="nc" id="L239">            taText.textProperty().addListener((o, ov, nv) -&gt; {</span>
+<span class="nc" id="L240">                v.setText(nv);</span>
+<span class="nc" id="L241">                xmlService.updateVariant(v);</span>
+<span class="nc" id="L242">            });</span>
+
+<span class="nc" id="L244">            TextArea taSol = new TextArea(v.getSolution());</span>
+<span class="nc" id="L245">            taSol.setPromptText(&quot;Solution (leave empty if none)&quot;);</span>
+<span class="nc" id="L246">            taSol.setPrefRowCount(3);</span>
+<span class="nc" id="L247">            taSol.setTooltip(new Tooltip(&quot;Sample solution text for this variant.&quot;));</span>
+<span class="nc" id="L248">            taSol.textProperty().addListener((o, ov, nv) -&gt; {</span>
+<span class="nc" id="L249">                v.setSolution(nv);</span>
+<span class="nc" id="L250">                xmlService.updateVariant(v);</span>
+<span class="nc" id="L251">            });</span>
+
+<span class="nc" id="L253">            vCard.getChildren().addAll(vHeader, new Label(&quot;Text&quot;), taText, new Label(&quot;Solution&quot;), taSol);</span>
+<span class="nc" id="L254">            variantsBox.getChildren().add(vCard);</span>
+<span class="nc" id="L255">        }</span>
+
+        // Build scrollable center and sticky footer
+<span class="nc" id="L258">        ScrollPane sp = new ScrollPane(content);</span>
+<span class="nc" id="L259">        sp.setFitToWidth(true);</span>
+<span class="nc" id="L260">        sp.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);</span>
+<span class="nc" id="L261">        sheet.setCenter(sp);</span>
+
+<span class="nc" id="L263">        HBox footer = new HBox(8);</span>
+<span class="nc" id="L264">        footer.getStyleClass().add(&quot;sheet-footer&quot;);</span>
+<span class="nc" id="L265">        Region footSpacer = new Region(); HBox.setHgrow(footSpacer, Priority.ALWAYS);</span>
+<span class="nc" id="L266">        Button btnClose = new Button(&quot;Close&quot;);</span>
+<span class="nc" id="L267">        btnClose.getStyleClass().add(&quot;chip&quot;);</span>
+<span class="nc" id="L268">        btnClose.setCancelButton(true);</span>
+<span class="nc" id="L269">        btnClose.setTooltip(new Tooltip(&quot;Close this editor.&quot;));</span>
+<span class="nc" id="L270">        btnClose.setOnAction(e -&gt; {</span>
+<span class="nc" id="L271">            root.getSlideOver().hide();</span>
+<span class="nc" id="L272">            rootStackMouseTransparent(root, true);</span>
+<span class="nc" id="L273">        });</span>
+<span class="nc" id="L274">        footer.getChildren().addAll(footSpacer, btnClose);</span>
+<span class="nc" id="L275">        sheet.setBottom(footer);</span>
+
+        // assemble content
+<span class="nc" id="L278">        content.getChildren().addAll(</span>
+                title,
+                new Label(&quot;Subtask title&quot;), tfSubtaskTitle,
+                new Separator(),
+                meta,
+                new Separator(),
+                variantsBox
+        );
+
+<span class="nc" id="L287">        root.getSlideOver().setContent(sheet);</span>
+<span class="nc" id="L288">        root.getSlideOver().show();</span>
+<span class="nc" id="L289">        rootStackMouseTransparent(root, false);</span>
+
+        // Ensure focus lands on the active editor field after opening.
+<span class="nc" id="L292">        Platform.runLater(() -&gt; {</span>
+<span class="nc" id="L293">            tfSubtaskTitle.requestFocus();</span>
+<span class="nc" id="L294">            tfSubtaskTitle.selectAll();</span>
+<span class="nc" id="L295">        });</span>
+<span class="nc" id="L296">    }</span>
+
+    private static void rootStackMouseTransparent(HomeController root, boolean v) {
+<span class="nc" id="L299">        root.rootStack.setMouseTransparent(v);</span>
+<span class="nc" id="L300">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

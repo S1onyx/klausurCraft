@@ -1,0 +1,42 @@
+generated_at=2026-04-22 11:05:20 CEST
+java_files=29
+code_lines=4163
+comment_lines=211
+blank_lines=718
+comment_ratio_percent=4.82
+package_count=8
+class_count=26
+interface_count=0
+enum_count=5
+record_count=1
+type_count=32
+method_count=218
+avg_method_size_loc=19.10
+total_imports=327
+avg_imports_per_type=11.68
+max_import_file=src/main/java/simon/klausurcraft/app/KlausurCraftApp.java
+max_imports=43
+
+[packages]
+simon.klausurcraft.app
+simon.klausurcraft.task
+simon.klausurcraft.task.export
+simon.klausurcraft.task.io
+simon.klausurcraft.task.planning
+simon.klausurcraft.ui
+simon.klausurcraft.ui.components
+simon.klausurcraft.ui.home
+
+[top_java_files_by_loc]
+     740 src/main/java/simon/klausurcraft/ui/home/HomeGenerateFlow.java
+     543 src/main/java/simon/klausurcraft/task/export/PdfExportService.java
+     476 src/main/java/simon/klausurcraft/ui/home/HomeCenterController.java
+     404 src/main/java/simon/klausurcraft/ui/home/HomeController.java
+     362 src/main/java/simon/klausurcraft/task/io/TaskXmlStore.java
+
+[top_java_files_by_imports]
+  43 src/main/java/simon/klausurcraft/app/KlausurCraftApp.java
+  42 src/main/java/simon/klausurcraft/ui/home/HomeGenerateFlow.java
+  40 src/main/java/simon/klausurcraft/ui/home/HomeController.java
+  26 src/main/java/simon/klausurcraft/task/export/PdfExportService.java
+  23 src/main/java/simon/klausurcraft/ui/home/HomeCenterController.java

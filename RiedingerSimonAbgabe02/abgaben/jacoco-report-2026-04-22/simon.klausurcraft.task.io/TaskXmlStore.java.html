@@ -1,0 +1,363 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="de"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TaskXmlStore.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">demo</a> &gt; <a href="index.source.html" class="el_package">simon.klausurcraft.task.io</a> &gt; <span class="el_source">TaskXmlStore.java</span></div><h1>TaskXmlStore.java</h1><pre class="source lang-java linenums">package simon.klausurcraft.task.io;
+
+import org.w3c.dom.*;
+import org.xml.sax.ErrorHandler;
+import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
+import simon.klausurcraft.task.*;
+
+import javax.xml.XMLConstants;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.*;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
+import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import static javax.xml.transform.OutputKeys.ENCODING;
+import static javax.xml.transform.OutputKeys.INDENT;
+
+<span class="fc" id="L27">public class TaskXmlStore {</span>
+
+    private Path currentFile;
+    private Document doc;
+
+<span class="fc" id="L32">    public record LoadResult(List&lt;Task&gt; tasks) {}</span>
+
+    public LoadResult load(Path xmlFile, Path xsdFile) throws Exception {
+<span class="fc" id="L35">        this.currentFile = xmlFile;</span>
+
+<span class="fc" id="L37">        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();</span>
+<span class="fc" id="L38">        dbf.setNamespaceAware(true);</span>
+<span class="fc" id="L39">        dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);</span>
+
+<span class="fc" id="L41">        Schema schema = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI)</span>
+<span class="fc" id="L42">                .newSchema(xsdFile.toFile());</span>
+<span class="fc" id="L43">        dbf.setSchema(schema);</span>
+
+<span class="fc" id="L45">        DocumentBuilder db = dbf.newDocumentBuilder();</span>
+<span class="fc" id="L46">        db.setErrorHandler(new ErrorHandler() {</span>
+            private String where(SAXParseException e) {
+<span class="fc" id="L48">                return &quot;(line &quot; + e.getLineNumber() + &quot;, col &quot; + e.getColumnNumber() + &quot;)&quot;;</span>
+            }
+            @Override public void warning(SAXParseException e) {
+<span class="nc" id="L51">                System.err.println(&quot;[XML WARNING] &quot; + where(e) + &quot; &quot; + e.getMessage());</span>
+<span class="nc" id="L52">            }</span>
+            @Override public void error(SAXParseException e) throws SAXException {
+<span class="fc" id="L54">                System.err.println(&quot;[XML ERROR] &quot; + where(e) + &quot; &quot; + e.getMessage());</span>
+<span class="fc" id="L55">                throw e;</span>
+            }
+            @Override public void fatalError(SAXParseException e) throws SAXException {
+<span class="nc" id="L58">                System.err.println(&quot;[XML FATAL] &quot; + where(e) + &quot; &quot; + e.getMessage());</span>
+<span class="nc" id="L59">                throw e;</span>
+            }
+        });
+
+<span class="fc" id="L63">        doc = db.parse(Files.newInputStream(xmlFile));</span>
+<span class="fc" id="L64">        doc.getDocumentElement().normalize();</span>
+
+<span class="fc" id="L66">        List&lt;Task&gt; tasks = parseTasks(doc);</span>
+<span class="fc" id="L67">        return new LoadResult(tasks);</span>
+    }
+
+    /**
+     * Create a brand-new XML file with an empty {@code &lt;tasks&gt;} root and load it into the repository.
+     */
+    public LoadResult createNew(Path xmlFile, Path xsdFile) throws Exception {
+<span class="fc" id="L74">        Path parent = xmlFile.getParent();</span>
+<span class="fc bfc" id="L75" title="All 2 branches covered.">        if (parent != null) {</span>
+<span class="fc" id="L76">            Files.createDirectories(parent);</span>
+        }
+
+<span class="fc" id="L79">        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();</span>
+<span class="fc" id="L80">        dbf.setNamespaceAware(true);</span>
+<span class="fc" id="L81">        dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);</span>
+<span class="fc" id="L82">        DocumentBuilder db = dbf.newDocumentBuilder();</span>
+<span class="fc" id="L83">        Document newDoc = db.newDocument();</span>
+<span class="fc" id="L84">        Element root = newDoc.createElement(&quot;tasks&quot;);</span>
+<span class="fc" id="L85">        newDoc.appendChild(root);</span>
+
+<span class="fc" id="L87">        this.doc = newDoc;</span>
+<span class="fc" id="L88">        this.currentFile = xmlFile;</span>
+<span class="fc" id="L89">        save();</span>
+
+<span class="fc" id="L91">        return load(xmlFile, xsdFile);</span>
+    }
+
+    private List&lt;Task&gt; parseTasks(Document d) {
+<span class="fc" id="L95">        List&lt;Task&gt; list = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L96">        NodeList nTasks = d.getElementsByTagName(&quot;task&quot;);</span>
+<span class="fc bfc" id="L97" title="All 2 branches covered.">        for (int i = 0; i &lt; nTasks.getLength(); i++) {</span>
+<span class="fc" id="L98">            Element eTask = (Element) nTasks.item(i);</span>
+<span class="fc" id="L99">            String id = eTask.getAttribute(&quot;id&quot;);</span>
+<span class="fc" id="L100">            String title = eTask.getAttribute(&quot;title&quot;);</span>
+<span class="fc" id="L101">            Task t = new Task(eTask, id, title);</span>
+
+<span class="fc" id="L103">            NodeList nSubs = eTask.getElementsByTagName(&quot;subtask&quot;);</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">            for (int j = 0; j &lt; nSubs.getLength(); j++) {</span>
+<span class="fc" id="L105">                Element eSub = (Element) nSubs.item(j);</span>
+<span class="pc bpc" id="L106" title="1 of 2 branches missed.">                if (!eSub.getParentNode().isSameNode(eTask)) continue;</span>
+
+<span class="fc" id="L108">                String sid = eSub.getAttribute(&quot;id&quot;);</span>
+<span class="fc" id="L109">                BigDecimal pts = Points.parseStorageValue(eSub.getAttribute(&quot;points&quot;));</span>
+<span class="fc" id="L110">                Difficulty diff = Difficulty.from(eSub.getAttribute(&quot;difficulty&quot;));</span>
+<span class="fc" id="L111">                Eligibility elig = Eligibility.from(eSub.getAttribute(&quot;eligibility&quot;));</span>
+<span class="fc" id="L112">                Subtask st = new Subtask(eSub, t, sid, pts, diff, elig);</span>
+
+<span class="fc" id="L114">                NodeList nVar = eSub.getElementsByTagName(&quot;variant&quot;);</span>
+<span class="fc bfc" id="L115" title="All 2 branches covered.">                for (int k = 0; k &lt; nVar.getLength(); k++) {</span>
+<span class="fc" id="L116">                    Element eVar = (Element) nVar.item(k);</span>
+<span class="fc" id="L117">                    Element eText = (Element) eVar.getElementsByTagName(&quot;text&quot;).item(0);</span>
+<span class="fc" id="L118">                    Element eSol = (Element) eVar.getElementsByTagName(&quot;solution&quot;).item(0);</span>
+<span class="fc" id="L119">                    String vid = eVar.getAttribute(&quot;id&quot;);</span>
+<span class="fc bfc" id="L120" title="All 2 branches covered.">                    String text = eText != null ? getText(eText) : &quot;&quot;;</span>
+<span class="fc bfc" id="L121" title="All 2 branches covered.">                    String sol = eSol != null ? getText(eSol) : &quot;&quot;;</span>
+<span class="fc" id="L122">                    Variant vm = new Variant(eVar, vid, text, sol);</span>
+<span class="fc" id="L123">                    st.getVariants().add(vm);</span>
+                }
+
+<span class="fc" id="L126">                t.getSubtasks().add(st);</span>
+            }
+
+<span class="fc" id="L129">            list.add(t);</span>
+        }
+<span class="fc" id="L131">        return list;</span>
+    }
+
+    private String getText(Element el) {
+<span class="pc bpc" id="L135" title="1 of 2 branches missed.">        return el.getTextContent() == null ? &quot;&quot; : el.getTextContent();</span>
+    }
+
+    // ----- Helpers to access variants@group (subtask title) -----
+
+    /** Read the variants@group (subtask title) of a subtask. */
+    public String readSubtaskGroup(Subtask st) {
+<span class="fc" id="L142">        Element eSub = st.getDom();</span>
+<span class="fc" id="L143">        NodeList vars = eSub.getElementsByTagName(&quot;variants&quot;);</span>
+<span class="fc bfc" id="L144" title="All 2 branches covered.">        if (vars.getLength() &gt; 0) {</span>
+<span class="fc" id="L145">            Element eVars = (Element) vars.item(0);</span>
+<span class="fc" id="L146">            return eVars.getAttribute(&quot;group&quot;);</span>
+        }
+<span class="fc" id="L148">        return &quot;&quot;;</span>
+    }
+
+    /** Update the variants@group (subtask title) and autosave. */
+    public void updateSubtaskGroup(Subtask st, String group) {
+<span class="fc" id="L153">        Element eSub = st.getDom();</span>
+        Element eVars;
+<span class="fc" id="L155">        NodeList vars = eSub.getElementsByTagName(&quot;variants&quot;);</span>
+<span class="fc bfc" id="L156" title="All 2 branches covered.">        if (vars.getLength() &gt; 0) {</span>
+<span class="fc" id="L157">            eVars = (Element) vars.item(0);</span>
+        } else {
+<span class="fc" id="L159">            eVars = eSub.getOwnerDocument().createElement(&quot;variants&quot;);</span>
+<span class="fc" id="L160">            eSub.appendChild(eVars);</span>
+        }
+<span class="fc bfc" id="L162" title="All 2 branches covered.">        if (group == null) group = &quot;&quot;;</span>
+<span class="fc" id="L163">        eVars.setAttribute(&quot;group&quot;, group);</span>
+<span class="fc" id="L164">        save();</span>
+<span class="fc" id="L165">    }</span>
+
+    // --- Autosave updates for other fields ---
+
+    public void updateTaskTitle(Task t) {
+<span class="fc" id="L170">        t.getDom().setAttribute(&quot;title&quot;, t.getTitle());</span>
+<span class="fc" id="L171">        save();</span>
+<span class="fc" id="L172">    }</span>
+
+    public void updateSubtaskMeta(Subtask st) {
+<span class="fc" id="L175">        st.getDom().setAttribute(&quot;points&quot;, Points.toStorageString(st.getPoints()));</span>
+<span class="fc" id="L176">        st.getDom().setAttribute(&quot;difficulty&quot;, st.getDifficulty().toString());</span>
+<span class="fc" id="L177">        st.getDom().setAttribute(&quot;eligibility&quot;, st.getEligibility().toString());</span>
+<span class="fc" id="L178">        save();</span>
+<span class="fc" id="L179">    }</span>
+
+    public void updateVariant(Variant v) {
+<span class="fc" id="L182">        Element e = v.getDom();</span>
+<span class="fc" id="L183">        NodeList nText = e.getElementsByTagName(&quot;text&quot;);</span>
+<span class="fc bfc" id="L184" title="All 2 branches covered.">        Element eText = (Element) (nText.getLength() == 0 ? e.appendChild(e.getOwnerDocument().createElement(&quot;text&quot;)) : nText.item(0));</span>
+<span class="fc" id="L185">        eText.setTextContent(v.getText());</span>
+
+<span class="fc" id="L187">        NodeList nSol = e.getElementsByTagName(&quot;solution&quot;);</span>
+<span class="fc bfc" id="L188" title="All 2 branches covered.">        Element eSol = (Element) (nSol.getLength() == 0 ? e.appendChild(e.getOwnerDocument().createElement(&quot;solution&quot;)) : nSol.item(0));</span>
+<span class="pc bpc" id="L189" title="1 of 2 branches missed.">        eSol.setTextContent(v.getSolution() == null ? &quot;&quot; : v.getSolution());</span>
+
+<span class="fc" id="L191">        save();</span>
+<span class="fc" id="L192">    }</span>
+
+    // ====== NEW: create/delete APIs for tasks, subtasks, variants ======
+
+    /** Create a new task with a 4-digit id and empty body. Returns the created Task. */
+    public Optional&lt;Task&gt; addTask(String title) {
+<span class="fc bfc" id="L198" title="All 2 branches covered.">        if (doc == null) return Optional.empty();</span>
+<span class="fc" id="L199">        Element root = doc.getDocumentElement(); // &lt;tasks&gt;</span>
+<span class="fc" id="L200">        String nextId = nextId4(root, &quot;task&quot;);</span>
+<span class="fc" id="L201">        Element eTask = doc.createElement(&quot;task&quot;);</span>
+<span class="fc" id="L202">        eTask.setAttribute(&quot;id&quot;, nextId);</span>
+<span class="pc bpc" id="L203" title="1 of 2 branches missed.">        eTask.setAttribute(&quot;title&quot;, title == null ? &quot;&quot; : title);</span>
+<span class="fc" id="L204">        root.appendChild(eTask);</span>
+
+<span class="fc" id="L206">        Task tm = new Task(eTask, nextId, title);</span>
+<span class="fc" id="L207">        save();</span>
+<span class="fc" id="L208">        return Optional.of(tm);</span>
+    }
+
+    /** Delete a task including all its subtasks. */
+    public boolean deleteTask(Task t) {
+        try {
+<span class="fc" id="L214">            Element eTask = t.getDom();</span>
+<span class="fc" id="L215">            eTask.getParentNode().removeChild(eTask);</span>
+<span class="fc" id="L216">            save();</span>
+<span class="fc" id="L217">            return true;</span>
+<span class="fc" id="L218">        } catch (Exception ex) {</span>
+<span class="fc" id="L219">            System.err.println(&quot;[XML DELETE TASK] &quot; + ex.getMessage());</span>
+<span class="fc" id="L220">            return false;</span>
+        }
+    }
+
+    /** Create a subtask under given task with default meta and one empty variant. */
+    public Optional&lt;Subtask&gt; addSubtask(Task task) {
+        try {
+<span class="fc" id="L227">            Element eTask = task.getDom();</span>
+<span class="fc" id="L228">            Document d = eTask.getOwnerDocument();</span>
+
+<span class="fc" id="L230">            String sid = nextId4(eTask, &quot;subtask&quot;);</span>
+<span class="fc" id="L231">            Element eSub = d.createElement(&quot;subtask&quot;);</span>
+<span class="fc" id="L232">            eSub.setAttribute(&quot;id&quot;, sid);</span>
+<span class="fc" id="L233">            eSub.setAttribute(&quot;points&quot;, &quot;1&quot;);</span>
+<span class="fc" id="L234">            eSub.setAttribute(&quot;difficulty&quot;, Difficulty.EASY.toString());</span>
+<span class="fc" id="L235">            eSub.setAttribute(&quot;eligibility&quot;, Eligibility.BOTH.toString());</span>
+
+<span class="fc" id="L237">            Element eVars = d.createElement(&quot;variants&quot;);</span>
+<span class="fc" id="L238">            eSub.appendChild(eVars);</span>
+
+<span class="fc" id="L240">            String vid = &quot;0001&quot;;</span>
+<span class="fc" id="L241">            Element eVar = d.createElement(&quot;variant&quot;);</span>
+<span class="fc" id="L242">            eVar.setAttribute(&quot;id&quot;, vid);</span>
+<span class="fc" id="L243">            Element eText = d.createElement(&quot;text&quot;);</span>
+<span class="fc" id="L244">            eText.setTextContent(&quot;&quot;);</span>
+<span class="fc" id="L245">            Element eSol = d.createElement(&quot;solution&quot;);</span>
+<span class="fc" id="L246">            eSol.setTextContent(&quot;&quot;);</span>
+<span class="fc" id="L247">            eVar.appendChild(eText);</span>
+<span class="fc" id="L248">            eVar.appendChild(eSol);</span>
+<span class="fc" id="L249">            eVars.appendChild(eVar);</span>
+
+<span class="fc" id="L251">            eTask.appendChild(eSub);</span>
+
+<span class="fc" id="L253">            Subtask st = new Subtask(eSub, task, sid, new BigDecimal(&quot;1&quot;), Difficulty.EASY, Eligibility.BOTH);</span>
+<span class="fc" id="L254">            Variant vm = new Variant(eVar, vid, &quot;&quot;, &quot;&quot;);</span>
+<span class="fc" id="L255">            st.getVariants().add(vm);</span>
+<span class="fc" id="L256">            task.getSubtasks().add(st);</span>
+
+<span class="fc" id="L258">            save();</span>
+<span class="fc" id="L259">            return Optional.of(st);</span>
+<span class="fc" id="L260">        } catch (Exception ex) {</span>
+<span class="fc" id="L261">            System.err.println(&quot;[XML ADD SUBTASK] &quot; + ex.getMessage());</span>
+<span class="fc" id="L262">            return Optional.empty();</span>
+        }
+    }
+
+    /** Delete a subtask node. */
+    public boolean deleteSubtask(Task task, Subtask st) {
+        try {
+<span class="fc" id="L269">            Element eSub = st.getDom();</span>
+<span class="fc" id="L270">            eSub.getParentNode().removeChild(eSub);</span>
+<span class="fc" id="L271">            save();</span>
+<span class="fc" id="L272">            return true;</span>
+<span class="fc" id="L273">        } catch (Exception ex) {</span>
+<span class="fc" id="L274">            System.err.println(&quot;[XML DELETE SUBTASK] &quot; + ex.getMessage());</span>
+<span class="fc" id="L275">            return false;</span>
+        }
+    }
+
+    /** Create a new variant under given subtask. */
+    public Optional&lt;Variant&gt; addVariant(Subtask sub) {
+        try {
+<span class="fc" id="L282">            Element eSub = sub.getDom();</span>
+<span class="fc" id="L283">            Document d = eSub.getOwnerDocument();</span>
+
+<span class="fc" id="L285">            Element eVars = ensureVariants(eSub);</span>
+
+<span class="fc" id="L287">            String vid = nextId4(eVars, &quot;variant&quot;);</span>
+<span class="fc" id="L288">            Element eVar = d.createElement(&quot;variant&quot;);</span>
+<span class="fc" id="L289">            eVar.setAttribute(&quot;id&quot;, vid);</span>
+<span class="fc" id="L290">            Element eText = d.createElement(&quot;text&quot;);</span>
+<span class="fc" id="L291">            eText.setTextContent(&quot;&quot;);</span>
+<span class="fc" id="L292">            Element eSol = d.createElement(&quot;solution&quot;);</span>
+<span class="fc" id="L293">            eSol.setTextContent(&quot;&quot;);</span>
+<span class="fc" id="L294">            eVar.appendChild(eText);</span>
+<span class="fc" id="L295">            eVar.appendChild(eSol);</span>
+
+<span class="fc" id="L297">            eVars.appendChild(eVar);</span>
+
+<span class="fc" id="L299">            Variant vm = new Variant(eVar, vid, &quot;&quot;, &quot;&quot;);</span>
+<span class="fc" id="L300">            sub.getVariants().add(vm);</span>
+
+<span class="fc" id="L302">            save();</span>
+<span class="fc" id="L303">            return Optional.of(vm);</span>
+<span class="fc" id="L304">        } catch (Exception ex) {</span>
+<span class="fc" id="L305">            System.err.println(&quot;[XML ADD VARIANT] &quot; + ex.getMessage());</span>
+<span class="fc" id="L306">            return Optional.empty();</span>
+        }
+    }
+
+    /** Delete a variant node. */
+    public boolean deleteVariant(Subtask sub, Variant v) {
+        try {
+<span class="fc" id="L313">            Element eVar = v.getDom();</span>
+<span class="fc" id="L314">            eVar.getParentNode().removeChild(eVar);</span>
+<span class="fc" id="L315">            save();</span>
+<span class="fc" id="L316">            return true;</span>
+<span class="fc" id="L317">        } catch (Exception ex) {</span>
+<span class="fc" id="L318">            System.err.println(&quot;[XML DELETE VARIANT] &quot; + ex.getMessage());</span>
+<span class="fc" id="L319">            return false;</span>
+        }
+    }
+
+    private Element ensureVariants(Element eSub) {
+<span class="fc" id="L324">        NodeList vars = eSub.getElementsByTagName(&quot;variants&quot;);</span>
+<span class="fc bfc" id="L325" title="All 2 branches covered.">        if (vars.getLength() &gt; 0) return (Element) vars.item(0);</span>
+<span class="fc" id="L326">        Element eVars = eSub.getOwnerDocument().createElement(&quot;variants&quot;);</span>
+<span class="fc" id="L327">        eSub.appendChild(eVars);</span>
+<span class="fc" id="L328">        return eVars;</span>
+    }
+
+    /** Compute next 4-digit id for direct children with given tag (e.g., &quot;task&quot;, &quot;subtask&quot;, &quot;variant&quot;). */
+    private String nextId4(Element parent, String tag) {
+<span class="fc" id="L333">        int max = 0;</span>
+<span class="fc" id="L334">        NodeList list = parent.getElementsByTagName(tag);</span>
+<span class="fc bfc" id="L335" title="All 2 branches covered.">        for (int i = 0; i &lt; list.getLength(); i++) {</span>
+<span class="fc" id="L336">            Element e = (Element) list.item(i);</span>
+<span class="pc bpc" id="L337" title="1 of 2 branches missed.">            if (!e.getParentNode().isSameNode(parent)) continue; // only direct children</span>
+<span class="fc" id="L338">            String s = e.getAttribute(&quot;id&quot;);</span>
+            try {
+<span class="fc" id="L340">                int n = Integer.parseInt(s);</span>
+<span class="pc bpc" id="L341" title="1 of 2 branches missed.">                if (n &gt; max) max = n;</span>
+<span class="fc" id="L342">            } catch (NumberFormatException ignored) {}</span>
+        }
+<span class="fc" id="L344">        int next = max + 1;</span>
+<span class="fc" id="L345">        return String.format(&quot;%04d&quot;, next);</span>
+    }
+
+    private void save() {
+<span class="pc bpc" id="L349" title="1 of 4 branches missed.">        if (doc == null || currentFile == null) return;</span>
+        try {
+<span class="fc" id="L351">            TransformerFactory tf = TransformerFactory.newInstance();</span>
+<span class="fc" id="L352">            Transformer t = tf.newTransformer();</span>
+<span class="fc" id="L353">            t.setOutputProperty(ENCODING, &quot;UTF-8&quot;);</span>
+<span class="fc" id="L354">            t.setOutputProperty(INDENT, &quot;yes&quot;);</span>
+<span class="fc" id="L355">            t.setOutputProperty(&quot;{http://xml.apache.org/xslt}indent-amount&quot;, &quot;2&quot;);</span>
+<span class="fc" id="L356">            t.transform(new DOMSource(doc), new StreamResult(currentFile.toFile()));</span>
+<span class="fc" id="L357">        } catch (TransformerException e) {</span>
+<span class="fc" id="L358">            System.err.println(&quot;[XML SAVE ERROR] &quot; + e.getMessage());</span>
+<span class="fc" id="L359">            e.printStackTrace();</span>
+<span class="fc" id="L360">        }</span>
+<span class="fc" id="L361">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

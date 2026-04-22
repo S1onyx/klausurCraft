@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="de"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PdfExportRules.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">demo</a> &gt; <a href="index.source.html" class="el_package">simon.klausurcraft.task.export</a> &gt; <span class="el_source">PdfExportRules.java</span></div><h1>PdfExportRules.java</h1><pre class="source lang-java linenums">package simon.klausurcraft.task.export;
+
+import simon.klausurcraft.task.Points;
+import simon.klausurcraft.task.Subtask;
+
+import java.io.File;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Locale;
+
+/**
+ * Pure helper rules for file naming, date formatting and point math used by PDF export.
+ */
+final class PdfExportRules {
+
+<span class="fc" id="L18">    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern(&quot;dd.MM.yyyy&quot;);</span>
+
+    private PdfExportRules() {}
+
+    /**
+     * Ensures that a chosen export file ends with the {@code .pdf} suffix.
+     *
+     * @param file selected file from the save dialog
+     * @return original file or suffixed variant
+     */
+    static File ensurePdfExtension(File file) {
+<span class="fc bfc" id="L29" title="All 2 branches covered.">        if (file == null) {</span>
+<span class="fc" id="L30">            throw new IllegalArgumentException(&quot;File must not be null.&quot;);</span>
+        }
+<span class="fc" id="L32">        String name = file.getName();</span>
+<span class="fc bfc" id="L33" title="All 2 branches covered.">        if (name.toLowerCase(Locale.ROOT).endsWith(&quot;.pdf&quot;)) {</span>
+<span class="fc" id="L34">            return file;</span>
+        }
+<span class="fc" id="L36">        File parent = file.getParentFile();</span>
+<span class="fc bfc" id="L37" title="All 2 branches covered.">        if (parent == null) {</span>
+<span class="fc" id="L38">            return new File(name + &quot;.pdf&quot;);</span>
+        }
+<span class="fc" id="L40">        return new File(parent, name + &quot;.pdf&quot;);</span>
+    }
+
+    /**
+     * Builds the sibling file path for the sample solution export.
+     *
+     * @param examFile already normalized exam PDF path
+     * @return solution PDF path with {@code _musterloesung.pdf} suffix
+     */
+    static File buildSolutionFile(File examFile) {
+<span class="fc bfc" id="L50" title="All 2 branches covered.">        if (examFile == null) {</span>
+<span class="fc" id="L51">            throw new IllegalArgumentException(&quot;Exam file must not be null.&quot;);</span>
+        }
+<span class="fc" id="L53">        String name = examFile.getName();</span>
+<span class="fc" id="L54">        int dot = name.lastIndexOf('.');</span>
+<span class="fc bfc" id="L55" title="All 2 branches covered.">        String base = dot &gt; 0 ? name.substring(0, dot) : name;</span>
+
+<span class="fc" id="L57">        File parent = examFile.getParentFile();</span>
+<span class="fc bfc" id="L58" title="All 2 branches covered.">        if (parent == null) {</span>
+<span class="fc" id="L59">            return new File(base + &quot;_musterloesung.pdf&quot;);</span>
+        }
+<span class="fc" id="L61">        return new File(parent, base + &quot;_musterloesung.pdf&quot;);</span>
+    }
+
+    /**
+     * Formats the date label for the PDF cover page.
+     *
+     * @param date nullable exam date
+     * @return formatted date or em dash if no date is set
+     */
+    static String formatDate(LocalDate date) {
+<span class="fc bfc" id="L71" title="All 2 branches covered.">        return date == null ? &quot;\u2014&quot; : date.format(DATE_FORMAT);</span>
+    }
+
+    /**
+     * Sums points for one assembled task.
+     *
+     * @param taskAssembly assembled task with chosen subtasks
+     * @return total point sum of the task
+     */
+    static BigDecimal taskPoints(PdfExportService.TaskAssembly taskAssembly) {
+<span class="fc bfc" id="L81" title="All 2 branches covered.">        if (taskAssembly == null) {</span>
+<span class="fc" id="L82">            throw new IllegalArgumentException(&quot;Task assembly must not be null.&quot;);</span>
+        }
+<span class="fc" id="L84">        BigDecimal sum = Points.ZERO;</span>
+<span class="fc bfc" id="L85" title="All 2 branches covered.">        for (PdfExportService.ChosenVariant chosenVariant : taskAssembly.chosenSubtasks()) {</span>
+<span class="fc" id="L86">            sum = sum.add(chosenVariant.subtask().getPoints());</span>
+<span class="fc" id="L87">        }</span>
+<span class="fc" id="L88">        return sum;</span>
+    }
+
+    /**
+     * Sums points over all assembled tasks.
+     *
+     * @param tasks selected task assemblies
+     * @return overall exam point sum
+     */
+    static BigDecimal totalPoints(List&lt;PdfExportService.TaskAssembly&gt; tasks) {
+<span class="fc bfc" id="L98" title="All 2 branches covered.">        if (tasks == null) {</span>
+<span class="fc" id="L99">            throw new IllegalArgumentException(&quot;Task list must not be null.&quot;);</span>
+        }
+<span class="fc" id="L101">        BigDecimal sum = Points.ZERO;</span>
+<span class="fc bfc" id="L102" title="All 2 branches covered.">        for (PdfExportService.TaskAssembly taskAssembly : tasks) {</span>
+<span class="fc" id="L103">            sum = sum.add(taskPoints(taskAssembly));</span>
+<span class="fc" id="L104">        }</span>
+<span class="fc" id="L105">        return sum;</span>
+    }
+
+    /**
+     * Computes the writing box height for a subtask in exam mode.
+     *
+     * @param subtask subtask with configured points
+     * @return minimum answer box height in PDF points
+     */
+    static float answerBoxHeight(Subtask subtask) {
+<span class="pc bpc" id="L115" title="1 of 4 branches missed.">        if (subtask == null || subtask.getPoints() == null) {</span>
+<span class="fc" id="L116">            throw new IllegalArgumentException(&quot;Subtask with points is required.&quot;);</span>
+        }
+
+        // Min. ~3 lines; grows with points for better writing space.
+<span class="fc" id="L120">        double points = subtask.getPoints().doubleValue();</span>
+<span class="fc" id="L121">        float base = 48f;</span>
+<span class="fc" id="L122">        float perPoint = 12f;</span>
+<span class="fc" id="L123">        float height = base + Math.max(0f, (float) (points - 3d)) * perPoint;</span>
+<span class="fc" id="L124">        return Math.max(height, base);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

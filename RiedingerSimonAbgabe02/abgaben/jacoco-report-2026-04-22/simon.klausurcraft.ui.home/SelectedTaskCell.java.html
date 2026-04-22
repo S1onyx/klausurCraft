@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="de"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SelectedTaskCell.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">demo</a> &gt; <a href="index.source.html" class="el_package">simon.klausurcraft.ui.home</a> &gt; <span class="el_source">SelectedTaskCell.java</span></div><h1>SelectedTaskCell.java</h1><pre class="source lang-java linenums">package simon.klausurcraft.ui.home;
+
+import javafx.animation.ScaleTransition;
+import javafx.beans.value.ChangeListener;
+import javafx.collections.ListChangeListener;
+import javafx.geometry.Pos;
+import javafx.scene.control.*;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.TransferMode;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.util.Duration;
+import simon.klausurcraft.task.Points;
+import simon.klausurcraft.task.planning.PointDistributionPlanner;
+
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.function.Consumer;
+
+/**
+ * Cell for the SELECTED list (top).
+ * - Checkbox unchecked =&gt; move back to pool (disable)
+ * - Always show &quot;Points:&quot; label and ComboBox with achievable values
+ * - Reorder with ↑ / ↓ and Drag &amp; Drop
+ */
+class SelectedTaskCell extends ListCell&lt;TaskSelection&gt; {
+
+    private final HomeController root;
+    private final List&lt;TaskSelection&gt; selected;
+    private final List&lt;TaskSelection&gt; pool;
+    private final Consumer&lt;TaskSelection&gt; onMoveToPool;
+
+<span class="nc" id="L35">    private final CheckBox cbSelected = new CheckBox();</span>
+<span class="nc" id="L36">    private final Label title = new Label();</span>
+<span class="nc" id="L37">    private final Label lblPoints = new Label(&quot;Points:&quot;);</span>
+<span class="nc" id="L38">    private final ComboBox&lt;BigDecimal&gt; cbPoints = new ComboBox&lt;&gt;();</span>
+<span class="nc" id="L39">    private final Button btnSuggest = new Button(&quot;Suggest&quot;);</span>
+<span class="nc" id="L40">    private final Button btnUp = new Button(&quot;↑&quot;);</span>
+<span class="nc" id="L41">    private final Button btnDown = new Button(&quot;↓&quot;);</span>
+
+    private final HBox box;
+    private TaskSelection boundTaskSelection;
+<span class="nc" id="L45">    private final ChangeListener&lt;BigDecimal&gt; chosenPointsListener = (obs, oldVal, newVal) -&gt; refreshSuggestState(getItem());</span>
+<span class="nc" id="L46">    private final ListChangeListener&lt;BigDecimal&gt; achievableListener = c -&gt; refreshSuggestState(getItem());</span>
+
+    SelectedTaskCell(HomeController root,
+                     List&lt;TaskSelection&gt; selected,
+                     List&lt;TaskSelection&gt; pool,
+<span class="nc" id="L51">                     Consumer&lt;TaskSelection&gt; onMoveToPool) {</span>
+<span class="nc" id="L52">        this.root = root;</span>
+<span class="nc" id="L53">        this.selected = selected;</span>
+<span class="nc" id="L54">        this.pool = pool;</span>
+<span class="nc" id="L55">        this.onMoveToPool = onMoveToPool;</span>
+
+<span class="nc" id="L57">        cbSelected.setSelected(true); // in this list, items are selected</span>
+<span class="nc" id="L58">        cbSelected.setTooltip(new Tooltip(&quot;Uncheck to move this task back to the pool.&quot;));</span>
+
+<span class="nc" id="L60">        title.setMaxWidth(Double.MAX_VALUE);</span>
+        // Keep full title visible if possible (no ellipsis)
+<span class="nc" id="L62">        HBox.setHgrow(title, Priority.ALWAYS);</span>
+
+<span class="nc" id="L64">        cbPoints.getStyleClass().add(&quot;points-combo&quot;);</span>
+<span class="nc" id="L65">        cbPoints.setMinWidth(120);</span>
+<span class="nc" id="L66">        cbPoints.setPrefWidth(140);</span>
+<span class="nc" id="L67">        cbPoints.setMaxWidth(180);</span>
+<span class="nc" id="L68">        cbPoints.setVisibleRowCount(10);</span>
+<span class="nc" id="L69">        cbPoints.setTooltip(new Tooltip(&quot;Choose target points for this task.&quot;));</span>
+<span class="nc" id="L70">        cbPoints.setButtonCell(new ListCell&lt;&gt;() {</span>
+            @Override protected void updateItem(BigDecimal item, boolean empty) {
+<span class="nc" id="L72">                super.updateItem(item, empty);</span>
+<span class="nc bnc" id="L73" title="All 4 branches missed.">                setText(empty || item == null ? &quot;&quot; : Points.toDisplayString(item));</span>
+<span class="nc" id="L74">                setAlignment(Pos.CENTER_LEFT);</span>
+<span class="nc" id="L75">            }</span>
+        });
+<span class="nc" id="L77">        cbPoints.setCellFactory(listView -&gt; new ListCell&lt;&gt;() {</span>
+            @Override protected void updateItem(BigDecimal item, boolean empty) {
+<span class="nc" id="L79">                super.updateItem(item, empty);</span>
+<span class="nc bnc" id="L80" title="All 4 branches missed.">                setText(empty || item == null ? &quot;&quot; : Points.toDisplayString(item));</span>
+<span class="nc" id="L81">                setAlignment(Pos.CENTER_LEFT);</span>
+<span class="nc" id="L82">            }</span>
+        });
+
+<span class="nc" id="L85">        btnSuggest.getStyleClass().add(&quot;chip&quot;);</span>
+<span class="nc" id="L86">        btnSuggest.setTooltip(new Tooltip(&quot;Auto-select the best reachable points for current scope.&quot;));</span>
+<span class="nc" id="L87">        btnSuggest.setOnAction(e -&gt; {</span>
+<span class="nc" id="L88">            TaskSelection ts = getItem();</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">            if (ts == null) return;</span>
+
+<span class="nc" id="L91">            ts.recomputeAchievable(root.scope.get());</span>
+<span class="nc" id="L92">            PointDistributionPlanner.suggestBestPointSum(ts.getTask(), root.scope.get())</span>
+<span class="nc" id="L93">                    .ifPresentOrElse(best -&gt; {</span>
+<span class="nc" id="L94">                        ts.chosenPointsProperty().set(best);</span>
+<span class="nc" id="L95">                        cbPoints.getSelectionModel().select(best);</span>
+<span class="nc" id="L96">                        playSuggestFeedback();</span>
+<span class="nc" id="L97">                        refreshSuggestState(ts);</span>
+<span class="nc" id="L98">                    }, () -&gt; HomeNotifications.showError(</span>
+                            &quot;No point suggestion available for this task in current scope.&quot;));
+<span class="nc" id="L100">        });</span>
+
+<span class="nc" id="L102">        btnUp.getStyleClass().add(&quot;chip&quot;);</span>
+<span class="nc" id="L103">        btnDown.getStyleClass().add(&quot;chip&quot;);</span>
+<span class="nc" id="L104">        btnUp.setTooltip(new Tooltip(&quot;Move task one row up.&quot;));</span>
+<span class="nc" id="L105">        btnDown.setTooltip(new Tooltip(&quot;Move task one row down.&quot;));</span>
+
+<span class="nc" id="L107">        Region spacer = new Region();</span>
+<span class="nc" id="L108">        HBox.setHgrow(spacer, Priority.ALWAYS);</span>
+
+<span class="nc" id="L110">        box = new HBox(8, cbSelected, title, spacer, lblPoints, cbPoints, btnSuggest, btnUp, btnDown);</span>
+<span class="nc" id="L111">        box.setFillHeight(true);</span>
+
+<span class="nc" id="L113">        setContentDisplay(ContentDisplay.GRAPHIC_ONLY);</span>
+<span class="nc" id="L114">        setGraphic(box);</span>
+
+        // Behavior
+<span class="nc" id="L117">        cbSelected.selectedProperty().addListener((o, ov, nv) -&gt; {</span>
+<span class="nc" id="L118">            TaskSelection ts = getItem();</span>
+<span class="nc bnc" id="L119" title="All 2 branches missed.">            if (ts == null) return;</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">            if (!nv) {</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">                if (onMoveToPool != null) {</span>
+<span class="nc" id="L122">                    onMoveToPool.accept(ts);</span>
+                }
+            }
+<span class="nc" id="L125">        });</span>
+
+<span class="nc" id="L127">        itemProperty().addListener((obs, oldItem, newItem) -&gt; {</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">            if (oldItem != null) {</span>
+<span class="nc" id="L129">                oldItem.chosenPointsProperty().removeListener(chosenPointsListener);</span>
+<span class="nc" id="L130">                oldItem.getAchievable().removeListener(achievableListener);</span>
+            }
+<span class="nc bnc" id="L132" title="All 2 branches missed.">            if (newItem != null) {</span>
+<span class="nc" id="L133">                newItem.chosenPointsProperty().addListener(chosenPointsListener);</span>
+<span class="nc" id="L134">                newItem.getAchievable().addListener(achievableListener);</span>
+            }
+<span class="nc" id="L136">            refreshSuggestState(newItem);</span>
+<span class="nc" id="L137">        });</span>
+
+<span class="nc" id="L139">        btnUp.setOnAction(e -&gt; moveItem(-1));</span>
+<span class="nc" id="L140">        btnDown.setOnAction(e -&gt; moveItem(+1));</span>
+
+        // Drag &amp; Drop reordering within selected
+<span class="nc" id="L143">        setOnDragDetected(e -&gt; {</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">            if (isEmpty()) return;</span>
+<span class="nc" id="L145">            Dragboard db = startDragAndDrop(TransferMode.MOVE);</span>
+<span class="nc" id="L146">            ClipboardContent cc = new ClipboardContent();</span>
+<span class="nc" id="L147">            cc.putString(Integer.toString(getIndex()));</span>
+<span class="nc" id="L148">            db.setContent(cc);</span>
+<span class="nc" id="L149">            e.consume();</span>
+<span class="nc" id="L150">        });</span>
+
+<span class="nc" id="L152">        setOnDragOver(e -&gt; {</span>
+<span class="nc" id="L153">            Dragboard db = e.getDragboard();</span>
+<span class="nc bnc" id="L154" title="All 6 branches missed.">            if (db.hasString() &amp;&amp; !isEmpty() &amp;&amp; getIndex() != Integer.parseInt(db.getString())) {</span>
+<span class="nc" id="L155">                e.acceptTransferModes(TransferMode.MOVE);</span>
+            }
+<span class="nc" id="L157">            e.consume();</span>
+<span class="nc" id="L158">        });</span>
+
+<span class="nc" id="L160">        setOnDragDropped(e -&gt; {</span>
+<span class="nc" id="L161">            Dragboard db = e.getDragboard();</span>
+<span class="nc" id="L162">            boolean success = false;</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">            if (db.hasString()) {</span>
+<span class="nc" id="L164">                int from = Integer.parseInt(db.getString());</span>
+<span class="nc" id="L165">                int to = getIndex();</span>
+<span class="nc" id="L166">                move(from, to);</span>
+<span class="nc" id="L167">                success = true;</span>
+            }
+<span class="nc" id="L169">            e.setDropCompleted(success);</span>
+<span class="nc" id="L170">            e.consume();</span>
+<span class="nc" id="L171">        });</span>
+<span class="nc" id="L172">    }</span>
+
+    private void moveItem(int delta) {
+<span class="nc" id="L175">        int idx = getIndex();</span>
+<span class="nc" id="L176">        int to = idx + delta;</span>
+<span class="nc" id="L177">        move(idx, to);</span>
+<span class="nc" id="L178">    }</span>
+
+    private void move(int from, int to) {
+<span class="nc" id="L181">        var lv = getListView();</span>
+<span class="nc bnc" id="L182" title="All 2 branches missed.">        if (lv == null) return;</span>
+<span class="nc" id="L183">        var items = lv.getItems();</span>
+<span class="nc bnc" id="L184" title="All 8 branches missed.">        if (from &lt; 0 || from &gt;= items.size() || to &lt; 0 || to &gt;= items.size()) return;</span>
+<span class="nc" id="L185">        TaskSelection ts = items.remove(from);</span>
+<span class="nc" id="L186">        items.add(to, ts);</span>
+<span class="nc" id="L187">        lv.getSelectionModel().clearAndSelect(to);</span>
+<span class="nc" id="L188">        lv.scrollTo(Math.max(0, to - 1));</span>
+<span class="nc" id="L189">        lv.refresh();</span>
+<span class="nc" id="L190">    }</span>
+
+    @Override
+    protected void updateItem(TaskSelection item, boolean empty) {
+<span class="nc" id="L194">        super.updateItem(item, empty);</span>
+
+<span class="nc bnc" id="L196" title="All 2 branches missed.">        if (boundTaskSelection != null) {</span>
+<span class="nc" id="L197">            cbPoints.valueProperty().unbindBidirectional(boundTaskSelection.chosenPointsProperty());</span>
+<span class="nc" id="L198">            boundTaskSelection = null;</span>
+        }
+
+<span class="nc bnc" id="L201" title="All 4 branches missed.">        if (empty || item == null) {</span>
+<span class="nc" id="L202">            cbPoints.setItems(javafx.collections.FXCollections.emptyObservableList());</span>
+<span class="nc" id="L203">            cbPoints.getSelectionModel().clearSelection();</span>
+<span class="nc" id="L204">            setGraphic(null);</span>
+<span class="nc" id="L205">            setText(null);</span>
+<span class="nc" id="L206">            return;</span>
+        }
+
+<span class="nc" id="L209">        cbSelected.setSelected(true);</span>
+<span class="nc" id="L210">        item.setEnabled(true); // being in selected marks it enabled</span>
+<span class="nc" id="L211">        title.setText(&quot;Task &quot; + item.getTask().getId() + &quot; — &quot; + item.getTask().getTitle());</span>
+
+        // ensure achievable is up to date (scope fixed in step 2)
+<span class="nc" id="L214">        cbPoints.setItems(item.getAchievable());</span>
+<span class="nc bnc" id="L215" title="All 2 branches missed.">        if (!item.getAchievable().isEmpty()) {</span>
+<span class="nc bnc" id="L216" title="All 2 branches missed.">            if (!item.getAchievable().contains(item.getChosenPoints())) {</span>
+<span class="nc" id="L217">                cbPoints.getSelectionModel().select(item.getAchievable().get(0));</span>
+            } else {
+<span class="nc" id="L219">                cbPoints.getSelectionModel().select(item.getChosenPoints());</span>
+            }
+        } else {
+<span class="nc" id="L222">            cbPoints.getSelectionModel().clearSelection();</span>
+        }
+<span class="nc" id="L224">        boundTaskSelection = item;</span>
+<span class="nc" id="L225">        cbPoints.valueProperty().bindBidirectional(item.chosenPointsProperty());</span>
+<span class="nc" id="L226">        refreshSuggestState(item);</span>
+
+<span class="nc" id="L228">        setGraphic(box);</span>
+<span class="nc" id="L229">    }</span>
+
+    private void refreshSuggestState(TaskSelection ts) {
+<span class="nc bnc" id="L232" title="All 4 branches missed.">        if (ts == null || ts.getAchievable().isEmpty()) {</span>
+<span class="nc" id="L233">            btnSuggest.setDisable(true);</span>
+<span class="nc" id="L234">            btnSuggest.setTooltip(new Tooltip(&quot;No suggestion available for this task in current scope.&quot;));</span>
+<span class="nc" id="L235">            return;</span>
+        }
+<span class="nc" id="L237">        BigDecimal fallback = ts.getAchievable().get(0);</span>
+<span class="nc" id="L238">        BigDecimal suggested = PointDistributionPlanner</span>
+<span class="nc" id="L239">                .suggestBestPointSum(ts.getTask(), root.scope.get())</span>
+<span class="nc" id="L240">                .orElse(fallback);</span>
+<span class="nc" id="L241">        boolean alreadySuggested = suggested.equals(ts.getChosenPoints());</span>
+<span class="nc" id="L242">        btnSuggest.setDisable(alreadySuggested);</span>
+<span class="nc bnc" id="L243" title="All 2 branches missed.">        if (alreadySuggested) {</span>
+<span class="nc" id="L244">            btnSuggest.setTooltip(new Tooltip(&quot;Suggested points are already selected.&quot;));</span>
+        } else {
+<span class="nc" id="L246">            btnSuggest.setTooltip(new Tooltip(&quot;Auto-select the best reachable points for current scope.&quot;));</span>
+        }
+<span class="nc" id="L248">    }</span>
+
+    private void playSuggestFeedback() {
+<span class="nc" id="L251">        ScaleTransition pulse = new ScaleTransition(Duration.millis(180), cbPoints);</span>
+<span class="nc" id="L252">        pulse.setFromX(1.0);</span>
+<span class="nc" id="L253">        pulse.setFromY(1.0);</span>
+<span class="nc" id="L254">        pulse.setToX(1.03);</span>
+<span class="nc" id="L255">        pulse.setToY(1.03);</span>
+<span class="nc" id="L256">        pulse.setAutoReverse(true);</span>
+<span class="nc" id="L257">        pulse.setCycleCount(2);</span>
+<span class="nc" id="L258">        pulse.play();</span>
+<span class="nc" id="L259">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

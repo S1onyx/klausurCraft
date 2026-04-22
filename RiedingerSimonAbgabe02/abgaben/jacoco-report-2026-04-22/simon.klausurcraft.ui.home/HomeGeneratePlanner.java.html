@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="de"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HomeGeneratePlanner.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">demo</a> &gt; <a href="index.source.html" class="el_package">simon.klausurcraft.ui.home</a> &gt; <span class="el_source">HomeGeneratePlanner.java</span></div><h1>HomeGeneratePlanner.java</h1><pre class="source lang-java linenums">package simon.klausurcraft.ui.home;
+
+import simon.klausurcraft.task.GenerateScope;
+import simon.klausurcraft.task.Points;
+import simon.klausurcraft.task.Variant;
+import simon.klausurcraft.task.planning.PointDistributionPlanner;
+
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
+
+/**
+ * Extracted non-UI planning logic for the generate wizard.
+ */
+final class HomeGeneratePlanner {
+
+    private HomeGeneratePlanner() {}
+
+    /**
+     * Picks one random variant from a non-empty variant list.
+     *
+     * @param variants available variants of one subtask
+     * @return random variant or {@code null} if none is available
+     */
+    static Variant pickVariant(List&lt;Variant&gt; variants) {
+<span class="pc bpc" id="L27" title="1 of 4 branches missed.">        if (variants == null || variants.isEmpty()) {</span>
+<span class="fc" id="L28">            return null;</span>
+        }
+<span class="fc" id="L30">        return variants.get(ThreadLocalRandom.current().nextInt(variants.size()));</span>
+    }
+
+    /**
+     * Moves one task selection from pool to selected list.
+     *
+     * @param item task selection to move
+     * @param pool source list
+     * @param selected target list
+     * @param scope current generate scope
+     * @return {@code true} if the task was moved
+     */
+    static boolean moveToSelected(TaskSelection item,
+                                  List&lt;TaskSelection&gt; pool,
+                                  List&lt;TaskSelection&gt; selected,
+                                  GenerateScope scope) {
+<span class="pc bpc" id="L46" title="1 of 2 branches missed.">        if (item == null) {</span>
+<span class="nc" id="L47">            return false;</span>
+        }
+
+<span class="fc" id="L50">        suggestPointForTaskSelection(scope, item);</span>
+<span class="fc bfc" id="L51" title="All 2 branches covered.">        if (item.getAchievable().isEmpty()) {</span>
+<span class="fc" id="L52">            return false;</span>
+        }
+
+<span class="fc" id="L55">        item.setEnabled(true);</span>
+<span class="fc" id="L56">        pool.remove(item);</span>
+<span class="pc bpc" id="L57" title="1 of 2 branches missed.">        if (!selected.contains(item)) {</span>
+<span class="fc" id="L58">            selected.add(item);</span>
+        }
+<span class="fc" id="L60">        return true;</span>
+    }
+
+    /**
+     * Moves one task selection back from selected to pool.
+     *
+     * @param item task selection to move
+     * @param selected source list
+     * @param pool target list
+     * @return {@code true} if processed
+     */
+    static boolean moveToPool(TaskSelection item,
+                              List&lt;TaskSelection&gt; selected,
+                              List&lt;TaskSelection&gt; pool) {
+<span class="pc bpc" id="L74" title="1 of 2 branches missed.">        if (item == null) {</span>
+<span class="nc" id="L75">            return false;</span>
+        }
+
+<span class="fc" id="L78">        item.setEnabled(false);</span>
+<span class="fc" id="L79">        selected.remove(item);</span>
+<span class="pc bpc" id="L80" title="1 of 2 branches missed.">        if (!pool.contains(item)) {</span>
+<span class="fc" id="L81">            pool.add(item);</span>
+        }
+<span class="fc" id="L83">        return true;</span>
+    }
+
+    /**
+     * Recomputes achievable values and applies one suggested target sum.
+     *
+     * @param scope current generate scope
+     * @param taskSelection selection entry to tune
+     */
+    static void suggestPointForTaskSelection(GenerateScope scope, TaskSelection taskSelection) {
+<span class="pc bpc" id="L93" title="1 of 2 branches missed.">        if (taskSelection == null) {</span>
+<span class="nc" id="L94">            return;</span>
+        }
+
+<span class="fc" id="L97">        taskSelection.recomputeAchievable(scope);</span>
+<span class="fc bfc" id="L98" title="All 2 branches covered.">        if (taskSelection.getAchievable().isEmpty()) {</span>
+<span class="fc" id="L99">            taskSelection.chosenPointsProperty().set(Points.ZERO);</span>
+<span class="fc" id="L100">            return;</span>
+        }
+
+<span class="fc" id="L103">        BigDecimal fallback = taskSelection.getAchievable().get(0);</span>
+<span class="fc" id="L104">        BigDecimal suggested = PointDistributionPlanner</span>
+<span class="fc" id="L105">                .suggestBestPointSum(taskSelection.getTask(), scope)</span>
+<span class="fc" id="L106">                .orElse(fallback);</span>
+<span class="fc" id="L107">        taskSelection.chosenPointsProperty().set(suggested);</span>
+<span class="fc" id="L108">    }</span>
+
+    /**
+     * Applies suggestions for all currently selected tasks.
+     *
+     * @param scope current generate scope
+     * @param selected selected tasks
+     * @return number of rows where the chosen points changed
+     */
+    static int suggestPointsForAll(GenerateScope scope, List&lt;TaskSelection&gt; selected) {
+<span class="fc" id="L118">        int changedCount = 0;</span>
+<span class="fc bfc" id="L119" title="All 2 branches covered.">        for (TaskSelection taskSelection : selected) {</span>
+<span class="fc" id="L120">            BigDecimal before = taskSelection.getChosenPoints();</span>
+<span class="fc" id="L121">            suggestPointForTaskSelection(scope, taskSelection);</span>
+<span class="pc bpc" id="L122" title="1 of 2 branches missed.">            if (!taskSelection.getChosenPoints().equals(before)) {</span>
+<span class="fc" id="L123">                changedCount++;</span>
+            }
+<span class="fc" id="L125">        }</span>
+<span class="fc" id="L126">        return changedCount;</span>
+    }
+
+    /**
+     * Picks a starter set of tasks and tunes points for each selected row.
+     *
+     * @param scope current generate scope
+     * @param selected currently selected tasks
+     * @param pool available pool tasks
+     * @return number of tuned tasks ({@code 0} if no candidate exists)
+     */
+    static int applySmartFill(GenerateScope scope,
+                              List&lt;TaskSelection&gt; selected,
+                              List&lt;TaskSelection&gt; pool) {
+<span class="fc" id="L140">        List&lt;TaskSelection&gt; candidates = pool.stream()</span>
+<span class="pc bpc" id="L141" title="1 of 2 branches missed.">                .filter(taskSelection -&gt; !taskSelection.getAchievable().isEmpty())</span>
+<span class="fc" id="L142">                .sorted((a, b) -&gt; Integer.compare(b.getAchievable().size(), a.getAchievable().size()))</span>
+<span class="fc" id="L143">                .collect(Collectors.toList());</span>
+
+<span class="pc bpc" id="L145" title="1 of 2 branches missed.">        if (candidates.isEmpty()) {</span>
+<span class="nc" id="L146">            return 0;</span>
+        }
+
+<span class="fc" id="L149">        int desired = Math.min(4, Math.max(1, selected.size() + candidates.size()));</span>
+<span class="fc" id="L150">        int missing = Math.max(0, desired - selected.size());</span>
+
+<span class="pc bpc" id="L152" title="1 of 2 branches missed.">        for (TaskSelection candidate : candidates) {</span>
+<span class="fc bfc" id="L153" title="All 2 branches covered.">            if (missing &lt;= 0) {</span>
+<span class="fc" id="L154">                break;</span>
+            }
+<span class="pc bpc" id="L156" title="1 of 2 branches missed.">            if (!pool.contains(candidate)) {</span>
+<span class="nc" id="L157">                continue;</span>
+            }
+<span class="fc" id="L159">            moveToSelected(candidate, pool, selected, scope);</span>
+<span class="fc" id="L160">            missing--;</span>
+<span class="fc" id="L161">        }</span>
+
+<span class="fc" id="L163">        int tuned = 0;</span>
+<span class="fc bfc" id="L164" title="All 2 branches covered.">        for (TaskSelection taskSelection : selected) {</span>
+<span class="fc" id="L165">            taskSelection.recomputeAchievable(scope);</span>
+<span class="pc bpc" id="L166" title="1 of 2 branches missed.">            if (taskSelection.getAchievable().isEmpty()) {</span>
+<span class="nc" id="L167">                continue;</span>
+            }
+
+<span class="fc" id="L170">            BigDecimal fallback = taskSelection.getAchievable().get(0);</span>
+<span class="fc" id="L171">            BigDecimal target = PointDistributionPlanner</span>
+<span class="fc" id="L172">                    .suggestBestPointSum(taskSelection.getTask(), scope)</span>
+<span class="fc" id="L173">                    .orElse(fallback);</span>
+<span class="fc" id="L174">            taskSelection.chosenPointsProperty().set(target);</span>
+<span class="fc" id="L175">            tuned++;</span>
+<span class="fc" id="L176">        }</span>
+
+<span class="fc" id="L178">        return tuned;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

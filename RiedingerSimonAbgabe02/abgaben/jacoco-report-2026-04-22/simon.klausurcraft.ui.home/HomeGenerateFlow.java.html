@@ -1,0 +1,680 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="de"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HomeGenerateFlow.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">demo</a> &gt; <a href="index.source.html" class="el_package">simon.klausurcraft.ui.home</a> &gt; <span class="el_source">HomeGenerateFlow.java</span></div><h1>HomeGenerateFlow.java</h1><pre class="source lang-java linenums">package simon.klausurcraft.ui.home;
+
+import javafx.animation.FadeTransition;
+import javafx.animation.PathTransition;
+import javafx.animation.ParallelTransition;
+import javafx.animation.PauseTransition;
+import javafx.animation.ScaleTransition;
+import javafx.animation.TranslateTransition;
+import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.StringBinding;
+import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
+import javafx.geometry.Bounds;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.shape.CubicCurveTo;
+import javafx.scene.shape.MoveTo;
+import javafx.scene.shape.Path;
+import javafx.scene.Node;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.layout.*;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.util.Duration;
+import simon.klausurcraft.app.KlausurCraftApp;
+import simon.klausurcraft.task.GenerateScope;
+import simon.klausurcraft.task.Points;
+import simon.klausurcraft.task.Subtask;
+import simon.klausurcraft.task.Task;
+import simon.klausurcraft.task.Variant;
+import simon.klausurcraft.task.export.PdfExportService;
+import simon.klausurcraft.task.planning.PointDistributionPlanner;
+import simon.klausurcraft.ui.ThemeService;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+final class HomeGenerateFlow {
+
+    private HomeGenerateFlow(){}
+
+    static void openStep1(HomeController root) {
+<span class="nc" id="L51">        BorderPane sheet = new BorderPane();</span>
+<span class="nc" id="L52">        sheet.setPadding(new Insets(0));</span>
+
+<span class="nc" id="L54">        VBox content = new VBox(12);</span>
+<span class="nc" id="L55">        content.setPadding(new Insets(16));</span>
+
+<span class="nc" id="L57">        Label header = new Label(&quot;Generate&quot;);</span>
+<span class="nc" id="L58">        header.getStyleClass().add(&quot;header&quot;);</span>
+
+        // --- Scope as colored &quot;badges&quot;
+<span class="nc" id="L61">        ToggleGroup tg = new ToggleGroup();</span>
+<span class="nc" id="L62">        RadioButton rbExam = new RadioButton(&quot;exam&quot;);</span>
+<span class="nc" id="L63">        RadioButton rbPractice = new RadioButton(&quot;practice&quot;);</span>
+<span class="nc" id="L64">        RadioButton rbBoth = new RadioButton(&quot;both&quot;);</span>
+<span class="nc" id="L65">        rbExam.setToggleGroup(tg); rbPractice.setToggleGroup(tg); rbBoth.setToggleGroup(tg);</span>
+<span class="nc" id="L66">        rbExam.setTooltip(new Tooltip(&quot;Generate only exam-eligible subtasks.&quot;));</span>
+<span class="nc" id="L67">        rbPractice.setTooltip(new Tooltip(&quot;Generate only practice-eligible subtasks.&quot;));</span>
+<span class="nc" id="L68">        rbBoth.setTooltip(new Tooltip(&quot;Generate from all eligible subtasks.&quot;));</span>
+
+        // add pill styles (CSS provides colors per scope)
+<span class="nc" id="L71">        rbExam.getStyleClass().addAll(&quot;scope-chip&quot;, &quot;scope-exam&quot;);</span>
+<span class="nc" id="L72">        rbPractice.getStyleClass().addAll(&quot;scope-chip&quot;, &quot;scope-practice&quot;);</span>
+<span class="nc" id="L73">        rbBoth.getStyleClass().addAll(&quot;scope-chip&quot;, &quot;scope-both&quot;);</span>
+
+<span class="nc bnc" id="L75" title="All 2 branches missed.">        rbExam.setSelected(root.scope.get() == GenerateScope.EXAM);</span>
+<span class="nc bnc" id="L76" title="All 2 branches missed.">        rbPractice.setSelected(root.scope.get() == GenerateScope.PRACTICE);</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">        rbBoth.setSelected(root.scope.get() == GenerateScope.BOTH);</span>
+
+<span class="nc" id="L79">        tg.selectedToggleProperty().addListener((o, ov, nv) -&gt; {</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">            if (nv == rbExam) root.scope.set(GenerateScope.EXAM);</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">            else if (nv == rbPractice) root.scope.set(GenerateScope.PRACTICE);</span>
+<span class="nc" id="L82">            else root.scope.set(GenerateScope.BOTH);</span>
+<span class="nc" id="L83">        });</span>
+
+<span class="nc" id="L85">        HBox scopeRow = new HBox(10, rbExam, rbPractice, rbBoth);</span>
+
+<span class="nc" id="L87">        TextField tfTitle = new TextField(root.examTitle.get());</span>
+<span class="nc" id="L88">        tfTitle.setPromptText(&quot;Title (e.g., Databases – Exam)&quot;);</span>
+<span class="nc" id="L89">        tfTitle.setTooltip(new Tooltip(&quot;Title shown in the exported exam PDF.&quot;));</span>
+<span class="nc" id="L90">        tfTitle.textProperty().addListener((o, ov, nv) -&gt; root.examTitle.set(nv));</span>
+
+<span class="nc" id="L92">        DatePicker dp = new DatePicker(root.examDate.get());</span>
+<span class="nc" id="L93">        dp.setTooltip(new Tooltip(&quot;Exam date printed in the export.&quot;));</span>
+<span class="nc" id="L94">        dp.valueProperty().addListener((o, ov, nv) -&gt; root.examDate.set(nv));</span>
+
+<span class="nc" id="L96">        TextField tfDuration = new TextField(Integer.toString(Math.max(1, root.examDurationMinutes.get())));</span>
+<span class="nc" id="L97">        tfDuration.setPromptText(&quot;e.g., 90&quot;);</span>
+<span class="nc" id="L98">        tfDuration.setTooltip(new Tooltip(&quot;Duration in minutes, used in the exam header.&quot;));</span>
+<span class="nc" id="L99">        tfDuration.textProperty().addListener((o, ov, nv) -&gt; {</span>
+<span class="nc bnc" id="L100" title="All 4 branches missed.">            if (nv == null || nv.isBlank()) return;</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">            if (nv.matches(&quot;\\d+&quot;)) {</span>
+                try {
+<span class="nc" id="L103">                    int minutes = Integer.parseInt(nv);</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">                    if (minutes &gt; 0) {</span>
+<span class="nc" id="L105">                        root.examDurationMinutes.set(minutes);</span>
+                    }
+<span class="nc" id="L107">                } catch (NumberFormatException ignored) {</span>
+                    // keep previous valid value
+<span class="nc" id="L109">                }</span>
+            }
+<span class="nc" id="L111">        });</span>
+<span class="nc" id="L112">        tfDuration.focusedProperty().addListener((o, ov, focused) -&gt; {</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">            if (!focused) {</span>
+<span class="nc" id="L114">                tfDuration.setText(Integer.toString(Math.max(1, root.examDurationMinutes.get())));</span>
+            }
+<span class="nc" id="L116">        });</span>
+
+        // NOTE: Sample solution checkbox intentionally removed from step 1
+
+<span class="nc" id="L120">        content.getChildren().addAll(header,</span>
+                new Label(&quot;Scope&quot;), scopeRow,
+                new Label(&quot;Title&quot;), tfTitle,
+                new Label(&quot;Date&quot;), dp,
+                new Label(&quot;Duration (minutes)&quot;), tfDuration);
+
+<span class="nc" id="L126">        ScrollPane sp = new ScrollPane(content);</span>
+<span class="nc" id="L127">        sp.setFitToWidth(true);</span>
+<span class="nc" id="L128">        sp.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);</span>
+<span class="nc" id="L129">        sheet.setCenter(sp);</span>
+
+<span class="nc" id="L131">        HBox actions = new HBox(8);</span>
+<span class="nc" id="L132">        actions.getStyleClass().add(&quot;sheet-footer&quot;);</span>
+<span class="nc" id="L133">        Region filler = new Region(); HBox.setHgrow(filler, Priority.ALWAYS);</span>
+
+<span class="nc" id="L135">        Button cancel = new Button(&quot;Cancel&quot;);</span>
+<span class="nc" id="L136">        cancel.setCancelButton(true);</span>
+<span class="nc" id="L137">        cancel.setTooltip(new Tooltip(&quot;Close the wizard without generating.&quot;));</span>
+<span class="nc" id="L138">        cancel.setOnAction(e -&gt; {</span>
+<span class="nc" id="L139">            root.getSlideOver().hide();</span>
+<span class="nc" id="L140">            root.rootStack.setMouseTransparent(true);</span>
+<span class="nc" id="L141">        });</span>
+
+<span class="nc" id="L143">        Button next = new Button(&quot;Next&quot;);</span>
+<span class="nc" id="L144">        next.getStyleClass().add(&quot;primary&quot;);</span>
+<span class="nc" id="L145">        next.setDefaultButton(true);</span>
+<span class="nc" id="L146">        next.setTooltip(new Tooltip(&quot;Continue to task selection and point setup.&quot;));</span>
+<span class="nc" id="L147">        next.setOnAction(e -&gt; openStep2(root)); // opens modal window</span>
+
+<span class="nc" id="L149">        actions.getChildren().addAll(filler, cancel, next);</span>
+<span class="nc" id="L150">        sheet.setBottom(actions);</span>
+
+<span class="nc" id="L152">        root.getSlideOver().setContent(sheet);</span>
+<span class="nc" id="L153">        root.getSlideOver().show();</span>
+<span class="nc" id="L154">        root.rootStack.setMouseTransparent(false);</span>
+
+        // Autofocus first field
+<span class="nc" id="L157">        tfTitle.requestFocus();</span>
+<span class="nc" id="L158">    }</span>
+
+    /** Step 2 redesigned: single modal window with two stacked lists: Selected (top) and Task pool (bottom). */
+    static void openStep2(HomeController root) {
+        // Close slide-over so only the modal window is visible
+<span class="nc bnc" id="L163" title="All 2 branches missed.">        if (root.getSlideOver().isShown()) {</span>
+<span class="nc" id="L164">            root.getSlideOver().hide();</span>
+<span class="nc" id="L165">            root.rootStack.setMouseTransparent(true);</span>
+        }
+
+        // ----- Content (new layout) -----
+<span class="nc" id="L169">        BorderPane pane = new BorderPane();</span>
+<span class="nc" id="L170">        pane.setPadding(new Insets(0));</span>
+<span class="nc" id="L171">        StackPane stageRoot = new StackPane(pane);</span>
+
+<span class="nc" id="L173">        VBox content = new VBox(16);</span>
+<span class="nc" id="L174">        content.setPadding(new Insets(16));</span>
+
+<span class="nc" id="L176">        Label header = new Label(&quot;Select tasks&quot;);</span>
+<span class="nc" id="L177">        header.getStyleClass().add(&quot;header&quot;);</span>
+
+        // Build TaskSelection lists
+<span class="nc" id="L180">        var all = TaskSelection.ensureFor(root.getTasks());</span>
+<span class="nc" id="L181">        var selected = FXCollections.&lt;TaskSelection&gt;observableArrayList();</span>
+<span class="nc" id="L182">        var pool = FXCollections.&lt;TaskSelection&gt;observableArrayList();</span>
+
+        // recompute achievable upfront based on fixed scope
+<span class="nc" id="L185">        all.forEach(ts -&gt; {</span>
+<span class="nc" id="L186">            ts.recomputeAchievable(root.scope.get());</span>
+<span class="nc" id="L187">            suggestPointForTaskSelection(root, ts);</span>
+<span class="nc" id="L188">        });</span>
+        // initial: none selected
+<span class="nc" id="L190">        pool.setAll(all);</span>
+
+        // --- Pool (bottom)
+<span class="nc" id="L193">        Label lblPool = new Label(&quot;Task pool&quot;);</span>
+<span class="nc" id="L194">        ListView&lt;TaskSelection&gt; lvPool = new ListView&lt;&gt;(pool);</span>
+<span class="nc" id="L195">        lvPool.setFocusTraversable(true);</span>
+<span class="nc" id="L196">        lvPool.setTooltip(new Tooltip(&quot;Available tasks. Tick a row to include it.&quot;));</span>
+
+        // --- Selected (top)
+<span class="nc" id="L199">        Label lblSelected = new Label(&quot;Selected tasks&quot;);</span>
+<span class="nc" id="L200">        Button btnSuggestForAll = new Button(&quot;Suggest for all&quot;);</span>
+<span class="nc" id="L201">        btnSuggestForAll.getStyleClass().add(&quot;chip&quot;);</span>
+<span class="nc" id="L202">        btnSuggestForAll.disableProperty().bind(Bindings.isEmpty(selected));</span>
+<span class="nc" id="L203">        btnSuggestForAll.setTooltip(new Tooltip(&quot;Apply suggested target points for all selected tasks.&quot;));</span>
+<span class="nc" id="L204">        HBox selectedHeader = new HBox(8, lblSelected, btnSuggestForAll);</span>
+<span class="nc" id="L205">        selectedHeader.setAlignment(Pos.CENTER_LEFT);</span>
+<span class="nc" id="L206">        ListView&lt;TaskSelection&gt; lvSelected = new ListView&lt;&gt;(selected);</span>
+<span class="nc" id="L207">        lvSelected.setCellFactory(v -&gt; new SelectedTaskCell(root, selected, pool, ts -&gt; {</span>
+<span class="nc" id="L208">            playSelectedToPoolAnimation(stageRoot, lvSelected, lvPool, ts);</span>
+<span class="nc" id="L209">            moveToPool(ts, selected, pool);</span>
+<span class="nc" id="L210">        }));</span>
+<span class="nc" id="L211">        lvSelected.setFocusTraversable(true);</span>
+<span class="nc" id="L212">        lvSelected.setTooltip(new Tooltip(&quot;Tasks included in the generated exam.&quot;));</span>
+
+<span class="nc" id="L214">        lvPool.setCellFactory(v -&gt; new PoolTaskCell(root, ts -&gt; {</span>
+<span class="nc" id="L215">            playPoolToSelectedAnimation(stageRoot, lvPool, selectedHeader, ts);</span>
+<span class="nc" id="L216">            moveToSelected(ts, pool, selected, root);</span>
+<span class="nc" id="L217">        }));</span>
+
+<span class="nc" id="L219">        installKeyboardTransfer(lvSelected, lvPool, root, selected, pool, stageRoot, selectedHeader);</span>
+        
+        // UI/UX-Rule &quot;Guidance&quot;
+<span class="nc" id="L222">        HBox progressStrip = new HBox(8);</span>
+<span class="nc" id="L223">        progressStrip.getStyleClass().add(&quot;generate-progress&quot;);</span>
+<span class="nc" id="L224">        Label step1 = buildProgressStep(&quot;1 Select tasks&quot;);</span>
+<span class="nc" id="L225">        Label step2 = buildProgressStep(&quot;2 Set points&quot;);</span>
+<span class="nc" id="L226">        Label step3 = buildProgressStep(&quot;3 Generate PDF&quot;);</span>
+<span class="nc" id="L227">        Label summary = new Label();</span>
+<span class="nc" id="L228">        summary.getStyleClass().add(&quot;generate-summary&quot;);</span>
+<span class="nc" id="L229">        summary.setMaxWidth(Double.MAX_VALUE);</span>
+<span class="nc" id="L230">        summary.setAlignment(Pos.CENTER_RIGHT);</span>
+<span class="nc" id="L231">        HBox.setHgrow(summary, Priority.ALWAYS);</span>
+<span class="nc" id="L232">        StringBinding totalBinding = TaskSelection.totalPointsBinding(selected);</span>
+<span class="nc" id="L233">        summary.textProperty().bind(Bindings.createStringBinding(</span>
+<span class="nc" id="L234">                () -&gt; &quot;Selected: &quot; + selected.size() + &quot; / &quot; + all.size() + &quot;  |  &quot; + totalBinding.get(),</span>
+                selected, totalBinding
+        ));
+<span class="nc" id="L237">        progressStrip.getChildren().addAll(step1, step2, step3, summary);</span>
+<span class="nc" id="L238">        refreshProgressStepState(selected, step1, step2, step3);</span>
+<span class="nc" id="L239">        selected.addListener((ListChangeListener&lt;? super TaskSelection&gt;) c -&gt; refreshProgressStepState(selected, step1, step2, step3));</span>
+<span class="nc" id="L240">        btnSuggestForAll.setOnAction(e -&gt; {</span>
+<span class="nc" id="L241">            int count = suggestPointsForAll(root, selected);</span>
+<span class="nc bnc" id="L242" title="All 2 branches missed.">            if (count &gt; 0) {</span>
+<span class="nc" id="L243">                HomeNotifications.showInfo(&quot;Applied suggestions for &quot; + count + &quot; task(s).&quot;);</span>
+<span class="nc" id="L244">                playSubtlePulse(progressStrip);</span>
+            }
+<span class="nc" id="L246">        });</span>
+
+        // Table-like header for pool rows, including fixed second column for possible points.
+<span class="nc" id="L249">        HBox poolHeader = new HBox(12);</span>
+<span class="nc" id="L250">        poolHeader.getStyleClass().add(&quot;generate-table-header&quot;);</span>
+<span class="nc" id="L251">        Label colTask = new Label(&quot;Task&quot;);</span>
+<span class="nc" id="L252">        colTask.getStyleClass().add(&quot;generate-col-task&quot;);</span>
+<span class="nc" id="L253">        HBox.setHgrow(colTask, Priority.ALWAYS);</span>
+<span class="nc" id="L254">        Label colPossible = new Label(&quot;Possible points&quot;);</span>
+<span class="nc" id="L255">        colPossible.getStyleClass().add(&quot;generate-col-possible&quot;);</span>
+<span class="nc" id="L256">        HBox colPossibleWrap = new HBox(colPossible);</span>
+<span class="nc" id="L257">        colPossibleWrap.getStyleClass().add(&quot;pool-possible-column&quot;);</span>
+<span class="nc" id="L258">        colPossibleWrap.setMinWidth(260);</span>
+<span class="nc" id="L259">        colPossibleWrap.setPrefWidth(360);</span>
+<span class="nc" id="L260">        poolHeader.getChildren().addAll(colTask, colPossibleWrap);</span>
+
+<span class="nc" id="L262">        content.getChildren().addAll(header, progressStrip, selectedHeader, lvSelected, new Separator(), lblPool, poolHeader, lvPool);</span>
+
+<span class="nc" id="L264">        ScrollPane sp = new ScrollPane(content);</span>
+<span class="nc" id="L265">        sp.setFitToWidth(true);</span>
+<span class="nc" id="L266">        sp.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER); // no horizontal scrollbar</span>
+<span class="nc" id="L267">        pane.setCenter(sp);</span>
+
+        // Footer: left theme toggle, right sample+total+generate
+<span class="nc" id="L270">        HBox actions = new HBox(8);</span>
+<span class="nc" id="L271">        actions.getStyleClass().add(&quot;sheet-footer&quot;);</span>
+<span class="nc" id="L272">        actions.setAlignment(Pos.CENTER_LEFT);</span>
+
+        // Theme Toggle (left)
+<span class="nc" id="L275">        Button themeToggle = new Button(&quot;◐&quot;);</span>
+<span class="nc" id="L276">        themeToggle.getStyleClass().add(&quot;icon-button&quot;);</span>
+<span class="nc" id="L277">        themeToggle.setPickOnBounds(true);</span>
+<span class="nc" id="L278">        themeToggle.setFocusTraversable(false);</span>
+<span class="nc" id="L279">        Tooltip.install(themeToggle, new Tooltip(&quot;Toggle theme (Ctrl+D)&quot;));</span>
+
+<span class="nc" id="L281">        Button back = new Button(&quot;Back&quot;);</span>
+<span class="nc" id="L282">        back.setTooltip(new Tooltip(&quot;Return to step 1 and keep your settings.&quot;));</span>
+
+        // UI/UX-Rule &quot;Novelty&quot;
+<span class="nc" id="L285">        Button btnSmartFill = new Button(&quot;Smart Fill&quot;);</span>
+<span class="nc" id="L286">        btnSmartFill.getStyleClass().add(&quot;chip&quot;);</span>
+<span class="nc" id="L287">        btnSmartFill.setTooltip(new Tooltip(&quot;Auto-pick a strong starter selection with sensible point defaults.&quot;));</span>
+<span class="nc" id="L288">        btnSmartFill.disableProperty().bind(Bindings.isEmpty(pool));</span>
+
+<span class="nc" id="L290">        Region spacer = new Region(); HBox.setHgrow(spacer, Priority.ALWAYS);</span>
+
+<span class="nc" id="L292">        CheckBox cbSample = new CheckBox(&quot;Sample Solution&quot;);</span>
+<span class="nc" id="L293">        cbSample.selectedProperty().bindBidirectional(root.withSampleSolution);</span>
+<span class="nc" id="L294">        cbSample.setTooltip(new Tooltip(&quot;Include a sample-solution PDF in the export.&quot;));</span>
+
+<span class="nc" id="L296">        Label total = new Label();</span>
+<span class="nc" id="L297">        total.textProperty().bind(TaskSelection.totalPointsBinding(selected));</span>
+<span class="nc" id="L298">        total.setTooltip(new Tooltip(&quot;Current total points from selected tasks.&quot;));</span>
+<span class="nc" id="L299">        btnSmartFill.setOnAction(e -&gt; {</span>
+<span class="nc" id="L300">            applySmartFill(root, selected, pool);</span>
+<span class="nc" id="L301">            playSubtlePulse(progressStrip);</span>
+<span class="nc" id="L302">            playSubtlePulse(total);</span>
+<span class="nc" id="L303">        });</span>
+
+<span class="nc" id="L305">        Button btnGenerateExam = new Button(&quot;Generate Exam&quot;);</span>
+<span class="nc" id="L306">        btnGenerateExam.getStyleClass().add(&quot;primary&quot;);</span>
+<span class="nc" id="L307">        btnGenerateExam.setDefaultButton(true);</span>
+<span class="nc" id="L308">        btnGenerateExam.disableProperty().bind(Bindings.isEmpty(selected));</span>
+<span class="nc" id="L309">        btnGenerateExam.setTooltip(new Tooltip(&quot;Generate PDF(s) with the selected tasks.&quot;));</span>
+
+<span class="nc" id="L311">        actions.getChildren().addAll(themeToggle, back, btnSmartFill, spacer, cbSample, total, btnGenerateExam);</span>
+<span class="nc" id="L312">        pane.setBottom(actions);</span>
+
+        // ----- Modal window -----
+<span class="nc" id="L315">        Stage stage = new Stage();</span>
+<span class="nc" id="L316">        stage.initOwner(root.getWindow());</span>
+<span class="nc" id="L317">        stage.initModality(Modality.APPLICATION_MODAL);</span>
+<span class="nc" id="L318">        stage.setTitle(&quot;Generate — Select tasks&quot;);</span>
+<span class="nc" id="L319">        stage.setMinWidth(1100);   // wide enough -&gt; no line breaks needed</span>
+<span class="nc" id="L320">        stage.setMinHeight(700);</span>
+<span class="nc" id="L321">        stage.setResizable(true);</span>
+<span class="nc bnc" id="L322" title="All 2 branches missed.">        if (!KlausurCraftApp.getStageIcons().isEmpty()) {</span>
+<span class="nc" id="L323">            stage.getIcons().setAll(KlausurCraftApp.getStageIcons());</span>
+        }
+
+<span class="nc" id="L326">        Scene scene = new Scene(stageRoot, 1100, 750);</span>
+<span class="nc" id="L327">        ThemeService.register(scene);</span>
+<span class="nc" id="L328">        stage.setScene(scene);</span>
+
+        // Theme Toggle &amp; Shortcut (Ctrl+D) in dialog
+<span class="nc" id="L331">        themeToggle.setOnAction(e -&gt; ThemeService.toggle(scene));</span>
+<span class="nc" id="L332">        scene.getAccelerators().put(</span>
+            new KeyCodeCombination(KeyCode.D, KeyCombination.CONTROL_DOWN),
+<span class="nc" id="L334">            () -&gt; ThemeService.toggle(scene)</span>
+        );
+
+        // Actions
+<span class="nc" id="L338">        back.setOnAction(e -&gt; {</span>
+<span class="nc" id="L339">            stage.close();</span>
+<span class="nc" id="L340">            openStep1(root);</span>
+<span class="nc" id="L341">        });</span>
+
+<span class="nc" id="L343">        btnGenerateExam.setOnAction(e -&gt; {</span>
+<span class="nc" id="L344">            playGeneratePrepAnimation(stageRoot, () -&gt; {</span>
+<span class="nc" id="L345">                boolean ok = generateExamNow(root, selected);</span>
+<span class="nc bnc" id="L346" title="All 2 branches missed.">                if (ok) {</span>
+<span class="nc" id="L347">                    stage.close();</span>
+                }
+<span class="nc" id="L349">            });</span>
+<span class="nc" id="L350">        });</span>
+
+<span class="nc" id="L352">        Platform.runLater(() -&gt; {</span>
+            // Animate only guidance to keep all tasks immediately visible.
+<span class="nc" id="L354">            playEntranceAnimation(progressStrip);</span>
+<span class="nc bnc" id="L355" title="All 2 branches missed.">            if (!pool.isEmpty()) lvPool.getSelectionModel().select(0);</span>
+<span class="nc" id="L356">            lvPool.requestFocus();</span>
+<span class="nc" id="L357">        });</span>
+
+<span class="nc" id="L359">        stage.showAndWait();</span>
+<span class="nc" id="L360">    }</span>
+
+    static boolean generateExamNow(HomeController root, List&lt;TaskSelection&gt; selections) {
+        try {
+<span class="nc" id="L364">            PdfExportService exporter = new PdfExportService();</span>
+
+<span class="nc" id="L366">            List&lt;PdfExportService.TaskAssembly&gt; assemblies = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L367">            int taskIndex = 1;</span>
+<span class="nc bnc" id="L368" title="All 2 branches missed.">            for (TaskSelection ts : selections) {</span>
+<span class="nc bnc" id="L369" title="All 2 branches missed.">                if (!ts.isEnabled()) continue;</span>
+<span class="nc" id="L370">                BigDecimal chosenPts = ts.getChosenPoints();</span>
+<span class="nc" id="L371">                Task task = ts.getTask();</span>
+
+<span class="nc" id="L373">                List&lt;Subtask&gt; eligible = task.getSubtasks().stream()</span>
+<span class="nc" id="L374">                        .filter(st -&gt; st.isEligibleFor(root.scope.get()))</span>
+<span class="nc" id="L375">                        .collect(Collectors.toList());</span>
+
+<span class="nc" id="L377">                List&lt;Subtask&gt; chosen = PointDistributionPlanner.pickSubtasksWithDistribution(</span>
+                        eligible, chosenPts);
+
+<span class="nc bnc" id="L380" title="All 2 branches missed.">                if (chosen == null) {</span>
+<span class="nc" id="L381">                    HomeNotifications.showError(&quot;Task &quot; + task.getId() + &quot;: no feasible combination for &quot;</span>
+<span class="nc" id="L382">                            + Points.toDisplayString(chosenPts)</span>
+                            + &quot; points with near 1/3 difficulty. Add more subtasks of different difficulties.&quot;);
+<span class="nc" id="L384">                    return false;</span>
+                }
+
+<span class="nc" id="L387">                List&lt;PdfExportService.ChosenVariant&gt; chosenVariants = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L388" title="All 2 branches missed.">                for (Subtask sub : chosen) {</span>
+<span class="nc" id="L389">                    List&lt;Variant&gt; variants = sub.getVariants();</span>
+<span class="nc" id="L390">                    Variant variant = HomeGeneratePlanner.pickVariant(variants);</span>
+<span class="nc" id="L391">                    chosenVariants.add(new PdfExportService.ChosenVariant(sub, variant));</span>
+<span class="nc" id="L392">                }</span>
+
+<span class="nc" id="L394">                assemblies.add(new PdfExportService.TaskAssembly(taskIndex++, task, chosenVariants));</span>
+<span class="nc" id="L395">            }</span>
+
+<span class="nc bnc" id="L397" title="All 2 branches missed.">            if (assemblies.isEmpty()) {</span>
+<span class="nc" id="L398">                HomeNotifications.showError(&quot;No tasks selected.&quot;);</span>
+<span class="nc" id="L399">                return false;</span>
+            }
+
+<span class="nc" id="L402">            boolean exported = exporter.export(</span>
+<span class="nc" id="L403">                    root.getWindow(),</span>
+<span class="nc" id="L404">                    root.examTitle.get(),</span>
+<span class="nc" id="L405">                    root.examDate.get(),</span>
+                    assemblies,
+<span class="nc" id="L407">                    root.examDurationMinutes.get(),</span>
+<span class="nc" id="L408">                    root.withSampleSolution.get()</span>
+            );
+<span class="nc bnc" id="L410" title="All 2 branches missed.">            if (!exported) {</span>
+                // User canceled the save dialog -&gt; keep current generate screen open.
+<span class="nc" id="L412">                return false;</span>
+            }
+
+            // Banner &amp; Cleanup (SlideOver is closed here anyway)
+<span class="nc" id="L416">            HomeNotifications.showInfo(&quot;PDF(s) generated.&quot;);</span>
+<span class="nc" id="L417">            return true;</span>
+<span class="nc" id="L418">        } catch (Exception ex) {</span>
+<span class="nc" id="L419">            HomeNotifications.showError(&quot;Generation failed: &quot; + ex.getMessage());</span>
+<span class="nc" id="L420">            return false;</span>
+        }
+    }
+
+    private static void installKeyboardTransfer(ListView&lt;TaskSelection&gt; lvSelected,
+                                                ListView&lt;TaskSelection&gt; lvPool,
+                                                HomeController root,
+                                                ObservableList&lt;TaskSelection&gt; selected,
+                                                ObservableList&lt;TaskSelection&gt; pool,
+                                                StackPane stageRoot,
+                                                Node selectedHeader) {
+<span class="nc" id="L431">        lvPool.setOnKeyPressed(e -&gt; {</span>
+<span class="nc bnc" id="L432" title="All 2 branches missed.">            if (e.getCode() != KeyCode.SPACE) return;</span>
+<span class="nc" id="L433">            TaskSelection item = lvPool.getSelectionModel().getSelectedItem();</span>
+<span class="nc bnc" id="L434" title="All 2 branches missed.">            if (item == null) return;</span>
+<span class="nc bnc" id="L435" title="All 2 branches missed.">            if (item.getAchievable().isEmpty()) {</span>
+<span class="nc" id="L436">                HomeNotifications.showError(&quot;This task has no possible points in the current scope.&quot;);</span>
+<span class="nc" id="L437">                e.consume();</span>
+<span class="nc" id="L438">                return;</span>
+            }
+
+<span class="nc" id="L441">            playPoolToSelectedAnimation(stageRoot, lvPool, selectedHeader, item);</span>
+<span class="nc" id="L442">            moveToSelected(item, pool, selected, root);</span>
+<span class="nc" id="L443">            int next = Math.min(pool.size() - 1, Math.max(0, lvPool.getSelectionModel().getSelectedIndex()));</span>
+<span class="nc bnc" id="L444" title="All 2 branches missed.">            if (!pool.isEmpty()) lvPool.getSelectionModel().select(next);</span>
+<span class="nc" id="L445">            e.consume();</span>
+<span class="nc" id="L446">        });</span>
+
+<span class="nc" id="L448">        lvSelected.setOnKeyPressed(e -&gt; {</span>
+<span class="nc bnc" id="L449" title="All 2 branches missed.">            if (e.getCode() != KeyCode.SPACE) return;</span>
+<span class="nc" id="L450">            TaskSelection item = lvSelected.getSelectionModel().getSelectedItem();</span>
+<span class="nc bnc" id="L451" title="All 2 branches missed.">            if (item == null) return;</span>
+
+<span class="nc" id="L453">            playSelectedToPoolAnimation(stageRoot, lvSelected, lvPool, item);</span>
+<span class="nc" id="L454">            moveToPool(item, selected, pool);</span>
+<span class="nc" id="L455">            int next = Math.min(selected.size() - 1, Math.max(0, lvSelected.getSelectionModel().getSelectedIndex()));</span>
+<span class="nc bnc" id="L456" title="All 2 branches missed.">            if (!selected.isEmpty()) lvSelected.getSelectionModel().select(next);</span>
+<span class="nc" id="L457">            e.consume();</span>
+<span class="nc" id="L458">        });</span>
+<span class="nc" id="L459">    }</span>
+
+    private static void moveToSelected(TaskSelection item,
+                                       ObservableList&lt;TaskSelection&gt; pool,
+                                       ObservableList&lt;TaskSelection&gt; selected,
+                                       HomeController root) {
+<span class="nc" id="L465">        HomeGeneratePlanner.moveToSelected(item, pool, selected, root.scope.get());</span>
+<span class="nc" id="L466">    }</span>
+
+    private static void moveToPool(TaskSelection item,
+                                   ObservableList&lt;TaskSelection&gt; selected,
+                                   ObservableList&lt;TaskSelection&gt; pool) {
+<span class="nc" id="L471">        HomeGeneratePlanner.moveToPool(item, selected, pool);</span>
+<span class="nc" id="L472">    }</span>
+
+    private static Label buildProgressStep(String text) {
+<span class="nc" id="L475">        Label step = new Label(text);</span>
+<span class="nc" id="L476">        step.getStyleClass().add(&quot;generate-progress-step&quot;);</span>
+<span class="nc" id="L477">        return step;</span>
+    }
+
+    private static void refreshProgressStepState(ObservableList&lt;TaskSelection&gt; selected,
+                                                 Label step1,
+                                                 Label step2,
+                                                 Label step3) {
+<span class="nc bnc" id="L484" title="All 2 branches missed.">        boolean hasSelection = !selected.isEmpty();</span>
+<span class="nc bnc" id="L485" title="All 2 branches missed.">        setProgressState(step1, hasSelection, !hasSelection);</span>
+<span class="nc" id="L486">        setProgressState(step2, hasSelection, hasSelection);</span>
+<span class="nc" id="L487">        setProgressState(step3, false, hasSelection);</span>
+<span class="nc" id="L488">    }</span>
+
+    private static void setProgressState(Label label, boolean done, boolean active) {
+<span class="nc" id="L491">        label.getStyleClass().removeAll(&quot;generate-progress-step-done&quot;, &quot;generate-progress-step-active&quot;);</span>
+<span class="nc bnc" id="L492" title="All 2 branches missed.">        if (done) {</span>
+<span class="nc" id="L493">            label.getStyleClass().add(&quot;generate-progress-step-done&quot;);</span>
+<span class="nc bnc" id="L494" title="All 2 branches missed.">        } else if (active) {</span>
+<span class="nc" id="L495">            label.getStyleClass().add(&quot;generate-progress-step-active&quot;);</span>
+        }
+<span class="nc" id="L497">    }</span>
+
+    private static void applySmartFill(HomeController root,
+                                       ObservableList&lt;TaskSelection&gt; selected,
+                                       ObservableList&lt;TaskSelection&gt; pool) {
+<span class="nc" id="L502">        int tuned = HomeGeneratePlanner.applySmartFill(root.scope.get(), selected, pool);</span>
+<span class="nc bnc" id="L503" title="All 2 branches missed.">        if (tuned &lt;= 0) {</span>
+<span class="nc" id="L504">            HomeNotifications.showError(&quot;Smart Fill could not find tasks with achievable points.&quot;);</span>
+<span class="nc" id="L505">            return;</span>
+        }
+
+<span class="nc" id="L508">        HomeNotifications.showInfo(&quot;Smart Fill prepared &quot; + tuned + &quot; task(s).&quot;);</span>
+<span class="nc" id="L509">    }</span>
+
+    private static void suggestPointForTaskSelection(HomeController root, TaskSelection ts) {
+<span class="nc" id="L512">        HomeGeneratePlanner.suggestPointForTaskSelection(root.scope.get(), ts);</span>
+<span class="nc" id="L513">    }</span>
+
+    private static int suggestPointsForAll(HomeController root, ObservableList&lt;TaskSelection&gt; selected) {
+<span class="nc" id="L516">        return HomeGeneratePlanner.suggestPointsForAll(root.scope.get(), selected);</span>
+    }
+
+    private static void playGeneratePrepAnimation(StackPane stageRoot, Runnable after) {
+<span class="nc" id="L520">        StackPane scrim = new StackPane();</span>
+<span class="nc" id="L521">        scrim.getStyleClass().add(&quot;generate-export-overlay&quot;);</span>
+<span class="nc" id="L522">        scrim.setPickOnBounds(true);</span>
+
+<span class="nc" id="L524">        VBox card = new VBox(10);</span>
+<span class="nc" id="L525">        card.getStyleClass().add(&quot;generate-export-card&quot;);</span>
+<span class="nc" id="L526">        ProgressIndicator spinner = new ProgressIndicator();</span>
+<span class="nc" id="L527">        spinner.setPrefSize(52, 52);</span>
+<span class="nc" id="L528">        Label title = new Label(&quot;Preparing export&quot;);</span>
+<span class="nc" id="L529">        title.getStyleClass().add(&quot;generate-export-title&quot;);</span>
+<span class="nc" id="L530">        Label subtitle = new Label(&quot;Checking task combinations and opening save dialog...&quot;);</span>
+<span class="nc" id="L531">        subtitle.getStyleClass().add(&quot;generate-export-subtitle&quot;);</span>
+<span class="nc" id="L532">        subtitle.setWrapText(true);</span>
+<span class="nc" id="L533">        subtitle.setMaxWidth(320);</span>
+<span class="nc" id="L534">        card.getChildren().addAll(spinner, title, subtitle);</span>
+<span class="nc" id="L535">        card.setOpacity(0);</span>
+<span class="nc" id="L536">        card.setScaleX(0.96);</span>
+<span class="nc" id="L537">        card.setScaleY(0.96);</span>
+<span class="nc" id="L538">        card.setAlignment(Pos.CENTER);</span>
+
+<span class="nc" id="L540">        scrim.getChildren().add(card);</span>
+<span class="nc" id="L541">        stageRoot.getChildren().add(scrim);</span>
+
+<span class="nc" id="L543">        FadeTransition fadeIn = new FadeTransition(Duration.millis(140), card);</span>
+<span class="nc" id="L544">        fadeIn.setFromValue(0);</span>
+<span class="nc" id="L545">        fadeIn.setToValue(1);</span>
+<span class="nc" id="L546">        ScaleTransition scaleIn = new ScaleTransition(Duration.millis(180), card);</span>
+<span class="nc" id="L547">        scaleIn.setFromX(0.96);</span>
+<span class="nc" id="L548">        scaleIn.setFromY(0.96);</span>
+<span class="nc" id="L549">        scaleIn.setToX(1.0);</span>
+<span class="nc" id="L550">        scaleIn.setToY(1.0);</span>
+<span class="nc" id="L551">        fadeIn.play();</span>
+<span class="nc" id="L552">        scaleIn.play();</span>
+
+<span class="nc" id="L554">        PauseTransition hold = new PauseTransition(Duration.millis(900));</span>
+<span class="nc" id="L555">        hold.setOnFinished(ev -&gt; {</span>
+<span class="nc" id="L556">            FadeTransition fadeOut = new FadeTransition(Duration.millis(130), scrim);</span>
+<span class="nc" id="L557">            fadeOut.setFromValue(1);</span>
+<span class="nc" id="L558">            fadeOut.setToValue(0);</span>
+<span class="nc" id="L559">            fadeOut.setOnFinished(done -&gt; {</span>
+<span class="nc" id="L560">                stageRoot.getChildren().remove(scrim);</span>
+<span class="nc" id="L561">                after.run();</span>
+<span class="nc" id="L562">            });</span>
+<span class="nc" id="L563">            fadeOut.play();</span>
+<span class="nc" id="L564">        });</span>
+<span class="nc" id="L565">        hold.play();</span>
+<span class="nc" id="L566">    }</span>
+
+    private static void playSubtlePulse(Node node) {
+<span class="nc bnc" id="L569" title="All 2 branches missed.">        if (node == null) return;</span>
+<span class="nc" id="L570">        ScaleTransition pulse = new ScaleTransition(Duration.millis(170), node);</span>
+<span class="nc" id="L571">        pulse.setFromX(1.0);</span>
+<span class="nc" id="L572">        pulse.setFromY(1.0);</span>
+<span class="nc" id="L573">        pulse.setToX(1.015);</span>
+<span class="nc" id="L574">        pulse.setToY(1.015);</span>
+<span class="nc" id="L575">        pulse.setAutoReverse(true);</span>
+<span class="nc" id="L576">        pulse.setCycleCount(2);</span>
+<span class="nc" id="L577">        pulse.play();</span>
+<span class="nc" id="L578">    }</span>
+
+    private static void playEntranceAnimation(Node node) {
+<span class="nc bnc" id="L581" title="All 2 branches missed.">        if (node == null) return;</span>
+<span class="nc" id="L582">        node.setOpacity(0);</span>
+<span class="nc" id="L583">        node.setTranslateY(8);</span>
+
+<span class="nc" id="L585">        FadeTransition fade = new FadeTransition(Duration.millis(200), node);</span>
+<span class="nc" id="L586">        fade.setFromValue(0);</span>
+<span class="nc" id="L587">        fade.setToValue(1);</span>
+<span class="nc" id="L588">        TranslateTransition slide = new TranslateTransition(Duration.millis(220), node);</span>
+<span class="nc" id="L589">        slide.setFromY(8);</span>
+<span class="nc" id="L590">        slide.setToY(0);</span>
+<span class="nc" id="L591">        fade.play();</span>
+<span class="nc" id="L592">        slide.play();</span>
+<span class="nc" id="L593">    }</span>
+
+    private static void playPoolToSelectedAnimation(StackPane stageRoot,
+                                                    Node poolNode,
+                                                    Node selectedHeader,
+                                                    TaskSelection item) {
+<span class="nc" id="L599">        playFunnelFlightAnimation(stageRoot, poolNode, selectedHeader, item, true);</span>
+<span class="nc" id="L600">    }</span>
+
+    private static void playSelectedToPoolAnimation(StackPane stageRoot,
+                                                    Node selectedNode,
+                                                    Node poolNode,
+                                                    TaskSelection item) {
+<span class="nc" id="L606">        playFunnelFlightAnimation(stageRoot, selectedNode, poolNode, item, false);</span>
+<span class="nc" id="L607">    }</span>
+
+    private static void playFunnelFlightAnimation(StackPane stageRoot,
+                                                  Node sourceNode,
+                                                  Node targetNode,
+                                                  TaskSelection item,
+                                                  boolean upward) {
+<span class="nc bnc" id="L614" title="All 8 branches missed.">        if (stageRoot == null || sourceNode == null || targetNode == null || item == null) return;</span>
+
+<span class="nc" id="L616">        Bounds sourceBounds = sourceNode.localToScene(sourceNode.getBoundsInLocal());</span>
+<span class="nc" id="L617">        Bounds targetBounds = targetNode.localToScene(targetNode.getBoundsInLocal());</span>
+<span class="nc" id="L618">        Bounds rootBounds = stageRoot.localToScene(stageRoot.getBoundsInLocal());</span>
+<span class="nc bnc" id="L619" title="All 6 branches missed.">        if (sourceBounds == null || targetBounds == null || rootBounds == null) return;</span>
+
+<span class="nc" id="L621">        String title = item.getTask().getTitle();</span>
+<span class="nc bnc" id="L622" title="All 4 branches missed.">        String chipText = (title == null || title.isBlank()) ? (&quot;Task &quot; + item.getTask().getId()) : title;</span>
+<span class="nc bnc" id="L623" title="All 2 branches missed.">        if (chipText.length() &gt; 28) {</span>
+<span class="nc" id="L624">            chipText = chipText.substring(0, 25) + &quot;...&quot;;</span>
+        }
+
+<span class="nc" id="L627">        Label ghost = new Label(chipText);</span>
+<span class="nc" id="L628">        ghost.getStyleClass().add(&quot;pool-fly-chip&quot;);</span>
+<span class="nc" id="L629">        ghost.setManaged(false);</span>
+<span class="nc" id="L630">        ghost.setMouseTransparent(true);</span>
+<span class="nc" id="L631">        stageRoot.getChildren().add(ghost);</span>
+<span class="nc" id="L632">        ghost.applyCss();</span>
+<span class="nc" id="L633">        ghost.autosize();</span>
+
+<span class="nc" id="L635">        double startX = sourceBounds.getMinX() + sourceBounds.getWidth() * 0.5;</span>
+<span class="nc" id="L636">        double startY = sourceBounds.getMinY() + sourceBounds.getHeight() * 0.5;</span>
+<span class="nc bnc" id="L637" title="All 2 branches missed.">        double endX = targetBounds.getMinX() + targetBounds.getWidth() * (upward ? 0.55 : 0.45);</span>
+<span class="nc bnc" id="L638" title="All 2 branches missed.">        double endY = targetBounds.getMinY() + targetBounds.getHeight() * (upward ? 0.55 : 0.40);</span>
+
+<span class="nc" id="L640">        ghost.relocate(startX - rootBounds.getMinX(), startY - rootBounds.getMinY());</span>
+<span class="nc" id="L641">        ghost.setOpacity(0.96);</span>
+<span class="nc" id="L642">        ghost.setScaleX(1.0);</span>
+<span class="nc" id="L643">        ghost.setScaleY(1.0);</span>
+
+<span class="nc" id="L645">        double dx = endX - startX;</span>
+<span class="nc" id="L646">        double dy = endY - startY;</span>
+<span class="nc" id="L647">        double bendX = dx * 0.42;</span>
+<span class="nc bnc" id="L648" title="All 2 branches missed.">        double funnelLift = upward ? -34 : 34;</span>
+<span class="nc bnc" id="L649" title="All 2 branches missed.">        double funnelPull = upward ? -16 : 16;</span>
+
+<span class="nc" id="L651">        Path path = new Path(</span>
+                new MoveTo(0, 0),
+                new CubicCurveTo(
+                        bendX, dy * 0.20 + funnelLift,
+                        dx * 0.78, dy * 0.78 + funnelPull,
+                        dx, dy
+                )
+        );
+
+<span class="nc" id="L660">        PathTransition travel = new PathTransition(Duration.millis(340), path, ghost);</span>
+
+<span class="nc" id="L662">        ScaleTransition scale = new ScaleTransition(Duration.millis(340), ghost);</span>
+<span class="nc" id="L663">        scale.setFromX(1.0);</span>
+<span class="nc" id="L664">        scale.setFromY(1.0);</span>
+<span class="nc" id="L665">        scale.setToX(0.42);</span>
+<span class="nc" id="L666">        scale.setToY(0.42);</span>
+
+<span class="nc" id="L668">        FadeTransition fade = new FadeTransition(Duration.millis(340), ghost);</span>
+<span class="nc" id="L669">        fade.setFromValue(0.96);</span>
+<span class="nc" id="L670">        fade.setToValue(0.10);</span>
+
+<span class="nc" id="L672">        ParallelTransition flight = new ParallelTransition(travel, scale, fade);</span>
+<span class="nc" id="L673">        flight.setOnFinished(e -&gt; {</span>
+<span class="nc" id="L674">            stageRoot.getChildren().remove(ghost);</span>
+<span class="nc" id="L675">            playSubtlePulse(targetNode);</span>
+<span class="nc" id="L676">        });</span>
+<span class="nc" id="L677">        flight.play();</span>
+<span class="nc" id="L678">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

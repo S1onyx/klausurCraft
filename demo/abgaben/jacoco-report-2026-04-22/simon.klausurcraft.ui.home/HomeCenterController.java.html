@@ -1,0 +1,457 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="de"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HomeCenterController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">demo</a> &gt; <a href="index.source.html" class="el_package">simon.klausurcraft.ui.home</a> &gt; <span class="el_source">HomeCenterController.java</span></div><h1>HomeCenterController.java</h1><pre class="source lang-java linenums">package simon.klausurcraft.ui.home;
+
+import javafx.application.Platform;
+import javafx.geometry.Insets;
+import javafx.geometry.Bounds;
+import javafx.fxml.FXML;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.control.*;
+import javafx.scene.input.ContextMenuEvent;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.*;
+import simon.klausurcraft.task.Difficulty;
+import simon.klausurcraft.task.Eligibility;
+import simon.klausurcraft.task.Points;
+import simon.klausurcraft.task.Subtask;
+import simon.klausurcraft.task.Task;
+import simon.klausurcraft.ui.UiStyles;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
+<span class="nc" id="L28">public class HomeCenterController {</span>
+
+    private HomeController root;
+<span class="nc" id="L31">    private final Map&lt;String, VBox&gt; taskCardByTaskId = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L32">    private final Map&lt;String, VBox&gt; subtaskContainerByTaskId = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L33">    private final Map&lt;String, Button&gt; toggleButtonByTaskId = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L34">    private final Map&lt;String, HBox&gt; subtaskRowById = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L35">    private final Map&lt;String, Boolean&gt; taskExpandedById = new HashMap&lt;&gt;();</span>
+
+    @FXML private ScrollPane centerScroll;
+    @FXML private VBox centerContainer;
+
+    public void init(HomeController root) {
+<span class="nc" id="L41">        this.root = root;</span>
+<span class="nc" id="L42">    }</span>
+
+    /** Reset to default expansion behavior (all tasks expanded) e.g. when loading a new file. */
+    public void resetExpansionState() {
+<span class="nc" id="L46">        taskExpandedById.clear();</span>
+<span class="nc" id="L47">    }</span>
+
+    public void render(List&lt;Task&gt; tasks, String query, Set&lt;Difficulty&gt; allowed) {
+<span class="nc" id="L50">        root.updateCounts();</span>
+<span class="nc" id="L51">        centerContainer.getChildren().clear();</span>
+<span class="nc" id="L52">        taskCardByTaskId.clear();</span>
+<span class="nc" id="L53">        subtaskContainerByTaskId.clear();</span>
+<span class="nc" id="L54">        toggleButtonByTaskId.clear();</span>
+<span class="nc" id="L55">        subtaskRowById.clear();</span>
+<span class="nc bnc" id="L56" title="All 2 branches missed.">        String q = query == null ? &quot;&quot; : query;</span>
+<span class="nc bnc" id="L57" title="All 2 branches missed.">        boolean hasQuery = !q.isEmpty();</span>
+
+<span class="nc" id="L59">        HBox taskControls = new HBox(8);</span>
+<span class="nc" id="L60">        taskControls.setPadding(new Insets(0, 0, 4, 0));</span>
+<span class="nc" id="L61">        Button btnExpandAll = new Button(&quot;Expand all&quot;);</span>
+<span class="nc" id="L62">        btnExpandAll.getStyleClass().add(&quot;chip&quot;);</span>
+<span class="nc" id="L63">        btnExpandAll.setTooltip(new Tooltip(&quot;Expand all task cards.&quot;));</span>
+<span class="nc" id="L64">        btnExpandAll.setOnAction(e -&gt; expandAllTasks(tasks));</span>
+<span class="nc" id="L65">        Button btnCollapseAll = new Button(&quot;Collapse all&quot;);</span>
+<span class="nc" id="L66">        btnCollapseAll.getStyleClass().add(&quot;chip&quot;);</span>
+<span class="nc" id="L67">        btnCollapseAll.setTooltip(new Tooltip(&quot;Collapse all task cards.&quot;));</span>
+<span class="nc" id="L68">        btnCollapseAll.setOnAction(e -&gt; collapseAllTasks(tasks));</span>
+<span class="nc" id="L69">        taskControls.getChildren().addAll(btnExpandAll, btnCollapseAll);</span>
+<span class="nc" id="L70">        centerContainer.getChildren().add(taskControls);</span>
+
+<span class="nc bnc" id="L72" title="All 2 branches missed.">        for (Task t : tasks) {</span>
+<span class="nc" id="L73">            boolean taskHeaderMatches = HomeSearchService.matchesTaskHeader(t, q);</span>
+<span class="nc" id="L74">            List&lt;Subtask&gt; visibleSubtasks = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L75">            List&lt;Subtask&gt; highlightedSubtasks = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L77" title="All 2 branches missed.">            for (Subtask st : t.getSubtasks()) {</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">                if (!allowed.contains(st.getDifficulty())) continue;</span>
+
+<span class="nc" id="L80">                String subGroup = root.getTaskRepository().readSubtaskGroup(st);</span>
+<span class="nc" id="L81">                boolean subtaskMatches = HomeSearchService.matchesSubtask(st, subGroup, q);</span>
+
+<span class="nc bnc" id="L83" title="All 6 branches missed.">                if (!hasQuery || taskHeaderMatches || subtaskMatches) {</span>
+<span class="nc" id="L84">                    visibleSubtasks.add(st);</span>
+                }
+<span class="nc bnc" id="L86" title="All 4 branches missed.">                if (hasQuery &amp;&amp; subtaskMatches) {</span>
+<span class="nc" id="L87">                    highlightedSubtasks.add(st);</span>
+                }
+<span class="nc" id="L89">            }</span>
+
+<span class="nc bnc" id="L91" title="All 6 branches missed.">            if (hasQuery &amp;&amp; !taskHeaderMatches &amp;&amp; visibleSubtasks.isEmpty()) {</span>
+<span class="nc" id="L92">                continue;</span>
+            }
+
+<span class="nc" id="L95">            VBox taskCard = makeCard();</span>
+<span class="nc" id="L96">            taskCard.setUserData(HomeSearchService.formatTaskTitle(t));</span>
+<span class="nc" id="L97">            taskCardByTaskId.put(taskKey(t), taskCard);</span>
+
+            // Header row with title + actions
+<span class="nc" id="L100">            HBox headerRow = new HBox(8);</span>
+<span class="nc" id="L101">            boolean expanded = isTaskExpanded(t);</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">            Button btnToggle = new Button(expanded ? &quot;▾&quot; : &quot;▸&quot;);</span>
+<span class="nc" id="L103">            btnToggle.getStyleClass().addAll(&quot;chip&quot;, &quot;task-toggle&quot;);</span>
+<span class="nc" id="L104">            btnToggle.setTooltip(new Tooltip(&quot;Expand or collapse this task.&quot;));</span>
+<span class="nc bnc" id="L105" title="All 2 branches missed.">            btnToggle.setOnAction(e -&gt; setTaskExpanded(t, !isTaskExpanded(t)));</span>
+
+<span class="nc" id="L107">            Label header = new Label(&quot;Task &quot; + t.getId() + &quot; — &quot; + t.getTitle());</span>
+<span class="nc" id="L108">            header.getStyleClass().add(&quot;header&quot;);</span>
+<span class="nc bnc" id="L109" title="All 4 branches missed.">            if (hasQuery &amp;&amp; taskHeaderMatches) {</span>
+<span class="nc" id="L110">                header.getStyleClass().add(&quot;search-hit-task-title&quot;);</span>
+            }
+
+<span class="nc" id="L113">            Region spacer = new Region();</span>
+<span class="nc" id="L114">            HBox.setHgrow(spacer, Priority.ALWAYS);</span>
+
+<span class="nc" id="L116">            Button btnEdit = new Button(&quot;Edit&quot;);</span>
+<span class="nc" id="L117">            btnEdit.getStyleClass().add(&quot;chip&quot;);</span>
+<span class="nc" id="L118">            btnEdit.setTooltip(new Tooltip(&quot;Edit task title.&quot;));</span>
+<span class="nc" id="L119">            btnEdit.setOnAction(e -&gt; HomeTaskSheet.openEdit(root, t));</span>
+
+<span class="nc" id="L121">            Button btnAddSub = new Button(&quot;+Subtask&quot;);</span>
+<span class="nc" id="L122">            btnAddSub.getStyleClass().add(&quot;chip&quot;);</span>
+<span class="nc" id="L123">            btnAddSub.setTooltip(new Tooltip(&quot;Add a new subtask to this task.&quot;));</span>
+<span class="nc" id="L124">            btnAddSub.setOnAction(e -&gt; {</span>
+<span class="nc" id="L125">                root.getTaskRepository().addSubtask(t).ifPresent(newSub -&gt; {</span>
+<span class="nc" id="L126">                    root.centerController.render(root.getTasks(), root.currentQuery(), root.allowedDifficulties());</span>
+<span class="nc" id="L127">                    HomeSubtaskSheet.open(root, t, newSub);</span>
+<span class="nc" id="L128">                });</span>
+<span class="nc" id="L129">            });</span>
+
+<span class="nc" id="L131">            Button btnDeleteTask = new Button(&quot;Delete&quot;);</span>
+<span class="nc" id="L132">            btnDeleteTask.getStyleClass().addAll(&quot;chip&quot;, &quot;danger&quot;);</span>
+<span class="nc" id="L133">            btnDeleteTask.setTooltip(new Tooltip(&quot;Delete this task with all subtasks and variants.&quot;));</span>
+<span class="nc" id="L134">            btnDeleteTask.setOnAction(e -&gt; tryDeleteTask(t));</span>
+
+<span class="nc" id="L136">            headerRow.getChildren().addAll(btnToggle, header, spacer, btnAddSub, btnEdit, btnDeleteTask);</span>
+<span class="nc" id="L137">            taskCard.getChildren().add(headerRow);</span>
+<span class="nc" id="L138">            toggleButtonByTaskId.put(taskKey(t), btnToggle);</span>
+
+<span class="nc" id="L140">            headerRow.addEventHandler(MouseEvent.MOUSE_CLICKED, ev -&gt; {</span>
+<span class="nc bnc" id="L141" title="All 4 branches missed.">                if (ev.getButton() != MouseButton.PRIMARY || ev.getClickCount() != 1) return;</span>
+<span class="nc bnc" id="L142" title="All 2 branches missed.">                if (isDescendantOf(ev.getPickResult().getIntersectedNode(), btnToggle)) return;</span>
+<span class="nc bnc" id="L143" title="All 2 branches missed.">                if (isDescendantOf(ev.getPickResult().getIntersectedNode(), btnAddSub)) return;</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">                if (isDescendantOf(ev.getPickResult().getIntersectedNode(), btnEdit)) return;</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">                if (isDescendantOf(ev.getPickResult().getIntersectedNode(), btnDeleteTask)) return;</span>
+<span class="nc bnc" id="L146" title="All 2 branches missed.">                setTaskExpanded(t, !isTaskExpanded(t));</span>
+<span class="nc" id="L147">            });</span>
+
+            // Context menu on task card (right-click)
+<span class="nc" id="L150">            ContextMenu taskMenu = new ContextMenu();</span>
+<span class="nc" id="L151">            MenuItem miEdit = new MenuItem(&quot;Edit task…&quot;);</span>
+<span class="nc" id="L152">            miEdit.setOnAction(e -&gt; HomeTaskSheet.openEdit(root, t));</span>
+<span class="nc" id="L153">            MenuItem miAdd = new MenuItem(&quot;Add subtask&quot;);</span>
+<span class="nc" id="L154">            miAdd.setOnAction(e -&gt; {</span>
+<span class="nc" id="L155">                root.getTaskRepository().addSubtask(t);</span>
+<span class="nc" id="L156">                root.centerController.render(root.getTasks(), root.currentQuery(), root.allowedDifficulties());</span>
+<span class="nc" id="L157">            });</span>
+<span class="nc" id="L158">            MenuItem miDel = new MenuItem(&quot;Delete task&quot;);</span>
+<span class="nc" id="L159">            miDel.setOnAction(e -&gt; tryDeleteTask(t));</span>
+<span class="nc" id="L160">            taskMenu.getItems().addAll(miEdit, miAdd, new SeparatorMenuItem(), miDel);</span>
+<span class="nc" id="L161">            taskCard.setOnContextMenuRequested((ContextMenuEvent ev) -&gt; taskMenu.show(taskCard, ev.getScreenX(), ev.getScreenY()));</span>
+
+<span class="nc" id="L163">            VBox subtaskRowsBox = new VBox(0);</span>
+<span class="nc" id="L164">            subtaskContainerByTaskId.put(taskKey(t), subtaskRowsBox);</span>
+<span class="nc" id="L165">            subtaskRowsBox.setManaged(expanded);</span>
+<span class="nc" id="L166">            subtaskRowsBox.setVisible(expanded);</span>
+
+<span class="nc bnc" id="L168" title="All 2 branches missed.">            for (Subtask st : visibleSubtasks) {</span>
+<span class="nc" id="L169">                String subName = root.getTaskRepository().readSubtaskGroup(st);</span>
+<span class="nc bnc" id="L170" title="All 4 branches missed.">                if (subName == null || subName.isBlank()) {</span>
+<span class="nc" id="L171">                    subName = &quot;Subtask &quot; + t.getId() + &quot;.&quot; + st.getId();</span>
+                }
+<span class="nc bnc" id="L173" title="All 4 branches missed.">                boolean isHighlightedSubtask = hasQuery &amp;&amp; highlightedSubtasks.contains(st);</span>
+
+<span class="nc" id="L175">                HBox row = new HBox(10);</span>
+<span class="nc" id="L176">                subtaskRowById.put(subtaskKey(t, st), row);</span>
+<span class="nc" id="L177">                row.setUserData(subtaskKey(t, st));</span>
+<span class="nc" id="L178">                row.setPadding(new Insets(6, 0, 6, 0));</span>
+<span class="nc" id="L179">                row.getStyleClass().add(&quot;subtask-row-clickable&quot;);</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">                if (isHighlightedSubtask) {</span>
+<span class="nc" id="L181">                    row.getStyleClass().add(&quot;search-hit-subtask-row&quot;);</span>
+                }
+
+<span class="nc" id="L184">                Label lblTitle = new Label(subName);</span>
+<span class="nc" id="L185">                lblTitle.getStyleClass().add(&quot;muted&quot;);</span>
+<span class="nc bnc" id="L186" title="All 2 branches missed.">                if (isHighlightedSubtask) {</span>
+<span class="nc" id="L187">                    lblTitle.getStyleClass().add(&quot;search-hit-subtask-title&quot;);</span>
+                }
+
+<span class="nc" id="L190">                Label bPts  = badge(Points.toDisplayString(st.getPoints()) + &quot; pts&quot;);</span>
+<span class="nc" id="L191">                Label bDiff = badgeForDifficulty(st.getDifficulty());</span>
+<span class="nc" id="L192">                Label bElig = badgeForEligibility(st.getEligibility());</span>
+<span class="nc" id="L193">                Label bHit = null;</span>
+<span class="nc bnc" id="L194" title="All 2 branches missed.">                if (isHighlightedSubtask) {</span>
+<span class="nc" id="L195">                    bHit = badge(&quot;match&quot;);</span>
+<span class="nc" id="L196">                    bHit.getStyleClass().add(&quot;badge-search-hit&quot;);</span>
+                }
+
+<span class="nc" id="L199">                Region spacer2 = new Region();</span>
+<span class="nc" id="L200">                HBox.setHgrow(spacer2, Priority.ALWAYS);</span>
+
+<span class="nc" id="L202">                Button btnOpen = new Button(&quot;Details&quot;);</span>
+<span class="nc" id="L203">                btnOpen.getStyleClass().add(&quot;chip&quot;);</span>
+<span class="nc" id="L204">                btnOpen.setTooltip(new Tooltip(&quot;Open subtask details and variants.&quot;));</span>
+<span class="nc" id="L205">                btnOpen.setOnAction(e -&gt; HomeSubtaskSheet.open(root, t, st));</span>
+
+<span class="nc" id="L207">                row.addEventHandler(MouseEvent.MOUSE_CLICKED, ev -&gt; {</span>
+<span class="nc bnc" id="L208" title="All 4 branches missed.">                    if (ev.getButton() != MouseButton.PRIMARY || ev.getClickCount() != 1) return;</span>
+<span class="nc bnc" id="L209" title="All 2 branches missed.">                    if (isDescendantOf(ev.getPickResult().getIntersectedNode(), btnOpen)) return;</span>
+<span class="nc" id="L210">                    HomeSubtaskSheet.open(root, t, st);</span>
+<span class="nc" id="L211">                });</span>
+
+                // Context menu on subtask row
+<span class="nc" id="L214">                ContextMenu subMenu = new ContextMenu();</span>
+<span class="nc" id="L215">                MenuItem miOpen = new MenuItem(&quot;Open details&quot;);</span>
+<span class="nc" id="L216">                miOpen.setOnAction(e -&gt; HomeSubtaskSheet.open(root, t, st));</span>
+<span class="nc" id="L217">                MenuItem miDelete = new MenuItem(&quot;Delete subtask&quot;);</span>
+<span class="nc" id="L218">                miDelete.setOnAction(e -&gt; tryDeleteSubtask(t, st));</span>
+<span class="nc" id="L219">                subMenu.getItems().addAll(miOpen, new SeparatorMenuItem(), miDelete);</span>
+<span class="nc" id="L220">                row.setOnContextMenuRequested(ev -&gt; subMenu.show(row, ev.getScreenX(), ev.getScreenY()));</span>
+
+<span class="nc bnc" id="L222" title="All 2 branches missed.">                if (bHit != null) {</span>
+<span class="nc" id="L223">                    row.getChildren().addAll(lblTitle, bHit, bPts, bDiff, bElig, spacer2, btnOpen);</span>
+                } else {
+<span class="nc" id="L225">                    row.getChildren().addAll(lblTitle, bPts, bDiff, bElig, spacer2, btnOpen);</span>
+                }
+<span class="nc" id="L227">                subtaskRowsBox.getChildren().add(row);</span>
+<span class="nc" id="L228">            }</span>
+<span class="nc" id="L229">            taskCard.getChildren().add(subtaskRowsBox);</span>
+
+<span class="nc bnc" id="L231" title="All 6 branches missed.">            if (!hasQuery || taskHeaderMatches || !visibleSubtasks.isEmpty()) {</span>
+<span class="nc" id="L232">                centerContainer.getChildren().add(taskCard);</span>
+            }
+<span class="nc" id="L234">        }</span>
+<span class="nc" id="L235">    }</span>
+
+    private void tryDeleteTask(Task t) {
+<span class="nc" id="L238">        Alert a = new Alert(Alert.AlertType.CONFIRMATION);</span>
+<span class="nc" id="L239">        a.setTitle(&quot;Delete task&quot;);</span>
+<span class="nc" id="L240">        a.setHeaderText(&quot;Delete this task?&quot;);</span>
+<span class="nc" id="L241">        a.setContentText(&quot;This will delete the task and all its subtasks and variants. This action cannot be undone.&quot;);</span>
+<span class="nc" id="L242">        a.initOwner(root.getWindow());</span>
+<span class="nc" id="L243">        UiStyles.applyCurrentStyles(a);</span>
+<span class="nc" id="L244">        a.showAndWait().ifPresent(bt -&gt; {</span>
+<span class="nc bnc" id="L245" title="All 2 branches missed.">            if (bt == ButtonType.OK) {</span>
+<span class="nc bnc" id="L246" title="All 2 branches missed.">                if (root.getTaskRepository().deleteTask(t)) {</span>
+<span class="nc" id="L247">                    root.getTasks().remove(t);</span>
+                } else {
+<span class="nc" id="L249">                    HomeNotifications.showError(&quot;Failed to delete task.&quot;);</span>
+                }
+            }
+<span class="nc" id="L252">        });</span>
+<span class="nc" id="L253">    }</span>
+
+    private void tryDeleteSubtask(Task task, Subtask st) {
+<span class="nc" id="L256">        Alert a = new Alert(Alert.AlertType.CONFIRMATION);</span>
+<span class="nc" id="L257">        a.setTitle(&quot;Delete subtask&quot;);</span>
+<span class="nc" id="L258">        a.setHeaderText(&quot;Delete this subtask?&quot;);</span>
+<span class="nc" id="L259">        a.setContentText(&quot;This will delete the subtask including all its variants. This action cannot be undone.&quot;);</span>
+<span class="nc" id="L260">        a.initOwner(root.getWindow());</span>
+<span class="nc" id="L261">        UiStyles.applyCurrentStyles(a);</span>
+<span class="nc" id="L262">        a.showAndWait().ifPresent(bt -&gt; {</span>
+<span class="nc bnc" id="L263" title="All 2 branches missed.">            if (bt == ButtonType.OK) {</span>
+<span class="nc bnc" id="L264" title="All 2 branches missed.">                if (root.getTaskRepository().deleteSubtask(task, st)) {</span>
+<span class="nc" id="L265">                    task.getSubtasks().remove(st);</span>
+<span class="nc" id="L266">                    render(root.getTasks(), root.currentQuery(), root.allowedDifficulties());</span>
+                } else {
+<span class="nc" id="L268">                    HomeNotifications.showError(&quot;Failed to delete subtask.&quot;);</span>
+                }
+            }
+<span class="nc" id="L271">        });</span>
+<span class="nc" id="L272">    }</span>
+
+    public void scrollToTask(Task task) {
+<span class="nc bnc" id="L275" title="All 2 branches missed.">        if (task == null) return;</span>
+<span class="nc" id="L276">        setTaskExpanded(task, true);</span>
+<span class="nc" id="L277">        Node card = taskCardByTaskId.get(taskKey(task));</span>
+<span class="nc bnc" id="L278" title="All 2 branches missed.">        if (card != null) {</span>
+<span class="nc" id="L279">            scrollNodeIntoView(card);</span>
+<span class="nc" id="L280">            Platform.runLater(() -&gt; scrollNodeIntoView(card));</span>
+        }
+<span class="nc" id="L282">    }</span>
+
+    public void scrollToSubtask(Task task, Subtask subtask) {
+<span class="nc bnc" id="L285" title="All 4 branches missed.">        if (task == null || subtask == null) return;</span>
+<span class="nc" id="L286">        setTaskExpanded(task, true);</span>
+<span class="nc" id="L287">        String key = subtaskKey(task, subtask);</span>
+<span class="nc" id="L288">        Node row = subtaskRowById.get(key);</span>
+<span class="nc bnc" id="L289" title="All 2 branches missed.">        if (row == null) {</span>
+<span class="nc" id="L290">            row = findNodeByUserData(centerContainer, key);</span>
+        }
+<span class="nc bnc" id="L292" title="All 2 branches missed.">        if (row == null) {</span>
+            // In case maps are stale after intermediate UI updates, rebuild once and retry.
+<span class="nc" id="L294">            render(root.getTasks(), root.currentQuery(), root.allowedDifficulties());</span>
+<span class="nc" id="L295">            setTaskExpanded(task, true);</span>
+<span class="nc" id="L296">            row = subtaskRowById.get(key);</span>
+<span class="nc bnc" id="L297" title="All 2 branches missed.">            if (row == null) {</span>
+<span class="nc" id="L298">                row = findNodeByUserData(centerContainer, key);</span>
+            }
+        }
+<span class="nc bnc" id="L301" title="All 2 branches missed.">        if (row == null) {</span>
+            // Last fallback: render unfiltered so the clicked tree target is guaranteed visible.
+<span class="nc" id="L303">            render(root.getTasks(), &quot;&quot;, java.util.EnumSet.allOf(Difficulty.class));</span>
+<span class="nc" id="L304">            setTaskExpanded(task, true);</span>
+<span class="nc" id="L305">            row = subtaskRowById.get(key);</span>
+<span class="nc bnc" id="L306" title="All 2 branches missed.">            if (row == null) {</span>
+<span class="nc" id="L307">                row = findNodeByUserData(centerContainer, key);</span>
+            }
+        }
+<span class="nc bnc" id="L310" title="All 2 branches missed.">        if (row != null) {</span>
+<span class="nc" id="L311">            scrollNodeIntoView(row);</span>
+<span class="nc" id="L312">            Node rowFinal = row;</span>
+<span class="nc" id="L313">            Platform.runLater(() -&gt; scrollNodeIntoView(rowFinal));</span>
+<span class="nc" id="L314">        } else {</span>
+<span class="nc" id="L315">            scrollToTask(task);</span>
+        }
+<span class="nc" id="L317">    }</span>
+
+    public void scrollToLabel(String label) {
+<span class="nc bnc" id="L320" title="All 2 branches missed.">        for (Task task : root.getTasks()) {</span>
+<span class="nc" id="L321">            String taskTitle = HomeSearchService.formatTaskTitle(task);</span>
+<span class="nc bnc" id="L322" title="All 6 branches missed.">            if (Objects.equals(label, taskTitle) || (label != null &amp;&amp; label.contains(taskTitle))) {</span>
+<span class="nc" id="L323">                scrollToTask(task);</span>
+<span class="nc" id="L324">                return;</span>
+            }
+<span class="nc bnc" id="L326" title="All 2 branches missed.">            for (Subtask st : task.getSubtasks()) {</span>
+<span class="nc" id="L327">                String subName = root.getTaskRepository().readSubtaskGroup(st);</span>
+<span class="nc bnc" id="L328" title="All 4 branches missed.">                if (subName == null || subName.isBlank()) {</span>
+<span class="nc" id="L329">                    subName = &quot;Subtask &quot; + task.getId() + &quot;.&quot; + st.getId();</span>
+                }
+<span class="nc" id="L331">                String treeLabel = &quot;• &quot; + subName;</span>
+<span class="nc bnc" id="L332" title="All 6 branches missed.">                if (Objects.equals(label, treeLabel) || (label != null &amp;&amp; label.contains(subName))) {</span>
+<span class="nc" id="L333">                    scrollToSubtask(task, st);</span>
+<span class="nc" id="L334">                    return;</span>
+                }
+<span class="nc" id="L336">            }</span>
+<span class="nc" id="L337">        }</span>
+<span class="nc" id="L338">    }</span>
+
+    // helpers
+
+    private VBox makeCard() {
+<span class="nc" id="L343">        VBox box = new VBox(8);</span>
+<span class="nc" id="L344">        box.getStyleClass().add(&quot;card&quot;);</span>
+<span class="nc" id="L345">        box.setPadding(new Insets(16));</span>
+<span class="nc" id="L346">        return box;</span>
+    }
+
+    private Label badge(String text) {
+<span class="nc" id="L350">        Label l = new Label(text);</span>
+<span class="nc" id="L351">        l.getStyleClass().add(&quot;badge&quot;);</span>
+<span class="nc" id="L352">        return l;</span>
+    }
+
+    private Label badgeForDifficulty(Difficulty d) {
+<span class="nc" id="L356">        Label l = badge(d.toString());</span>
+<span class="nc bnc" id="L357" title="All 3 branches missed.">        l.getStyleClass().addAll(&quot;badge-diff&quot;, switch (d) {</span>
+<span class="nc" id="L358">            case EASY -&gt; &quot;badge-diff-easy&quot;;</span>
+<span class="nc" id="L359">            case MEDIUM -&gt; &quot;badge-diff-medium&quot;;</span>
+<span class="nc" id="L360">            case HARD -&gt; &quot;badge-diff-hard&quot;;</span>
+        });
+<span class="nc" id="L362">        return l;</span>
+    }
+
+    private Label badgeForEligibility(Eligibility e) {
+<span class="nc" id="L366">        Label l = badge(e.toString());</span>
+<span class="nc bnc" id="L367" title="All 3 branches missed.">        l.getStyleClass().addAll(&quot;badge-elig&quot;, switch (e) {</span>
+<span class="nc" id="L368">            case EXAM -&gt; &quot;badge-elig-exam&quot;;</span>
+<span class="nc" id="L369">            case PRACTICE -&gt; &quot;badge-elig-practice&quot;;</span>
+<span class="nc" id="L370">            case BOTH -&gt; &quot;badge-elig-both&quot;;</span>
+        });
+<span class="nc" id="L372">        return l;</span>
+    }
+
+    private boolean isTaskExpanded(Task task) {
+<span class="nc" id="L376">        return taskExpandedById.getOrDefault(taskKey(task), true);</span>
+    }
+
+    private void setTaskExpanded(Task task, boolean expanded) {
+<span class="nc" id="L380">        String taskKey = taskKey(task);</span>
+<span class="nc" id="L381">        taskExpandedById.put(taskKey, expanded);</span>
+<span class="nc" id="L382">        VBox box = subtaskContainerByTaskId.get(taskKey);</span>
+<span class="nc bnc" id="L383" title="All 2 branches missed.">        if (box != null) {</span>
+<span class="nc" id="L384">            box.setManaged(expanded);</span>
+<span class="nc" id="L385">            box.setVisible(expanded);</span>
+        }
+<span class="nc" id="L387">        Button toggle = toggleButtonByTaskId.get(taskKey);</span>
+<span class="nc bnc" id="L388" title="All 2 branches missed.">        if (toggle != null) {</span>
+<span class="nc bnc" id="L389" title="All 2 branches missed.">            toggle.setText(expanded ? &quot;▾&quot; : &quot;▸&quot;);</span>
+        }
+<span class="nc" id="L391">    }</span>
+
+    private void expandAllTasks(List&lt;Task&gt; tasks) {
+<span class="nc bnc" id="L394" title="All 2 branches missed.">        for (Task t : tasks) setTaskExpanded(t, true);</span>
+<span class="nc" id="L395">    }</span>
+
+    private void collapseAllTasks(List&lt;Task&gt; tasks) {
+<span class="nc bnc" id="L398" title="All 2 branches missed.">        for (Task t : tasks) setTaskExpanded(t, false);</span>
+<span class="nc" id="L399">    }</span>
+
+    private void scrollNodeIntoView(Node node) {
+<span class="nc bnc" id="L402" title="All 2 branches missed.">        if (node == null) return;</span>
+<span class="nc" id="L403">        centerContainer.applyCss();</span>
+<span class="nc" id="L404">        centerContainer.layout();</span>
+
+<span class="nc" id="L406">        Bounds viewport = centerScroll.getViewportBounds();</span>
+<span class="nc" id="L407">        Bounds content = centerContainer.getLayoutBounds();</span>
+<span class="nc" id="L408">        Bounds bounds = centerContainer.sceneToLocal(node.localToScene(node.getBoundsInLocal()));</span>
+
+<span class="nc" id="L410">        double viewportHeight = viewport.getHeight();</span>
+<span class="nc" id="L411">        double contentHeight = content.getHeight();</span>
+<span class="nc bnc" id="L412" title="All 2 branches missed.">        if (contentHeight &lt;= viewportHeight + 0.5) {</span>
+<span class="nc" id="L413">            centerScroll.setVvalue(0);</span>
+<span class="nc" id="L414">            return;</span>
+        }
+
+<span class="nc" id="L417">        double targetTop = bounds.getMinY();</span>
+<span class="nc" id="L418">        double targetCenter = targetTop + bounds.getHeight() / 2.0;</span>
+<span class="nc" id="L419">        double raw = (targetCenter - viewportHeight / 2.0) / (contentHeight - viewportHeight);</span>
+<span class="nc" id="L420">        centerScroll.setVvalue(clamp(raw, 0, 1));</span>
+<span class="nc" id="L421">        node.requestFocus();</span>
+<span class="nc" id="L422">    }</span>
+
+    private static double clamp(double value, double min, double max) {
+<span class="nc" id="L425">        return Math.max(min, Math.min(max, value));</span>
+    }
+
+    private static boolean isDescendantOf(Node node, Node ancestor) {
+<span class="nc" id="L429">        Node cur = node;</span>
+<span class="nc bnc" id="L430" title="All 2 branches missed.">        while (cur != null) {</span>
+<span class="nc bnc" id="L431" title="All 2 branches missed.">            if (cur == ancestor) return true;</span>
+<span class="nc" id="L432">            cur = cur.getParent();</span>
+        }
+<span class="nc" id="L434">        return false;</span>
+    }
+
+    private static Node findNodeByUserData(Node node, Object userData) {
+<span class="nc bnc" id="L438" title="All 2 branches missed.">        if (node == null) return null;</span>
+<span class="nc bnc" id="L439" title="All 2 branches missed.">        if (Objects.equals(node.getUserData(), userData)) return node;</span>
+<span class="nc bnc" id="L440" title="All 2 branches missed.">        if (node instanceof Parent p) {</span>
+<span class="nc bnc" id="L441" title="All 2 branches missed.">            for (Node child : p.getChildrenUnmodifiable()) {</span>
+<span class="nc" id="L442">                Node found = findNodeByUserData(child, userData);</span>
+<span class="nc bnc" id="L443" title="All 2 branches missed.">                if (found != null) return found;</span>
+<span class="nc" id="L444">            }</span>
+        }
+<span class="nc" id="L446">        return null;</span>
+    }
+
+    private static String taskKey(Task task) {
+<span class="nc" id="L450">        return task.getId();</span>
+    }
+
+    private static String subtaskKey(Task task, Subtask subtask) {
+<span class="nc" id="L454">        return task.getId() + &quot;:&quot; + subtask.getId();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

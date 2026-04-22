@@ -1,0 +1,10 @@
+module:simon.klausurcraft
+simon.klausurcraft.app
+simon.klausurcraft.shipping
+simon.klausurcraft.task
+simon.klausurcraft.task.export
+simon.klausurcraft.task.io
+simon.klausurcraft.task.planning
+simon.klausurcraft.ui
+simon.klausurcraft.ui.components
+simon.klausurcraft.ui.home
